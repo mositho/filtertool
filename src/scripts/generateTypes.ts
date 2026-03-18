@@ -39,7 +39,7 @@ export async function parseBaseTypes() {
 
   const itemClasses: Record<string, string[]> = {}
 
-  createReadStream(join(__dirname, '../assets/basetypes.csv'))
+  createReadStream(join(__dirname, '../assets/BaseTypes.csv'))
     .pipe(csv.parse({ headers: true }))
     .on('data', (row) => {
       baseTypesRaw.push(row as BaseTypeRow)

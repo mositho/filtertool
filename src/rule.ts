@@ -1,8 +1,16 @@
-import { Condition, Rule, RuleContent } from './types'
+import path from 'path'
 import { createTTSFile } from './scripts/createTTS'
+import { Condition, Rule, RuleContent, StyleData } from './types'
 
-const filterPath = process.env.FILTER_PATH
-const soundsFolder = process.env.SOUNDS_FOLDER
+const filterPath = process.env.FILTER_PATH || ''
+const soundsFolder = process.env.SOUNDS_FOLDER || ''
+
+const getSoundPath = (file: string) => {
+  const cleanedFilterPath = filterPath.replace(/[\\/]+$/, '')
+  const cleanedSoundsFolder = soundsFolder.replace(/^[\\/]+|[\\/]+$/g, '')
+  const folder = [cleanedFilterPath, cleanedSoundsFolder].filter(Boolean).join(path.sep)
+  return folder ? path.join(folder, file) : file
+}
 
 /* Rule content
  * Serves as a proxy for accessing the map of conditions and their values,
@@ -20,6 +28,7 @@ const content = (rules: Rule[]): RuleContent => {
       if (this.rules.length > 0) {
         this.rules.map((r) => r.content.set(condition, value))
       } else {
+        this.map = this.map.filter((c) => !c.startsWith(`${condition} `) && c !== condition)
         this.map.push(`${condition} ${value}`)
       }
     },
@@ -116,17 +125,17 @@ const rule = (...rules: Rule[]): Rule => {
       return this
     },
 
-    tts(path, volume = 300, generate = true) {
-      const soundPath = `${filterPath}${soundsFolder}${path}`
-      if(generate == true) {
+    tts(file, volume = 300, generate = true) {
+      const soundPath = getSoundPath(file)
+      if (generate) {
         createTTSFile(soundPath)
       }
       this.content.set('CustomAlertSound', `"${soundPath}" ${volume}`)
       return this
     },
 
-    customSound(path, volume = 300, generate = true) {
-      this.content.set('CustomAlertSound', `"${soundsFolder}${path}" ${volume}`)
+    customSound(path, volume = 300) {
+      this.content.set('CustomAlertSound', `"${path}" ${volume}`)
       return this
     },
 
@@ -147,6 +156,26 @@ const rule = (...rules: Rule[]): Rule => {
 
     background(r, g, b, a) {
       this.content.set('SetBackgroundColor', `${r} ${g} ${b} ${a !== undefined ? a : ''}`)
+      return this
+    },
+
+    style(styleData?: StyleData) {
+      if (!styleData) return this
+      if (styleData.text) {
+        const [r, g, b] = styleData.text
+        this.text(r, g, b)
+      }
+      if (styleData.background) {
+        const [r, g, b] = styleData.background
+        this.background(r, g, b)
+      }
+      if (styleData.border) {
+        const [r, g, b] = styleData.border
+        this.border(r, g, b)
+      }
+      if (styleData.size !== undefined) {
+        this.size(styleData.size)
+      }
       return this
     },
 

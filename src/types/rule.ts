@@ -13,6 +13,13 @@ import {
   Shape,
 } from '.'
 
+export type StyleData = {
+  text?: [number, number, number]
+  background?: [number, number, number]
+  border?: [number, number, number]
+  size?: number
+}
+
 export type RuleContent = {
   map: string[]
   rules: Rule[]
@@ -35,9 +42,10 @@ export type Rule = {
   size: (size: number) => Rule
   effect: (color: Color, temp?: boolean) => Rule
   sound: (id: NumberRange<1, 17>, volume?: number, positional?: boolean) => Rule
-  tts: (path: string, volume?: number, generate?: boolean) => Rule
+  tts: (file: string, volume?: number, generate?: boolean) => Rule
   customSound: (path: string, volume?: number) => Rule
   icon: (color: Color, shape: Shape, size?: 0 | 1 | 2) => Rule
+  style: (styleData?: StyleData) => Rule
   text: (r: number, g: number, b: number, a?: number) => Rule
   border: (r: number, g: number, b: number, a?: number) => Rule
   background: (r: number, g: number, b: number, a?: number) => Rule
