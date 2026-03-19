@@ -135,7 +135,7 @@ export const socketBases = ({
   itemClasses = ARMOUR_CLASSES,
   maxAreaLevel = filterDefaults.socketBases.maxAreaLevel,
   desiredThreeSocketGroups = filterDefaults.socketBases.desiredThreeSocketGroups,
-  goodThreeSocketMaxAreaLevel = filterDefaults.socketBases.goodThreeSocketMaxAreaLevel,
+  desiredThreeSocketMaxAreaLevel = filterDefaults.socketBases.desiredThreeSocketMaxAreaLevel,
   shieldProgression,
 }: SocketBasesConfig & BuildProfile & { itemClasses?: typeof ARMOUR_CLASSES }) => {
   const shieldConfig = normalizeShieldProgressionConfig(shieldProgression)
@@ -156,7 +156,7 @@ export const socketBases = ({
         .sockets("==", 3)
         .itemClass(...itemClasses)
         .socketGroup(">=", ...desiredThreeSocketGroups)
-        .areaLevel("<=", goodThreeSocketMaxAreaLevel)
+        .areaLevel("<=", desiredThreeSocketMaxAreaLevel)
         .border(255, 0, 127),
     ),
   )

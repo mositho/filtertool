@@ -116,7 +116,7 @@ export type LinksConfig = {
 export type SocketBasesConfig = {
   maxAreaLevel?: number
   desiredThreeSocketGroups?: readonly TwoLinkPattern[]
-  goodThreeSocketMaxAreaLevel?: number
+  desiredThreeSocketMaxAreaLevel?: number
 }
 
 export type RareItemsConfig = {

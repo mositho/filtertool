@@ -9,7 +9,7 @@ export const filterDefaults = {
   socketBases: {
     maxAreaLevel: 45,
     desiredThreeSocketGroups: ["RG"],
-    goodThreeSocketMaxAreaLevel: 20,
+    desiredThreeSocketMaxAreaLevel: 20,
   },
   rareItems: {
     maxAreaLevel: 45,
