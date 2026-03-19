@@ -10,19 +10,18 @@ import {
   ChromaticItemsConfig,
   compileRules,
   defenceMixinMap,
-  fourLinkSoundMap,
+  getShieldThreeLinkSoundPrefix,
+  getSocketPatternSoundPrefix,
   HighlightedEquipmentConfig,
   ARMOUR_CLASSES,
   LinksConfig,
-  normalizeEarlyShieldsConfig,
+  normalizeShieldProgressionConfig,
   normalizeGenericFourLinkConfig,
   normalizeSocketPatternConfig,
   RareItemsConfig,
-  shieldThreeLinkSoundMap,
   SOCKETABLE_CLASSES,
   SocketBasesConfig,
   TincturesConfig,
-  threeLinkSoundMap,
   withHeading,
 } from "./helpers"
 
@@ -32,12 +31,14 @@ export const links = ({
   threeLinkPatterns = [],
   threeLinkMaxAreaLevel = 33,
   fourLinkPatterns = [],
-  genericFourLinks = [],
-  earlyShields,
-}: LinksConfig) =>
+  genericFourLinks,
+  preferredArmourTypes,
+  shieldProgression,
+}: LinksConfig & Partial<BuildProfile>) =>
   {
-    const earlyShieldConfig = normalizeEarlyShieldsConfig(earlyShields)
-    const genericThreeLinkClasses = earlyShieldConfig.enabled ? SOCKETABLE_CLASSES : ARMOUR_CLASSES
+    const shieldConfig = normalizeShieldProgressionConfig(shieldProgression)
+    const genericThreeLinkClasses = shieldConfig.enabled ? SOCKETABLE_CLASSES : ARMOUR_CLASSES
+    const genericFourLinkEntries = genericFourLinks ?? preferredArmourTypes ?? []
 
     return withHeading(
       "Links",
@@ -51,13 +52,13 @@ export const links = ({
           linkedSockets: 4,
           pattern,
           itemClasses,
-          soundPrefix: fourLinkSoundMap[pattern],
+          soundPrefix: getSocketPatternSoundPrefix(pattern),
           iconColor: "Cyan",
           maxAreaLevel,
           style: styleMixin(filterStyles.fourLink),
         })
       }),
-      ...genericFourLinks.flatMap((entry) => {
+      ...genericFourLinkEntries.flatMap((entry) => {
         const { defenceType, maxAreaLevel } = normalizeGenericFourLinkConfig(entry)
 
         return buildGenericFourLinkRules({
@@ -72,13 +73,13 @@ export const links = ({
           linkedSockets: 3,
           pattern,
           itemClasses,
-          soundPrefix: threeLinkSoundMap[pattern],
+          soundPrefix: getSocketPatternSoundPrefix(pattern),
           iconColor: "Green",
           maxAreaLevel,
           style: styleMixin(filterStyles.threeLink),
         })
       }),
-      ...(earlyShieldConfig.enabled
+      ...(shieldConfig.enabled
         ? threeLinkPatterns.flatMap((entry) => {
           const { pattern } = normalizeSocketPatternConfig(entry)
 
@@ -86,9 +87,9 @@ export const links = ({
             linkedSockets: 3,
             pattern,
             itemClasses: ["Shields"],
-            soundPrefix: shieldThreeLinkSoundMap[pattern],
+            soundPrefix: getShieldThreeLinkSoundPrefix(pattern),
             iconColor: "Green",
-            maxAreaLevel: earlyShieldConfig.maxAreaLevel,
+            maxAreaLevel: shieldConfig.maxAreaLevel,
             style: styleMixin(filterStyles.threeLink),
           })
         })
@@ -134,12 +135,12 @@ export const socketBases = ({
   itemClasses = ARMOUR_CLASSES,
   maxAreaLevel = 45,
   goodShieldBaseTypes = ["Painted Buckler", "War Buckler"],
-  goodThreeSocketGroups = ["RG"],
+  desiredThreeSocketGroups = ["RG"],
   goodThreeSocketMaxAreaLevel = 20,
-  earlyShields,
+  shieldProgression,
 }: SocketBasesConfig & BuildProfile & { itemClasses?: typeof ARMOUR_CLASSES }) =>
   {
-    const earlyShieldConfig = normalizeEarlyShieldsConfig(earlyShields)
+    const shieldConfig = normalizeShieldProgressionConfig(shieldProgression)
 
     return withHeading(
       "Socket Bases",
@@ -153,16 +154,16 @@ export const socketBases = ({
           .icon("Cyan", "Diamond")
           .mixin(styleMixin(filterStyles.fourLink)),
       ),
-      earlyShieldConfig.enabled &&
+      shieldConfig.enabled &&
         rule()
           .baseType(...goodShieldBaseTypes)
-          .areaLevel("<=", earlyShieldConfig.maxAreaLevel)
+          .areaLevel("<=", shieldConfig.maxAreaLevel)
           .background(0, 50, 0)
           .size(45),
       rule()
         .sockets("==", 3)
         .itemClass(...itemClasses)
-        .socketGroup(">=", ...goodThreeSocketGroups)
+        .socketGroup(">=", ...desiredThreeSocketGroups)
         .areaLevel("<=", goodThreeSocketMaxAreaLevel)
         .border(255, 0, 127),
       ),
@@ -175,10 +176,10 @@ export const rareItems = ({
   maxAreaLevel = 45,
   earlyBootClass = "Boots",
   earlyBootMaxAreaLevel = 24,
-  earlyShields,
+  shieldProgression,
 }: RareItemsConfig & BuildProfile) => {
   const jewelleryClasses = ["Rings", "Amulets", "Belts"] as const
-  const earlyShieldConfig = normalizeEarlyShieldsConfig(earlyShields)
+  const shieldConfig = normalizeShieldProgressionConfig(shieldProgression)
 
   return withHeading(
     "Rare Items",
@@ -208,8 +209,8 @@ export const rareItems = ({
         .rarity("==", "Rare")
         .areaLevel("<=", maxAreaLevel)
         .size(45),
-      earlyShieldConfig.enabled &&
-        rule().itemClass("Shields").rarity("==", "Rare").areaLevel("<=", earlyShieldConfig.maxAreaLevel).size(45),
+      shieldConfig.enabled &&
+        rule().itemClass("Shields").rarity("==", "Rare").areaLevel("<=", shieldConfig.maxAreaLevel).size(45),
       weaponItemClasses.length > 0 &&
         rule()
           .itemClass(...weaponItemClasses)

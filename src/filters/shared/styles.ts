@@ -1,6 +1,6 @@
 import type { Color, Mixin, Shape, StyleData } from "../../types"
 
-export const SOUND_FOLDER = "allex-sounds/"
+export const SOUND_FOLDER = "poeft-sounds/"
 
 export const soundFile = (file: string) => `${SOUND_FOLDER}${file}`
 

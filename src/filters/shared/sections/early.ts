@@ -1,6 +1,6 @@
 import rule from "../../../rule"
 import { filterStyles, soundFile, styleMixin } from "../styles"
-import { applyHighlightTargets, compileRules, EarlyActsConfig, EarlySocketFallbacksConfig, normalizeEarlyShieldsConfig, SOCKETABLE_CLASSES, withHeading } from "./helpers"
+import { applyHighlightTargets, compileRules, EarlyActsConfig, EarlySocketFallbacksConfig, normalizeShieldProgressionConfig, SOCKETABLE_CLASSES, withHeading } from "./helpers"
 
 export const twilightStrand = () =>
   withHeading(
@@ -70,14 +70,14 @@ export const earlySocketFallbacks = ({ weaponItemClasses = [], weaponBaseTypes =
 
 export const earlyActs = ({
   weaponHighlights = [],
-  earlyShields,
+  shieldProgression,
   earlyMaxAreaLevel = 13,
   showRustic = true,
   includeMomentumColors = true,
   momentumSocketGroups = ["RRG"],
   momentumMaxAreaLevel = 20,
 }: EarlyActsConfig) => {
-  const earlyShieldConfig = normalizeEarlyShieldsConfig(earlyShields)
+  const shieldConfig = normalizeShieldProgressionConfig(shieldProgression)
   const buildWeaponHighlightRules = ({ baseTypes, itemClasses, maxAreaLevel = earlyMaxAreaLevel }: (typeof weaponHighlights)[number]) => {
     const buildBaseRule = (rarityOperator: "==" | "<") =>
       applyHighlightTargets(rule().rarity(rarityOperator, "Rare").areaLevel("<=", maxAreaLevel), { baseTypes, itemClasses })
@@ -92,17 +92,17 @@ export const earlyActs = ({
     "Early Acts",
     compileRules(
       ...weaponHighlights.flatMap(buildWeaponHighlightRules),
-      earlyShieldConfig.enabled &&
+      shieldConfig.enabled &&
         rule()
           .itemClass("Shields")
           .socketGroup(">=", "RG")
-          .areaLevel("<=", earlyShieldConfig.maxAreaLevel)
+          .areaLevel("<=", shieldConfig.maxAreaLevel)
           .mixin(styleMixin(filterStyles.earlyShieldLink)),
-      earlyShieldConfig.enabled &&
+      shieldConfig.enabled &&
         rule()
           .itemClass("Shields")
           .baseES("==", 0)
-          .areaLevel("<=", earlyShieldConfig.maxAreaLevel)
+          .areaLevel("<=", shieldConfig.maxAreaLevel)
           .mixin(styleMixin(filterStyles.earlyShieldBase)),
       showRustic &&
         rule()

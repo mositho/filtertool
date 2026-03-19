@@ -1,3 +1,8 @@
 node_modules
 .env
-src/filters/output/
+src/filters/*
+!src/filters/example/
+!src/filters/example/**
+!src/filters/shared.ts
+!src/filters/shared/
+!src/filters/shared/**
