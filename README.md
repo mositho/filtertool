@@ -1,41 +1,67 @@
-# Allex filter tool
+# poe filter tool
 
-## Setup and configuration
+Quickstart for building Path of Exile filters with shared sections and custom sounds.
 
-Install all packages with
+This tool is currently built with leveling filters in mind. Any Contributions that extend its capabilities are very welcome.
+
+## Prerequisites
+
+- [Node.js](https://nodejs.org/) installed
+- An IDE or editor of your choice
+- [Visual Studio Code](https://code.visualstudio.com/) recommended for the best autocomplete experience
+
+## Quickstart
+
+1. Install dependencies.
+
 ```bash
 npm install
 ```
 
-The FILTER_PATH environment variable needs to be set in a `.env` file in the root directory and should point to the Path of Exile filter folder (or the folder which you want the filter to be exported to).
+2. Set your Path of Exile filter folder in `.env`.
 
-```filename=".env"
+```env
 FILTER_PATH="C:\Users\user\Documents\My Games\Path of Exile"
 ```
 
-## Sounds
+3. Copy [`src/filters/example`](/home/moritz/workspace/poe/filtertool/src/filters/example) to a new folder under `src/filters/`.
 
-Custom sounds are distributed as [`allex-sounds.zip`](/home/moritz/workspace/poe/filtertool/allex-sounds.zip).
+4. Edit [`config.ts`](/home/moritz/workspace/poe/filtertool/src/filters/example/config.ts).
 
-Extract the zip into the same folder as your exported filter so it creates an `allex-sounds/` directory next to the `.filter` file.
+For most standard filters, `config.ts` is the only file you need to touch. [`index.ts`](/home/moritz/workspace/poe/filtertool/src/filters/example/index.ts) usually only needs changes if you want a different section layout or custom logic.
 
-Example target structure:
+5. Extract the `poeft-sounds` zip file into your `FILTER_PATH` folder.
+
+This should create a `poeft-sounds/` folder next to your exported `.filter` file.
+
+Example:
 
 ```text
 Path of Exile/
-  Elehit.filter
-  allex-sounds/
+  Example.filter
+  poeft-sounds/
     chaos.mp3
     regal.mp3
     ...
 ```
 
-If you extract the zip directly into your `FILTER_PATH` folder, the structure should be correct automatically.
-
-## Exporting filters
-
-Filters are kept in `src/filters` and export a `getFilter()` function from their index file. Filters can be exported using the `export` npm script like so:
+6. Export your filter.
 
 ```bash
 npm run export filtername
 ```
+
+If your filter folder is `src/filters/yourfilter`, run:
+
+```bash
+npm run export yourfilter
+```
+
+## Notes
+
+- Most config fields have autocomplete for Path of Exile item classes, base types, link patterns, and tinctures.
+- Custom filter folders under `src/filters/` are gitignored by default, while the shared example template stays tracked.
+
+---
+
+<sub>Thanks to Allex for the sounds and the core of the project.</sub>
