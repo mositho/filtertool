@@ -13,7 +13,7 @@ export const filterDefaults = {
   links: {
     twoLinkMaxAreaLevel: 9,
     threeLinkMaxAreaLevel: 33,
-    genericFourLinkMaxAreaLevel: 53,
+    fourLinkMaxAreaLevel: 53,
   },
   socketBases: {
     maxAreaLevel: GLOBAL_PART_ONE_MAX_AREA_LEVEL,

@@ -49,8 +49,10 @@ export const buildSpecificOptions = {
       // Example with a custom item-class scope or cap.
       // { pattern: "GGB", itemClasses: ["Body Armours", "Gloves"], maxAreaLevel: 28 },
     ],
+    // Shared cap for 3-links that you can override
+    // threeLinkMaxAreaLevel: 33,
     // Set to false if you only want to see the explicit 3-link patterns above.
-    // genericThreeLinks: false,
+    genericThreeLinks: true,
     fourLinkPatterns: [
       // 4-links for your build.
       "RRRG",
@@ -59,6 +61,8 @@ export const buildSpecificOptions = {
       // Example with a custom level cap.
       // { pattern: "RRRB", maxAreaLevel: 45 },
     ],
+    // Shared cap for 4-links that you can override
+    // fourLinkMaxAreaLevel: 53,
     // Set to false if you only want to see the explicit 4-link patterns above.
     genericFourLinksEnabled: true,
     // Optional override if you want different generic 4-links than `preferredArmourTypes`.

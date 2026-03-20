@@ -69,7 +69,7 @@ export const links = ({
           itemClasses,
           soundPrefix: getSocketPatternSoundPrefix(pattern),
           iconColor: "Cyan",
-          maxAreaLevel,
+          maxAreaLevel: maxAreaLevel ?? filterDefaults.links.fourLinkMaxAreaLevel,
           style: styleMixin(filterStyles.selectedFourLink),
         })
       }),
@@ -92,7 +92,7 @@ export const links = ({
           itemClasses,
           soundPrefix: getSocketPatternSoundPrefix(pattern),
           iconColor: "Green",
-          maxAreaLevel,
+          maxAreaLevel: maxAreaLevel ?? threeLinkMaxAreaLevel,
           style: styleMixin(filterStyles.selectedThreeLink),
         })
       }),

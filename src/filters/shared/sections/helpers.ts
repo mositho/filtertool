@@ -388,7 +388,7 @@ export const buildItemClassSocketRules = ({
 
 export const buildGenericFourLinkRules = ({
   defenceType,
-  maxAreaLevel = filterDefaults.links.genericFourLinkMaxAreaLevel,
+  maxAreaLevel = filterDefaults.links.fourLinkMaxAreaLevel,
 }: GenericFourLinkConfig) =>
   ARMOUR_CLASSES.map((itemClass) =>
     rule()
