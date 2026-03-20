@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "export": "ts-node ./src/scripts/export.ts",
-    "generate-types": "ts-node ./src/scripts/generateTypes.ts"
+    "preexport": "npm run generate-types && npm run generate-sounds",
+    "generate-types": "ts-node ./src/scripts/generateTypes.ts",
+    "generate-sounds": "ts-node ./src/scripts/generateSounds.ts"
   },
   "keywords": [],
   "author": "",
