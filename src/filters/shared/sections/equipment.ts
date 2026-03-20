@@ -204,11 +204,6 @@ export const jewellery = () =>
         .mixin(styleMixin(filterStyles.rareAccessory))
         .customSound(soundFile("rare_rustic.mp3")),
       rule()
-        .baseType("Amber", "Jade", "Lapis", "Turquoise", "Onyx", "Agate", "Citrine")
-        .itemClass("Amulets")
-        .rarity("==", "Rare")
-        .mixin(styleMixin(filterStyles.rareAccessory)),
-      rule()
         .baseType("Amethyst")
         .itemClass("Rings")
         .rarity("==", "Magic")
@@ -370,6 +365,11 @@ export const jewellery = () =>
         .icon("Red", "Cross")
         .mixin(styleMixin(filterStyles.accessory))
         .customSound(soundFile("jade.mp3")),
+      rule()
+        .baseType("Amber", "Jade", "Lapis", "Turquoise", "Onyx", "Agate", "Citrine")
+        .itemClass("Amulets")
+        .rarity("==", "Rare")
+        .mixin(styleMixin(filterStyles.rareAccessory)),
     ),
   )
 
