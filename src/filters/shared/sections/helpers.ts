@@ -107,12 +107,12 @@ export type BuildSpecificOptions = {
   links: LinksConfig
   socketBases?: SocketBasesConfig
   rareItems?: RareItemsConfig
-  magicItems?: FallbackItemsConfig
-  normalItems?: FallbackItemsConfig
+  magicItems?: ItemSectionConfig
+  normalItems?: ItemSectionConfig
   tinctures?: TincturesConfig
   highlightedEquipment?: HighlightedEquipmentConfig
   early?: EarlyConfig
-  earlySocketFallbacks?: EarlySocketFallbacksConfig
+  earlySockets?: EarlySocketsConfig
 }
 
 export type SocketPatternConfig<TPattern extends SocketPattern = SocketPattern> = {
@@ -131,7 +131,9 @@ export type LinksConfig = {
   twoLinkMaxAreaLevel?: number
   threeLinkPatterns?: readonly (ThreeLinkPattern | SocketPatternConfig<ThreeLinkPattern>)[]
   threeLinkMaxAreaLevel?: number
+  genericThreeLinks?: boolean
   fourLinkPatterns?: readonly (FourLinkPattern | SocketPatternConfig<FourLinkPattern>)[]
+  genericFourLinksEnabled?: boolean
   genericFourLinks?: readonly (DefenceBaseType | GenericFourLinkConfig)[]
 }
 
@@ -186,12 +188,12 @@ export type HighlightedEquipmentConfig = {
   highlights?: readonly HighlightedBaseTypeConfig[]
 }
 
-export type FallbackItemsConfig = {
+export type ItemSectionConfig = {
   weaponItemClasses?: readonly WeaponItemClass[]
   weaponBaseTypes?: readonly WeaponBaseType[]
 }
 
-export type EarlySocketFallbacksConfig = FallbackItemsConfig
+export type EarlySocketsConfig = ItemSectionConfig
 
 export type ShieldProgressionMode = "none" | "early" | "full"
 

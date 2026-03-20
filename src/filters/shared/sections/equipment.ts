@@ -12,9 +12,9 @@ import {
   ChromaticItemsConfig,
   compileRules,
   defenceMixinMap,
-  FallbackItemsConfig,
   getSocketPatternSoundPrefix,
   HighlightedEquipmentConfig,
+  ItemSectionConfig,
   LinksConfig,
   normalizeGenericFourLinkConfig,
   normalizeShieldProgressionConfig,
@@ -31,7 +31,9 @@ export const links = ({
   twoLinkMaxAreaLevel = filterDefaults.links.twoLinkMaxAreaLevel,
   threeLinkPatterns = [],
   threeLinkMaxAreaLevel = filterDefaults.links.threeLinkMaxAreaLevel,
+  genericThreeLinks = true,
   fourLinkPatterns = [],
+  genericFourLinksEnabled = true,
   genericFourLinks,
   preferredArmourTypes,
   shieldProgression,
@@ -47,7 +49,7 @@ export const links = ({
       soundPrefix: getSocketPatternSoundPrefix("RGG"),
       iconColor: "Green",
       maxAreaLevel: shieldConfig.maxAreaLevel,
-      style: styleMixin(filterStyles.threeLink),
+      style: styleMixin(filterStyles.selectedThreeLink),
     })
 
   return withHeading(
@@ -65,17 +67,19 @@ export const links = ({
           soundPrefix: getSocketPatternSoundPrefix(pattern),
           iconColor: "Cyan",
           maxAreaLevel,
-          style: styleMixin(filterStyles.fourLink),
+          style: styleMixin(filterStyles.selectedFourLink),
         })
       }),
-      ...genericFourLinkEntries.flatMap((entry) => {
-        const { defenceType, maxAreaLevel } = normalizeGenericFourLinkConfig(entry)
+      ...(genericFourLinksEnabled
+        ? genericFourLinkEntries.flatMap((entry) => {
+            const { defenceType, maxAreaLevel } = normalizeGenericFourLinkConfig(entry)
 
-        return buildGenericFourLinkRules({
-          defenceType,
-          maxAreaLevel,
-        })
-      }),
+            return buildGenericFourLinkRules({
+              defenceType,
+              maxAreaLevel,
+            })
+          })
+        : []),
       ...threeLinkPatterns.flatMap((entry) => {
         const { pattern, maxAreaLevel, itemClasses } = normalizeSocketPatternConfig(entry)
 
@@ -86,17 +90,18 @@ export const links = ({
           soundPrefix: getSocketPatternSoundPrefix(pattern),
           iconColor: "Green",
           maxAreaLevel,
-          style: styleMixin(filterStyles.threeLink),
+          style: styleMixin(filterStyles.selectedThreeLink),
         })
       }),
       ...((shieldThreeLinkRule as ReturnType<typeof buildItemClassSocketRules> | false) || []),
-      rule()
-        .linkedSockets("==", 3)
-        .itemClass(...ARMOUR_CLASSES)
-        .areaLevel("<=", threeLinkMaxAreaLevel)
-        .icon("Green", "Diamond")
-        .mixin(styleMixin(filterStyles.threeLink))
-        .size(40),
+      genericThreeLinks &&
+        rule()
+          .linkedSockets("==", 3)
+          .itemClass(...ARMOUR_CLASSES)
+          .areaLevel("<=", threeLinkMaxAreaLevel)
+          .icon("Green", "Diamond")
+          .mixin(styleMixin(filterStyles.threeLink))
+          .size(40),
       ...twoLinkPatterns.map((entry) => {
         const { pattern, maxAreaLevel, itemClasses } = normalizeSocketPatternConfig(entry)
         const effectiveItemClasses = itemClasses ?? ARMOUR_CLASSES
@@ -104,7 +109,7 @@ export const links = ({
           .itemClass(...effectiveItemClasses)
           .socketGroup("==", pattern)
           .icon("Green", "Diamond")
-          .mixin(styleMixin(filterStyles.twoLink))
+          .mixin(styleMixin(filterStyles.selectedTwoLink))
 
         if (maxAreaLevel ?? twoLinkMaxAreaLevel) {
           builtRule.areaLevel("<=", maxAreaLevel ?? twoLinkMaxAreaLevel!)
@@ -509,7 +514,7 @@ export const magicItems = ({
   preferredWeaponItemClasses = [],
   weaponItemClasses = preferredWeaponItemClasses,
   weaponBaseTypes = [],
-}: FallbackItemsConfig & Partial<BuildProfile> = {}) => {
+}: ItemSectionConfig & Partial<BuildProfile> = {}) => {
   const itemClasses = [...SOCKETABLE_CLASSES, ...weaponItemClasses]
   const magicItemMaxAreaLevel = filterDefaults.early.magicItemMaxAreaLevel
 
@@ -535,7 +540,7 @@ export const normalItems = ({
   preferredWeaponItemClasses = [],
   weaponItemClasses = preferredWeaponItemClasses,
   weaponBaseTypes = [],
-}: FallbackItemsConfig & Partial<BuildProfile> = {}) => {
+}: ItemSectionConfig & Partial<BuildProfile> = {}) => {
   const itemClasses = [...SOCKETABLE_CLASSES, ...weaponItemClasses]
   const normalItemMaxAreaLevel = filterDefaults.early.normalItemMaxAreaLevel
 

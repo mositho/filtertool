@@ -13,8 +13,8 @@ Only set `links.genericFourLinks` if you want to override that default.
 Only set `rareItems.weaponItemClasses`, `magicItems.weaponItemClasses`, or
 `normalItems.weaponItemClasses` if you want to override that shared default.
 
-`earlySocketFallbacks.weaponItemClasses` also defaults to `preferredWeaponItemClasses`,
-so you only need to set it if the early socket fallback section should use a different list.
+`earlySockets.weaponItemClasses` also defaults to `preferredWeaponItemClasses`,
+so you only need to set it if the early socket section should use a different list.
 
 `shieldProgression` controls shield handling for:
 - `RGG` shield 3-link rule
@@ -50,6 +50,8 @@ export const buildSpecificOptions = {
       // Example with a custom item-class scope or cap.
       // { pattern: "GGB", itemClasses: ["Body Armours", "Gloves"], maxAreaLevel: 28 },
     ],
+    // Set to false if you only want to see the explicit 3-link patterns above.
+    // genericThreeLinks: false,
     fourLinkPatterns: [
       // 4-links for your build.
       "RRRG",
@@ -58,6 +60,8 @@ export const buildSpecificOptions = {
       // Example with a custom level cap.
       // { pattern: "RRRB", maxAreaLevel: 45 },
     ],
+    // Set to false if you only want to see the explicit 4-link patterns above.
+    // genericFourLinksEnabled: false,
     // Optional override if you want different generic 4-links than `preferredArmourTypes`.
     // genericFourLinks: ["armour", "armour-evasion", "evasion"],
   },
@@ -115,11 +119,11 @@ export const buildSpecificOptions = {
     // Disable if you're a ruthless enjoyer
     includeMomentumColors: true,
   },
-  earlySocketFallbacks: {
-    // These classes/bases only feed the early 2-socket / 3-socket fallback section.
+  earlySockets: {
+    // These classes/bases only feed the early 2-socket / 3-socket socket section.
     // weaponItemClasses defaults to `preferredWeaponItemClasses`.
     // weaponItemClasses: ["Two Hand Axes", "Two Hand Maces"],
-    // Optional specific bases for the same fallback rules.
+    // Optional specific bases for the same early socket rules.
     // weaponBaseTypes: ["Stone Axe", "Driftwood Maul"],
   },
 } as const satisfies BuildSpecificOptions

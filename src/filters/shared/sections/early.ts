@@ -7,7 +7,7 @@ import {
   BuildProfile,
   compileRules,
   EarlyConfig,
-  EarlySocketFallbacksConfig,
+  EarlySocketsConfig,
   normalizeShieldProgressionConfig,
   SOCKETABLE_CLASSES,
   withHeading,
@@ -25,17 +25,17 @@ export const twilightStrand = () =>
     ),
   )
 
-export const earlySocketFallbacks = ({
+export const earlySockets = ({
   preferredWeaponItemClasses = [],
   weaponItemClasses = preferredWeaponItemClasses,
   weaponBaseTypes = [],
-}: EarlySocketFallbacksConfig & Partial<BuildProfile> = {}) => {
+}: EarlySocketsConfig & Partial<BuildProfile> = {}) => {
   const itemClasses = [...SOCKETABLE_CLASSES, ...weaponItemClasses]
   const twoSocketMaxAreaLevel = filterDefaults.early.twoSocketMaxAreaLevel
   const threeSocketMaxAreaLevel = filterDefaults.early.threeSocketMaxAreaLevel
 
   return withHeading(
-    "Early Socket Fallbacks",
+    "Early Sockets",
     compileRules(
       rule()
         .sockets("==", 2)
@@ -85,12 +85,13 @@ export const early = ({
       .mixin(styleMixin(filterStyles.momentum))
       .icon("Orange", "Kite")
   const buildWeaponHighlightRules = ({ baseTypes, itemClasses, maxAreaLevel = earlyMaxAreaLevel }: (typeof weaponHighlights)[number]) => {
-    const buildBaseRule = (rarityOperator: "==" | "<") =>
-      applyHighlightTargets(rule().rarity(rarityOperator, "Rare").areaLevel("<=", maxAreaLevel), { baseTypes, itemClasses })
+    const buildBaseRule = (rarity: "Rare" | "Magic" | "Normal") =>
+      applyHighlightTargets(rule().rarity("==", rarity).areaLevel("<=", maxAreaLevel), { baseTypes, itemClasses })
 
     return [
-      buildBaseRule("==").mixin(styleMixin(filterStyles.earlyWeaponRare)).icon("Yellow", "UpsideDownHouse").sound(3),
-      buildBaseRule("<").mixin(styleMixin(filterStyles.earlyWeaponBase)).icon("Cyan", "UpsideDownHouse"),
+      buildBaseRule("Rare").mixin(styleMixin(filterStyles.earlyWeaponRare)).icon("Yellow", "UpsideDownHouse").sound(3),
+      buildBaseRule("Magic").mixin(styleMixin(filterStyles.earlyWeaponMagic)).icon("Blue", "UpsideDownHouse"),
+      buildBaseRule("Normal").mixin(styleMixin(filterStyles.earlyWeaponNormal)).icon("Cyan", "UpsideDownHouse"),
     ]
   }
 
