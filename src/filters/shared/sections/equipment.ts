@@ -466,7 +466,6 @@ export const rareItems = ({
   preferredWeaponItemClasses = [],
   weaponItemClasses = preferredWeaponItemClasses,
   maxAreaLevel = filterDefaults.rareItems.maxAreaLevel,
-  earlyBootMaxAreaLevel = filterDefaults.rareItems.earlyBootMaxAreaLevel,
   shieldProgression,
 }: RareItemsConfig & BuildProfile) => {
   const earlyMaxAreaLevel = filterDefaults.campaign.earlyMaxAreaLevel
@@ -477,12 +476,6 @@ export const rareItems = ({
   return withHeading(
     "Rare Items",
     compileRules(
-      rule()
-        .itemClass("Boots")
-        .areaLevel("<=", earlyBootMaxAreaLevel)
-        .rarity("==", "Rare")
-        .mixin(styleMixin(filterStyles.rareArmour))
-        .customSound(soundFile("rare_boots.mp3")),
       rule().itemClass("Boots").rarity("==", "Rare").mixin(styleMixin(filterStyles.rareArmour)),
       ...preferredArmourTypes.map((baseType) =>
         rule()

@@ -32,7 +32,7 @@ export const earlySocketFallbacks = ({
 }: EarlySocketFallbacksConfig & Partial<BuildProfile> = {}) => {
   const itemClasses = [...SOCKETABLE_CLASSES, ...weaponItemClasses]
   const twoSocketMaxAreaLevel = filterDefaults.early.twoSocketMaxAreaLevel
-  const threeSocketMaxAreaLevel = filterDefaults.campaign.earlyMaxAreaLevel
+  const threeSocketMaxAreaLevel = filterDefaults.early.threeSocketMaxAreaLevel
 
   return withHeading(
     "Early Socket Fallbacks",
@@ -72,6 +72,7 @@ export const early = ({
   momentumMaxAreaLevel = filterDefaults.early.momentumMaxAreaLevel,
   shieldProgression,
 }: EarlyConfig & Partial<BuildProfile>) => {
+  const earlyBootMaxAreaLevel = filterDefaults.rareItems.earlyBootMaxAreaLevel
   const shieldConfig = normalizeShieldProgressionConfig(shieldProgression)
   const defaultMomentumItemClasses = shieldConfig.enabled ? SOCKETABLE_CLASSES : ARMOUR_CLASSES
   const momentumItemClasses = momentumColors?.itemClasses ?? defaultMomentumItemClasses
@@ -97,6 +98,12 @@ export const early = ({
     "Early",
     compileRules(
       ...weaponHighlights.flatMap(buildWeaponHighlightRules),
+      rule()
+        .itemClass("Boots")
+        .areaLevel("<=", earlyBootMaxAreaLevel)
+        .rarity("==", "Rare")
+        .mixin(styleMixin(filterStyles.rareArmour))
+        .customSound(soundFile("rare_boots.mp3")),
       shieldConfig.enabled &&
         (() => {
           const builtRule = rule().itemClass("Shields").socketGroup(">=", "RG").mixin(styleMixin(filterStyles.earlyShieldLink))

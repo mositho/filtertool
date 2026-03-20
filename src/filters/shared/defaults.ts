@@ -25,8 +25,8 @@ export const filterDefaults = {
   },
   // These do not affect the rare jewellery rules
   jewellery: {
-    elementalRingMaxAreaLevel: 24,
     basicRingMaxAreaLevel: 16,
+    elementalRingMaxAreaLevel: 24,
     beltMaxAreaLevel: 24,
     amuletMaxAreaLevel: 24,
   },
@@ -39,11 +39,12 @@ export const filterDefaults = {
   },
   early: {
     earlyMaxAreaLevel: GLOBAL_EARLY_MAX_AREA_LEVEL,
-    twoSocketMaxAreaLevel: 9,
+    twoSocketMaxAreaLevel: 7,
+    threeSocketMaxAreaLevel: GLOBAL_EARLY_MAX_AREA_LEVEL,
     normalItemMaxAreaLevel: 4,
     magicItemMaxAreaLevel: 9,
-    showRustic: true,
-    includeMomentumColors: true,
     momentumMaxAreaLevel: 20,
+    includeMomentumColors: true,
+    showRustic: true,
   },
 } as const
