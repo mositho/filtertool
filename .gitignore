@@ -6,3 +6,5 @@ src/filters/*
 !src/filters/shared.ts
 !src/filters/shared/
 !src/filters/shared/**
+src/filters/shared/user-defaults.ts
+src/filters/shared/user-styles.ts

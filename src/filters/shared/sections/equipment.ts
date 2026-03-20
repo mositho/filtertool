@@ -24,7 +24,9 @@ import {
   normalizeSocketPatternConfig,
   RareItemsConfig,
   SOCKETABLE_CLASSES,
-  SocketBasesConfig,
+  TwoLinkPattern,
+  ThreeLinkPattern,
+  FourLinkPattern,
   TincturesConfig,
   withHeading,
 } from "./helpers"
@@ -61,7 +63,7 @@ export const links = ({
       rule().linkedSockets("=", 6).icon("Red", "Diamond").mixin(styleMixin(filterStyles.priorityA)).customSound(soundFile("6_link.mp3")),
       rule().linkedSockets("=", 5).icon("Orange", "Diamond").mixin(styleMixin(filterStyles.priorityB)).customSound(soundFile("5_link.mp3")),
       ...fourLinkPatterns.flatMap((entry) => {
-        const { pattern, maxAreaLevel, itemClasses } = normalizeSocketPatternConfig(entry)
+        const { pattern, maxAreaLevel, itemClasses } = normalizeSocketPatternConfig<FourLinkPattern>(entry)
 
         return buildItemClassSocketRules({
           linkedSockets: 4,
@@ -84,7 +86,7 @@ export const links = ({
           })
         : []),
       ...threeLinkPatterns.flatMap((entry) => {
-        const { pattern, maxAreaLevel, itemClasses } = normalizeSocketPatternConfig(entry)
+        const { pattern, maxAreaLevel, itemClasses } = normalizeSocketPatternConfig<ThreeLinkPattern>(entry)
 
         return buildItemClassSocketRules({
           linkedSockets: 3,
@@ -106,7 +108,7 @@ export const links = ({
           .mixin(styleMixin(filterStyles.threeLink))
           .size(40),
       ...twoLinkPatterns.map((entry) => {
-        const { pattern, maxAreaLevel, itemClasses } = normalizeSocketPatternConfig(entry)
+        const { pattern, maxAreaLevel, itemClasses } = normalizeSocketPatternConfig<TwoLinkPattern>(entry)
         const effectiveItemClasses = itemClasses ?? ARMOUR_CLASSES
         const builtRule = rule()
           .itemClass(...effectiveItemClasses)
@@ -134,50 +136,6 @@ export const sixSockets = () =>
 
 export const highlightedEquipment = ({ highlights = [] }: HighlightedEquipmentConfig) =>
   withHeading("Highlighted Equipment", compileRules(...highlights.flatMap(buildHighlightedBaseTypeRules)))
-
-export const socketBases = ({
-  preferredArmourTypes,
-  itemClasses,
-  maxAreaLevel = filterDefaults.socketBases.maxAreaLevel,
-  desiredThreeSocketGroups = filterDefaults.socketBases.desiredThreeSocketGroups,
-  desiredThreeSocketMaxAreaLevel = filterDefaults.socketBases.desiredThreeSocketMaxAreaLevel,
-  shieldProgression,
-}: SocketBasesConfig & BuildProfile & { itemClasses?: typeof SOCKETABLE_CLASSES }) => {
-  const includeShields = getShieldProgressionMode(shieldProgression) === "full"
-  const effectiveItemClasses = itemClasses ?? (includeShields ? SOCKETABLE_CLASSES : ARMOUR_CLASSES)
-  const socketBaseRarities = [
-    { rarity: "Rare" as const, style: filterStyles.socketBaseRare },
-    { rarity: "Magic" as const, style: filterStyles.socketBaseMagic },
-    { rarity: "Normal" as const, style: filterStyles.socketBaseNormal },
-  ]
-
-  return withHeading(
-    "Socket Bases",
-    compileRules(
-      ...preferredArmourTypes.flatMap((baseType) =>
-        socketBaseRarities.map(({ rarity, style }) =>
-          rule()
-            .itemClass(...effectiveItemClasses)
-            .sockets(">=", 4)
-            .areaLevel("<=", maxAreaLevel)
-            .rarity("==", rarity)
-            .mixin(defenceMixinMap[baseType])
-            .icon("Cyan", "Diamond")
-            .mixin(styleMixin(style)),
-        ),
-      ),
-      ...socketBaseRarities.map(({ rarity, style }) =>
-        rule()
-          .sockets("==", 3)
-          .itemClass(...effectiveItemClasses)
-          .socketGroup(">=", ...desiredThreeSocketGroups)
-          .areaLevel("<=", desiredThreeSocketMaxAreaLevel)
-          .rarity("==", rarity)
-          .mixin(styleMixin(style)),
-      ),
-    ),
-  )
-}
 
 export const jewellery = ({ amulets = filterDefaults.jewellery.amulets }: JewelleryConfig = {}) =>
   withHeading(

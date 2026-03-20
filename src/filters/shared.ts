@@ -14,7 +14,6 @@ export {
   normalItems,
   rareItems,
   sixSockets,
-  socketBases,
   tinctures,
 } from "./shared/sections/equipment"
 export { divinationCards, gems, hideEquipment, misc, questItems, showUnknownItems, uniques } from "./shared/sections/global"

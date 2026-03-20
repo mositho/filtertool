@@ -58,6 +58,9 @@ const SLOT_SOUND_SUFFIX: Record<(typeof ARMOUR_CLASSES)[number] | "Shields", str
 // Shared config types
 export type DefenceBaseType = "armour" | "evasion" | "es" | "armour-evasion" | "armour-es" | "es-evasion"
 export type SocketColor = "R" | "G" | "B"
+export type AnyTwoLinkPattern = `${SocketColor}${SocketColor}`
+export type AnyThreeLinkPattern = `${SocketColor}${SocketColor}${SocketColor}`
+export type AnyFourLinkPattern = `${SocketColor}${SocketColor}${SocketColor}${SocketColor}`
 export type TwoLinkPattern = "RR" | "RG" | "RB" | "GG" | "GB" | "BB"
 export type ThreeLinkPattern = "RRR" | "RRG" | "RRB" | "RGG" | "RGB" | "RBB" | "GGG" | "GGB" | "GBB" | "BBB"
 export type FourLinkPattern =
@@ -120,7 +123,6 @@ export type BuildProfile = {
 
 export type BuildSpecificOptions = {
   links: LinksConfig
-  socketBases?: SocketBasesConfig
   jewellery?: JewelleryConfig
   rareItems?: RareItemsConfig
   magicItems?: MagicItemsConfig
@@ -131,7 +133,7 @@ export type BuildSpecificOptions = {
   earlySockets?: EarlySocketsConfig
 }
 
-export type SocketPatternConfig<TPattern extends SocketPattern = SocketPattern> = {
+export type SocketPatternConfig<TPattern extends string = SocketPattern> = {
   pattern: TPattern
   maxAreaLevel?: number
   itemClasses?: readonly ((typeof ARMOUR_CLASSES)[number] | "Shields")[]
@@ -143,20 +145,14 @@ export type GenericFourLinkConfig = {
 }
 
 export type LinksConfig = {
-  twoLinkPatterns?: readonly (TwoLinkPattern | SocketPatternConfig<TwoLinkPattern>)[]
+  twoLinkPatterns?: readonly (AnyTwoLinkPattern | SocketPatternConfig<AnyTwoLinkPattern>)[]
   twoLinkMaxAreaLevel?: number
-  threeLinkPatterns?: readonly (ThreeLinkPattern | SocketPatternConfig<ThreeLinkPattern>)[]
+  threeLinkPatterns?: readonly (AnyThreeLinkPattern | SocketPatternConfig<AnyThreeLinkPattern>)[]
   threeLinkMaxAreaLevel?: number
   genericThreeLinks?: boolean
-  fourLinkPatterns?: readonly (FourLinkPattern | SocketPatternConfig<FourLinkPattern>)[]
+  fourLinkPatterns?: readonly (AnyFourLinkPattern | SocketPatternConfig<AnyFourLinkPattern>)[]
   genericFourLinksEnabled?: boolean
   genericFourLinks?: readonly (DefenceBaseType | GenericFourLinkConfig)[]
-}
-
-export type SocketBasesConfig = {
-  maxAreaLevel?: number
-  desiredThreeSocketGroups?: readonly TwoLinkPattern[]
-  desiredThreeSocketMaxAreaLevel?: number
 }
 
 export type RareItemsConfig = {
@@ -291,9 +287,30 @@ export const genericFourLinkSoundMap: Record<DefenceBaseType, string> = {
 }
 
 // Config normalizers
+const SOCKET_COLOR_PRIORITY = { R: 0, G: 1, B: 2 } as const
+
+export const normalizeSocketPattern = <TPattern extends SocketPattern>(pattern: string): TPattern => {
+  if (![...pattern].every((color): color is SocketColor => color in SOCKET_COLOR_PRIORITY)) {
+    throw new Error(`Invalid socket pattern "${pattern}". Only R, G, and B are allowed.`)
+  }
+
+  return [...pattern]
+    .sort((left, right) => {
+      const countDelta = pattern.split(right).length - pattern.split(left).length
+      return countDelta !== 0 ? countDelta : SOCKET_COLOR_PRIORITY[left] - SOCKET_COLOR_PRIORITY[right]
+    })
+    .join("") as TPattern
+}
+
 export const normalizeSocketPatternConfig = <TPattern extends SocketPattern>(
-  entry: TPattern | SocketPatternConfig<TPattern>,
-): SocketPatternConfig<TPattern> => (typeof entry === "string" ? { pattern: entry } : entry)
+  entry: string | SocketPatternConfig<string>,
+): SocketPatternConfig<TPattern> => {
+  const normalizedEntry = typeof entry === "string" ? { pattern: entry } : entry
+  return {
+    ...normalizedEntry,
+    pattern: normalizeSocketPattern<TPattern>(normalizedEntry.pattern),
+  }
+}
 
 export const normalizeGenericFourLinkConfig = (entry: DefenceBaseType | GenericFourLinkConfig): GenericFourLinkConfig =>
   typeof entry === "string" ? { defenceType: entry } : entry

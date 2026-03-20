@@ -16,7 +16,6 @@ Only set `rareItems.weaponItemClasses`, `normalItems.weaponItemClasses`, or
 - the shield `RGG` 3-link rule
 - early shield link/base highlights
 - early socket shield handling
-- socket-base shield handling when set to `full`
 - preferred rare shield highlighting
 - `none`: never
 - `early`: early only, max area level 12 (default value)
@@ -35,7 +34,7 @@ export const buildSpecificOptions = {
     // twoLinkMaxAreaLevel: 9,
     twoLinkPatterns: [
       // Early 2-links you want to see on armour pieces.
-      // Use the canonical order shown by autocomplete. Socket order does not matter in-game.
+      // Any RGB order works here.
       "RG",
       "GG",
       // You can also set a custom level cap per pattern.
@@ -67,10 +66,6 @@ export const buildSpecificOptions = {
     genericFourLinksEnabled: true,
     // Optional override if you want different generic 4-links than `preferredArmourTypes`.
     // genericFourLinks: ["armour", "armour-evasion", "evasion"],
-  },
-  socketBases: {
-    // Early 3-socket armour bases that already contain a good 2-link for your build.
-    desiredThreeSocketGroups: ["RG", "GG"],
   },
   jewellery: {
     // Select which amulets are visible. Leave unset to show all three.

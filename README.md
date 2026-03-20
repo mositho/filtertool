@@ -39,6 +39,21 @@ npm run export yourfilter
 
 This also regenerates the typed item/sound files and syncs the sound pack before exporting.
 
+## User Overrides
+
+If you want personal defaults or styles without creating merge conflicts whenever the shared defaults change, you can add local override files that apply to all filters.
+
+- Create `src/filters/shared/user-defaults.ts` to override shared defaults
+- Create `src/filters/shared/user-styles.ts` to override shared styles
+- Both files are gitignored, so they stay local to your machine
+
+Example files are included here:
+
+- [`src/filters/shared/user-defaults.example.ts`](src/filters/shared/user-defaults.example.ts)
+- [`src/filters/shared/user-styles.example.ts`](src/filters/shared/user-styles.example.ts)
+
+These overrides are merged on top of the committed shared defaults and styles automatically.
+
 ## Sounds
 
 The repository stores its checked-in sound files in `sounds/`.

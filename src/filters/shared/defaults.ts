@@ -1,7 +1,9 @@
+import { loadOptionalOverride, mergeDeep } from "./user-overrides"
+
 const GLOBAL_EARLY_MAX_AREA_LEVEL = 12
 const GLOBAL_PART_ONE_MAX_AREA_LEVEL = 45
 
-export const filterDefaults = {
+export const baseFilterDefaults = {
   campaign: {
     earlyMaxAreaLevel: GLOBAL_EARLY_MAX_AREA_LEVEL,
     partOneMaxAreaLevel: GLOBAL_PART_ONE_MAX_AREA_LEVEL,
@@ -14,11 +16,6 @@ export const filterDefaults = {
     twoLinkMaxAreaLevel: 9,
     threeLinkMaxAreaLevel: 33,
     fourLinkMaxAreaLevel: 53,
-  },
-  socketBases: {
-    maxAreaLevel: GLOBAL_PART_ONE_MAX_AREA_LEVEL,
-    desiredThreeSocketGroups: ["RG"],
-    desiredThreeSocketMaxAreaLevel: 20,
   },
   // These do not affect the rare jewellery rules
   jewellery: {
@@ -54,3 +51,8 @@ export const filterDefaults = {
     baseTypes: ["Prismatic Tincture"],
   },
 } as const
+
+export const filterDefaults = mergeDeep(
+  baseFilterDefaults,
+  loadOptionalOverride<typeof baseFilterDefaults>("./user-defaults", "userFilterDefaults"),
+)

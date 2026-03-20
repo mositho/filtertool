@@ -1,5 +1,6 @@
 import type { Color, Mixin, Shape, StyleData } from "../../types"
 export { getSoundPackFolder, soundFile } from "../../sounds/paths"
+import { loadOptionalOverride, mergeDeep } from "./user-overrides"
 
 export const DEFAULT_STYLE_SETTINGS = {
   size: 45,
@@ -7,7 +8,7 @@ export const DEFAULT_STYLE_SETTINGS = {
 } as const
 
 // prettier-ignore
-export const filterStyles = {
+export const baseFilterStyles = {
   priorityA:                  { text: "#00A8FF", background: "#FFFFFF", border: "#00A8FF" },
   priorityB:                  { text: "#FFFFFF", background: "#00A8FF", border: "#FFFFFF" },
   priorityC:                  { text: "#00FFFF", background: "#000000", border: "#00FFFF" },
@@ -51,6 +52,8 @@ export const filterStyles = {
   relics:                     { text: "#FF0032", background: "#280014", border: "#FF0032" },
   unknownItem:                { text: "#E100FF", background: "#000000", border: "#E100FF" },
 } satisfies Record<string, StyleData>
+
+export const filterStyles = mergeDeep(baseFilterStyles, loadOptionalOverride<typeof baseFilterStyles>("./user-styles", "userFilterStyles"))
 
 export const styleMixin =
   (style: StyleData): Mixin =>
