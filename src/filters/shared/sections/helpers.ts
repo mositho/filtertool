@@ -58,9 +58,24 @@ const SLOT_SOUND_SUFFIX: Record<(typeof ARMOUR_CLASSES)[number] | "Shields", str
 // Shared config types
 export type DefenceBaseType = "armour" | "evasion" | "es" | "armour-evasion" | "armour-es" | "es-evasion"
 export type SocketColor = "R" | "G" | "B"
-export type TwoLinkPattern = `${SocketColor}${SocketColor}`
-export type ThreeLinkPattern = `${SocketColor}${SocketColor}${SocketColor}`
-export type FourLinkPattern = `${SocketColor}${SocketColor}${SocketColor}${SocketColor}`
+export type TwoLinkPattern = "RR" | "RG" | "RB" | "GG" | "GB" | "BB"
+export type ThreeLinkPattern = "RRR" | "RRG" | "RRB" | "RGG" | "RGB" | "RBB" | "GGG" | "GGB" | "GBB" | "BBB"
+export type FourLinkPattern =
+  | "RRRR"
+  | "RRRG"
+  | "RRRB"
+  | "RRGG"
+  | "RRGB"
+  | "RRBB"
+  | "RGGG"
+  | "RGGB"
+  | "RGBB"
+  | "RBBB"
+  | "GGGG"
+  | "GGGB"
+  | "GGBB"
+  | "GBBB"
+  | "BBBB"
 export type SocketPattern = TwoLinkPattern | ThreeLinkPattern | FourLinkPattern
 export type WeaponItemClass =
   | "One Hand Axes"
@@ -106,9 +121,10 @@ export type BuildProfile = {
 export type BuildSpecificOptions = {
   links: LinksConfig
   socketBases?: SocketBasesConfig
+  jewellery?: JewelleryConfig
   rareItems?: RareItemsConfig
-  magicItems?: ItemSectionConfig
-  normalItems?: ItemSectionConfig
+  magicItems?: MagicItemsConfig
+  normalItems?: NormalItemsConfig
   tinctures?: TincturesConfig
   highlightedEquipment?: HighlightedEquipmentConfig
   early?: EarlyConfig
@@ -146,12 +162,17 @@ export type SocketBasesConfig = {
 export type RareItemsConfig = {
   weaponItemClasses?: readonly WeaponItemClass[]
   maxAreaLevel?: number
-  earlyBootMaxAreaLevel?: number
 }
 
 export type ChromaticItemsConfig = {
   smallMaxAreaLevel?: number
   largeMaxAreaLevel?: number
+}
+
+export type LevelingAmuletBaseType = "Amber" | "Jade" | "Lapis"
+
+export type JewelleryConfig = {
+  amulets?: readonly LevelingAmuletBaseType[]
 }
 
 export type WeaponHighlightConfig = {
@@ -188,9 +209,17 @@ export type HighlightedEquipmentConfig = {
   highlights?: readonly HighlightedBaseTypeConfig[]
 }
 
+export type MagicItemsConfig = {
+  maxAreaLevel?: number
+}
+
 export type ItemSectionConfig = {
   weaponItemClasses?: readonly WeaponItemClass[]
   weaponBaseTypes?: readonly WeaponBaseType[]
+}
+
+export type NormalItemsConfig = ItemSectionConfig & {
+  maxAreaLevel?: number
 }
 
 export type EarlySocketsConfig = ItemSectionConfig
@@ -270,22 +299,27 @@ export const normalizeGenericFourLinkConfig = (entry: DefenceBaseType | GenericF
   typeof entry === "string" ? { defenceType: entry } : entry
 
 export const normalizeShieldProgressionConfig = (shieldProgression?: ShieldProgressionConfig) => {
-  if (!shieldProgression || shieldProgression === "none") {
-    return { enabled: false, maxAreaLevel: filterDefaults.campaign.earlyMaxAreaLevel }
+  const defaultMode = filterDefaults.shieldProgression.mode
+  const earlyMaxAreaLevel = filterDefaults.shieldProgression.earlyMaxAreaLevel
+
+  if (typeof shieldProgression === "string" || shieldProgression === undefined) {
+    const mode = shieldProgression ?? defaultMode
+
+    if (mode === "none") {
+      return { enabled: false, maxAreaLevel: earlyMaxAreaLevel }
+    }
+
+    if (mode === "full") {
+      return { enabled: true, maxAreaLevel: undefined }
+    }
+
+    return { enabled: true, maxAreaLevel: earlyMaxAreaLevel }
   }
 
-  if (shieldProgression === "early") {
-    return { enabled: true, maxAreaLevel: filterDefaults.campaign.earlyMaxAreaLevel }
-  }
-
-  if (shieldProgression === "full") {
-    return { enabled: true, maxAreaLevel: undefined }
-  }
-
-  const mode = shieldProgression.mode ?? "none"
+  const mode = shieldProgression.mode ?? defaultMode
 
   if (mode === "none") {
-    return { enabled: false, maxAreaLevel: shieldProgression.maxAreaLevel ?? filterDefaults.campaign.earlyMaxAreaLevel }
+    return { enabled: false, maxAreaLevel: shieldProgression.maxAreaLevel ?? earlyMaxAreaLevel }
   }
 
   if (mode === "full") {
@@ -294,9 +328,12 @@ export const normalizeShieldProgressionConfig = (shieldProgression?: ShieldProgr
 
   return {
     enabled: true,
-    maxAreaLevel: shieldProgression.maxAreaLevel ?? filterDefaults.campaign.earlyMaxAreaLevel,
+    maxAreaLevel: shieldProgression.maxAreaLevel ?? earlyMaxAreaLevel,
   }
 }
+
+export const getShieldProgressionMode = (shieldProgression?: ShieldProgressionConfig): ShieldProgressionMode =>
+  typeof shieldProgression === "string" ? shieldProgression : (shieldProgression?.mode ?? filterDefaults.shieldProgression.mode)
 
 // Generic rule builders
 export const applyHighlightTargets = (
@@ -364,6 +401,36 @@ export const buildGenericFourLinkRules = ({
       .customSound(soundFile(`${genericFourLinkSoundMap[defenceType]}_${SLOT_SOUND_SUFFIX[itemClass]}.mp3`)),
   )
 
+const highlightedEquipmentStyleMap = {
+  Rare: filterStyles.highlightedEquipmentRare,
+  Magic: filterStyles.highlightedEquipmentMagic,
+  Normal: filterStyles.highlightedEquipmentNormal,
+} as const satisfies Record<"Rare" | "Magic" | "Normal", (typeof filterStyles)[keyof typeof filterStyles]>
+
+const HIGHLIGHTABLE_RARITIES = ["Normal", "Magic", "Rare"] as const satisfies readonly Rarity[]
+type HighlightableRarity = (typeof HIGHLIGHTABLE_RARITIES)[number]
+
+const getRaritiesForOperator = (operator: Operator, rarity: HighlightableRarity) => {
+  const pivotIndex = HIGHLIGHTABLE_RARITIES.indexOf(rarity)
+
+  switch (operator) {
+    case "<":
+      return HIGHLIGHTABLE_RARITIES.slice(0, pivotIndex)
+    case "<=":
+      return HIGHLIGHTABLE_RARITIES.slice(0, pivotIndex + 1)
+    case ">":
+      return HIGHLIGHTABLE_RARITIES.slice(pivotIndex + 1)
+    case ">=":
+      return HIGHLIGHTABLE_RARITIES.slice(pivotIndex)
+    case "!=":
+      return HIGHLIGHTABLE_RARITIES.filter((entry) => entry !== rarity)
+    case "=":
+    case "==":
+    default:
+      return [rarity]
+  }
+}
+
 export const buildHighlightedBaseTypeRules = ({
   baseTypes,
   itemClasses,
@@ -374,12 +441,17 @@ export const buildHighlightedBaseTypeRules = ({
   soundId,
   soundFileName,
 }: HighlightedBaseTypeConfig) => {
-  const appliedRarities = rarities?.length ? rarities : undefined
-  const buildRule = () => {
-    const builtRule = applyHighlightTargets(rule().icon("Cyan", "UpsideDownHouse").mixin(styleMixin(filterStyles.highlightedEquipment)), {
-      baseTypes,
-      itemClasses,
-    })
+  const appliedRarities = rarities?.length
+    ? rarities.filter((entry): entry is HighlightableRarity => HIGHLIGHTABLE_RARITIES.includes(entry as HighlightableRarity))
+    : rarityOperator && rarity && HIGHLIGHTABLE_RARITIES.includes(rarity as HighlightableRarity)
+      ? getRaritiesForOperator(rarityOperator, rarity as HighlightableRarity)
+      : [...HIGHLIGHTABLE_RARITIES]
+  const buildRule = (selectedRarity?: Rarity) => {
+    const style =
+      selectedRarity && selectedRarity in highlightedEquipmentStyleMap
+        ? highlightedEquipmentStyleMap[selectedRarity as keyof typeof highlightedEquipmentStyleMap]
+        : filterStyles.highlightedEquipment
+    const builtRule = applyHighlightTargets(rule().icon("Cyan", "UpsideDownHouse").mixin(styleMixin(style)), { baseTypes, itemClasses })
 
     if (maxAreaLevel !== undefined) {
       builtRule.areaLevel("<=", maxAreaLevel)
@@ -394,15 +466,7 @@ export const buildHighlightedBaseTypeRules = ({
     return builtRule
   }
 
-  if (appliedRarities) {
-    return appliedRarities.map((selectedRarity) => buildRule().rarity("==", selectedRarity))
-  }
-
-  if (rarityOperator && rarity) {
-    return [buildRule().rarity(rarityOperator, rarity)]
-  }
-
-  return [buildRule()]
+  return appliedRarities.map((selectedRarity) => buildRule(selectedRarity).rarity("==", selectedRarity))
 }
 
 // Section-specific data builders
@@ -432,6 +496,7 @@ export const buildTierCurrency = (
 export const buildFlaskRule = ({
   baseTypes,
   itemClass,
+  rarity,
   maxAreaLevel,
   iconColor,
   sound,
@@ -439,6 +504,7 @@ export const buildFlaskRule = ({
 }: {
   baseTypes: readonly string[]
   itemClass: "Life Flasks" | "Mana Flasks"
+  rarity: "Normal" | "Magic"
   maxAreaLevel?: number
   iconColor: Color
   sound: string
@@ -447,7 +513,7 @@ export const buildFlaskRule = ({
   const builtRule = rule()
     .itemClass(itemClass)
     .baseType(...baseTypes)
-    .rarity("<=", "Magic")
+    .rarity("==", rarity)
     .icon(iconColor, "Raindrop")
     .mixin(style)
 
@@ -469,16 +535,26 @@ export const buildFlaskSeries = ({
   style: "lifeFlask" | "manaFlask"
   entries: Array<{ baseTypes: string[]; maxAreaLevel?: number; soundFileName: SoundFile }>
 }) =>
-  entries.map(({ baseTypes, maxAreaLevel, soundFileName }) =>
+  entries.flatMap(({ baseTypes, maxAreaLevel, soundFileName }) => [
     buildFlaskRule({
       itemClass,
       baseTypes,
+      rarity: "Normal",
       maxAreaLevel,
       iconColor,
       sound: soundFileName,
       style: styleMixin(filterStyles[style]),
     }),
-  )
+    buildFlaskRule({
+      itemClass,
+      baseTypes,
+      rarity: "Magic",
+      maxAreaLevel,
+      iconColor,
+      sound: soundFileName,
+      style: styleMixin(filterStyles[style]),
+    }),
+  ])
 
 export const buildUtilityFlaskRules = (entries: Array<{ baseType: string; soundFileName: SoundFile }>) =>
   entries.map(({ baseType, soundFileName }) =>

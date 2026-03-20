@@ -12,10 +12,13 @@ import {
   ChromaticItemsConfig,
   compileRules,
   defenceMixinMap,
+  getShieldProgressionMode,
   getSocketPatternSoundPrefix,
   HighlightedEquipmentConfig,
-  ItemSectionConfig,
+  JewelleryConfig,
   LinksConfig,
+  MagicItemsConfig,
+  NormalItemsConfig,
   normalizeGenericFourLinkConfig,
   normalizeShieldProgressionConfig,
   normalizeSocketPatternConfig,
@@ -140,31 +143,43 @@ export const socketBases = ({
   desiredThreeSocketMaxAreaLevel = filterDefaults.socketBases.desiredThreeSocketMaxAreaLevel,
   shieldProgression,
 }: SocketBasesConfig & BuildProfile & { itemClasses?: typeof SOCKETABLE_CLASSES }) => {
-  const effectiveItemClasses = itemClasses ?? ARMOUR_CLASSES
+  const includeShields = getShieldProgressionMode(shieldProgression) === "full"
+  const effectiveItemClasses = itemClasses ?? (includeShields ? SOCKETABLE_CLASSES : ARMOUR_CLASSES)
+  const socketBaseRarities = [
+    { rarity: "Rare" as const, style: filterStyles.socketBaseRare },
+    { rarity: "Magic" as const, style: filterStyles.socketBaseMagic },
+    { rarity: "Normal" as const, style: filterStyles.socketBaseNormal },
+  ]
 
   return withHeading(
     "Socket Bases",
     compileRules(
-      ...preferredArmourTypes.map((baseType) =>
-        rule()
-          .itemClass(...effectiveItemClasses)
-          .sockets(">=", 4)
-          .areaLevel("<=", maxAreaLevel)
-          .mixin(defenceMixinMap[baseType])
-          .icon("Cyan", "Diamond")
-          .mixin(styleMixin(filterStyles.fourLink)),
+      ...preferredArmourTypes.flatMap((baseType) =>
+        socketBaseRarities.map(({ rarity, style }) =>
+          rule()
+            .itemClass(...effectiveItemClasses)
+            .sockets(">=", 4)
+            .areaLevel("<=", maxAreaLevel)
+            .rarity("==", rarity)
+            .mixin(defenceMixinMap[baseType])
+            .icon("Cyan", "Diamond")
+            .mixin(styleMixin(style)),
+        ),
       ),
-      rule()
-        .sockets("==", 3)
-        .itemClass(...effectiveItemClasses)
-        .socketGroup(">=", ...desiredThreeSocketGroups)
-        .areaLevel("<=", desiredThreeSocketMaxAreaLevel)
-        .border(255, 0, 127),
+      ...socketBaseRarities.map(({ rarity, style }) =>
+        rule()
+          .sockets("==", 3)
+          .itemClass(...effectiveItemClasses)
+          .socketGroup(">=", ...desiredThreeSocketGroups)
+          .areaLevel("<=", desiredThreeSocketMaxAreaLevel)
+          .rarity("==", rarity)
+          .mixin(styleMixin(style)),
+      ),
     ),
   )
 }
 
-export const jewellery = () =>
+export const jewellery = ({ amulets = filterDefaults.jewellery.amulets }: JewelleryConfig = {}) =>
   withHeading(
     "Jewellery",
     compileRules(
@@ -344,27 +359,39 @@ export const jewellery = () =>
         .mixin(styleMixin(filterStyles.accessory))
         .customSound(soundFile("heavy_belt.mp3")),
       rule().itemClass("Belts").rarity("==", "Rare").mixin(styleMixin(filterStyles.accessory)),
-      rule()
-        .baseType("Amber")
-        .itemClass("Amulets")
-        .areaLevel("<=", filterDefaults.jewellery.amuletMaxAreaLevel)
-        .icon("Red", "Cross")
-        .mixin(styleMixin(filterStyles.accessory))
-        .customSound(soundFile("amber.mp3")),
-      rule()
-        .baseType("Lapis")
-        .itemClass("Amulets")
-        .areaLevel("<=", filterDefaults.jewellery.amuletMaxAreaLevel)
-        .icon("Red", "Cross")
-        .mixin(styleMixin(filterStyles.accessory))
-        .customSound(soundFile("lapis.mp3")),
-      rule()
-        .baseType("Jade")
-        .itemClass("Amulets")
-        .areaLevel("<=", filterDefaults.jewellery.amuletMaxAreaLevel)
-        .icon("Red", "Cross")
-        .mixin(styleMixin(filterStyles.accessory))
-        .customSound(soundFile("jade.mp3")),
+      ...(amulets.includes("Amber")
+        ? [
+            rule()
+              .baseType("Amber")
+              .itemClass("Amulets")
+              .areaLevel("<=", filterDefaults.jewellery.amuletMaxAreaLevel)
+              .icon("Red", "Cross")
+              .mixin(styleMixin(filterStyles.accessory))
+              .customSound(soundFile("amber.mp3")),
+          ]
+        : []),
+      ...(amulets.includes("Lapis")
+        ? [
+            rule()
+              .baseType("Lapis")
+              .itemClass("Amulets")
+              .areaLevel("<=", filterDefaults.jewellery.amuletMaxAreaLevel)
+              .icon("Red", "Cross")
+              .mixin(styleMixin(filterStyles.accessory))
+              .customSound(soundFile("lapis.mp3")),
+          ]
+        : []),
+      ...(amulets.includes("Jade")
+        ? [
+            rule()
+              .baseType("Jade")
+              .itemClass("Amulets")
+              .areaLevel("<=", filterDefaults.jewellery.amuletMaxAreaLevel)
+              .icon("Red", "Cross")
+              .mixin(styleMixin(filterStyles.accessory))
+              .customSound(soundFile("jade.mp3")),
+          ]
+        : []),
       rule()
         .baseType("Amber", "Jade", "Lapis", "Turquoise", "Onyx", "Agate", "Citrine")
         .itemClass("Amulets")
@@ -510,39 +537,17 @@ export const rareItems = ({
   )
 }
 
-export const magicItems = ({
-  preferredWeaponItemClasses = [],
-  weaponItemClasses = preferredWeaponItemClasses,
-  weaponBaseTypes = [],
-}: ItemSectionConfig & Partial<BuildProfile> = {}) => {
-  const itemClasses = [...SOCKETABLE_CLASSES, ...weaponItemClasses]
-  const magicItemMaxAreaLevel = filterDefaults.early.magicItemMaxAreaLevel
-
-  return withHeading(
-    "Magic Items",
-    compileRules(
-      rule()
-        .rarity("==", "Magic")
-        .itemClass(...itemClasses)
-        .areaLevel("<=", magicItemMaxAreaLevel)
-        .size(40),
-      weaponBaseTypes.length > 0 &&
-        rule()
-          .rarity("==", "Magic")
-          .baseType(...weaponBaseTypes)
-          .areaLevel("<=", magicItemMaxAreaLevel)
-          .size(40),
-    ),
-  )
+export const magicItems = ({ maxAreaLevel = filterDefaults.magicItems.maxAreaLevel }: MagicItemsConfig = {}) => {
+  return withHeading("Magic Items", compileRules(rule().rarity("==", "Magic").areaLevel("<=", maxAreaLevel).size(40)))
 }
 
 export const normalItems = ({
   preferredWeaponItemClasses = [],
   weaponItemClasses = preferredWeaponItemClasses,
   weaponBaseTypes = [],
-}: ItemSectionConfig & Partial<BuildProfile> = {}) => {
+  maxAreaLevel = filterDefaults.normalItems.maxAreaLevel,
+}: NormalItemsConfig & Partial<BuildProfile> = {}) => {
   const itemClasses = [...SOCKETABLE_CLASSES, ...weaponItemClasses]
-  const normalItemMaxAreaLevel = filterDefaults.early.normalItemMaxAreaLevel
 
   return withHeading(
     "Normal Items",
@@ -550,15 +555,15 @@ export const normalItems = ({
       rule()
         .rarity("==", "Normal")
         .itemClass(...itemClasses)
-        .areaLevel("<=", normalItemMaxAreaLevel)
+        .areaLevel("<=", maxAreaLevel)
         .size(40),
       weaponBaseTypes.length > 0 &&
         rule()
           .rarity("==", "Normal")
           .baseType(...weaponBaseTypes)
-          .areaLevel("<=", normalItemMaxAreaLevel)
+          .areaLevel("<=", maxAreaLevel)
           .size(40),
-      rule().itemClass("Belts").rarity("==", "Normal").areaLevel("<=", normalItemMaxAreaLevel).mixin(styleMixin(filterStyles.accessory)),
+      rule().itemClass("Belts").rarity("==", "Normal").areaLevel("<=", maxAreaLevel).mixin(styleMixin(filterStyles.accessory)),
     ),
   )
 }

@@ -1,29 +1,27 @@
 import { type BuildProfile, type BuildSpecificOptions } from "../shared"
 
 /* Set your preferred armour types and shield progression here.
-`preferredArmourTypes` is always literal.
-For example, `["armour", "evasion"]` covers only `"armour"` and `"evasion"`,
-and `["armour-evasion"]` covers only `"armour-evasion"`.
+`preferredArmourTypes` is always literal. For example, `["armour", "evasion"]`
+only covers `armour` and `evasion`, while `["armour-evasion"]` only covers
+`armour-evasion`.
 
-`preferredArmourTypes` is also used as the default source for generic 4-link rules,
-so for most builds you do not need to repeat those in `links.genericFourLinks`.
-Only set `links.genericFourLinks` if you want to override that default.
+`preferredArmourTypes` also feeds `links.genericFourLinks` by default, so you
+only need to set `links.genericFourLinks` if you want a different generic 4-link mix.
 
-`preferredWeaponItemClasses` is reused by the rare, magic and normal item sections.
-Only set `rareItems.weaponItemClasses`, `magicItems.weaponItemClasses`, or
-`normalItems.weaponItemClasses` if you want to override that shared default.
+`preferredWeaponItemClasses` is reused by the rare, normal, and early socket sections.
+Only set `rareItems.weaponItemClasses`, `normalItems.weaponItemClasses`, or
+`earlySockets.weaponItemClasses` if one of those sections should use a different list.
 
-`earlySockets.weaponItemClasses` also defaults to `preferredWeaponItemClasses`,
-so you only need to set it if the early socket section should use a different list.
-
-`shieldProgression` controls shield handling for:
-- `RGG` shield 3-link rule
+`shieldProgression` controls:
+- the shield `RGG` 3-link rule
 - early shield link/base highlights
+- early socket shield handling
+- socket-base shield handling when set to `full`
 - preferred rare shield highlighting
-- `"none"`: never
-- `"early"`: early only, default max area level 12
-- `"full"`: all leveling long
-You can also use `{ mode: "early", maxAreaLevel: 10 }` if you want to override the default early cutoff. */
+- `none`: never
+- `early`: early only, max area level 12 (default value)
+- `full`: all leveling long
+You can also use `{ mode: "early", maxAreaLevel: 10 }` to override the default early cutoff. */
 
 export const buildProfile = {
   preferredArmourTypes: ["armour", "evasion", "armour-evasion"] as const,
@@ -37,6 +35,7 @@ export const buildSpecificOptions = {
     // twoLinkMaxAreaLevel: 9,
     twoLinkPatterns: [
       // Early 2-links you want to see on armour pieces.
+      // Use the canonical order shown by autocomplete. Socket order does not matter in-game.
       "RG",
       "GG",
       // You can also set a custom level cap per pattern.
@@ -61,7 +60,7 @@ export const buildSpecificOptions = {
       // { pattern: "RRRB", maxAreaLevel: 45 },
     ],
     // Set to false if you only want to see the explicit 4-link patterns above.
-    // genericFourLinksEnabled: false,
+    genericFourLinksEnabled: true,
     // Optional override if you want different generic 4-links than `preferredArmourTypes`.
     // genericFourLinks: ["armour", "armour-evasion", "evasion"],
   },
@@ -69,16 +68,23 @@ export const buildSpecificOptions = {
     // Early 3-socket armour bases that already contain a good 2-link for your build.
     desiredThreeSocketGroups: ["RG", "GG"],
   },
+  jewellery: {
+    // Select which amulets are visible. Leave unset to show all three.
+    amulets: ["Amber", "Lapis"],
+  },
   rareItems: {
+    // Optional override for how long the rare-item section stays visible.
+    // maxAreaLevel: 45,
     // Optional override if your rare-item section should use different weapon classes.
     // weaponItemClasses: ["Two Hand Axes", "Two Hand Maces"],
   },
   magicItems: {
-    // Optional override if your magic-item section should use different weapon classes.
-    // weaponItemClasses: ["Two Hand Axes", "Two Hand Maces"],
-    // weaponBaseTypes: ["Stone Axe", "Driftwood Maul"],
+    // Optional override for how long the magic-item section stays visible.
+    // maxAreaLevel: 9,
   },
   normalItems: {
+    // Optional override for how long the normal-item section stays visible.
+    // maxAreaLevel: 4,
     // Optional override if your normal-item section should use different weapon classes.
     // weaponItemClasses: ["Two Hand Axes", "Two Hand Maces"],
     // weaponBaseTypes: ["Stone Axe", "Driftwood Maul"],

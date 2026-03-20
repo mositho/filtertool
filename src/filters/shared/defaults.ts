@@ -7,6 +7,7 @@ export const filterDefaults = {
     partOneMaxAreaLevel: GLOBAL_PART_ONE_MAX_AREA_LEVEL,
   },
   shieldProgression: {
+    mode: "early",
     earlyMaxAreaLevel: GLOBAL_EARLY_MAX_AREA_LEVEL,
   },
   links: {
@@ -19,16 +20,31 @@ export const filterDefaults = {
     desiredThreeSocketGroups: ["RG"],
     desiredThreeSocketMaxAreaLevel: 20,
   },
-  rareItems: {
-    maxAreaLevel: GLOBAL_PART_ONE_MAX_AREA_LEVEL,
-    earlyBootMaxAreaLevel: 24,
-  },
   // These do not affect the rare jewellery rules
   jewellery: {
     basicRingMaxAreaLevel: 16,
     elementalRingMaxAreaLevel: 24,
     beltMaxAreaLevel: 24,
     amuletMaxAreaLevel: 24,
+    amulets: ["Amber", "Jade", "Lapis"],
+  },
+  early: {
+    earlyMaxAreaLevel: GLOBAL_EARLY_MAX_AREA_LEVEL,
+    twoSocketMaxAreaLevel: 7,
+    threeSocketMaxAreaLevel: GLOBAL_EARLY_MAX_AREA_LEVEL,
+    momentumMaxAreaLevel: 20,
+    earlyBootsMaxAreaLevel: 24,
+    includeMomentumColors: true,
+    showRustic: true,
+  },
+  rareItems: {
+    maxAreaLevel: GLOBAL_PART_ONE_MAX_AREA_LEVEL,
+  },
+  magicItems: {
+    maxAreaLevel: 9,
+  },
+  normalItems: {
+    maxAreaLevel: 4,
   },
   chromaticItems: {
     smallMaxAreaLevel: 99,
@@ -36,15 +52,5 @@ export const filterDefaults = {
   },
   tinctures: {
     baseTypes: ["Prismatic Tincture"],
-  },
-  early: {
-    earlyMaxAreaLevel: GLOBAL_EARLY_MAX_AREA_LEVEL,
-    twoSocketMaxAreaLevel: 7,
-    threeSocketMaxAreaLevel: GLOBAL_EARLY_MAX_AREA_LEVEL,
-    normalItemMaxAreaLevel: 4,
-    magicItemMaxAreaLevel: 9,
-    momentumMaxAreaLevel: 20,
-    includeMomentumColors: true,
-    showRustic: true,
   },
 } as const

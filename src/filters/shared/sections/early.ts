@@ -30,7 +30,7 @@ export const earlySockets = ({
   weaponItemClasses = preferredWeaponItemClasses,
   weaponBaseTypes = [],
 }: EarlySocketsConfig & Partial<BuildProfile> = {}) => {
-  const itemClasses = [...SOCKETABLE_CLASSES, ...weaponItemClasses]
+  const itemClasses = [...ARMOUR_CLASSES, ...weaponItemClasses]
   const twoSocketMaxAreaLevel = filterDefaults.early.twoSocketMaxAreaLevel
   const threeSocketMaxAreaLevel = filterDefaults.early.threeSocketMaxAreaLevel
 
@@ -72,7 +72,7 @@ export const early = ({
   momentumMaxAreaLevel = filterDefaults.early.momentumMaxAreaLevel,
   shieldProgression,
 }: EarlyConfig & Partial<BuildProfile>) => {
-  const earlyBootMaxAreaLevel = filterDefaults.rareItems.earlyBootMaxAreaLevel
+  const earlyBootsMaxAreaLevel = filterDefaults.early.earlyBootsMaxAreaLevel
   const shieldConfig = normalizeShieldProgressionConfig(shieldProgression)
   const defaultMomentumItemClasses = shieldConfig.enabled ? SOCKETABLE_CLASSES : ARMOUR_CLASSES
   const momentumItemClasses = momentumColors?.itemClasses ?? defaultMomentumItemClasses
@@ -101,33 +101,26 @@ export const early = ({
       ...weaponHighlights.flatMap(buildWeaponHighlightRules),
       rule()
         .itemClass("Boots")
-        .areaLevel("<=", earlyBootMaxAreaLevel)
+        .areaLevel("<=", earlyBootsMaxAreaLevel)
         .rarity("==", "Rare")
         .mixin(styleMixin(filterStyles.rareArmour))
         .customSound(soundFile("rare_boots.mp3")),
       shieldConfig.enabled &&
-        (() => {
-          const builtRule = rule().itemClass("Shields").socketGroup(">=", "RG").mixin(styleMixin(filterStyles.earlyShieldLink))
-          builtRule.areaLevel("<=", earlyMaxAreaLevel)
-          return builtRule
-        })(),
+        rule()
+          .itemClass("Shields")
+          .socketGroup(">=", "RG")
+          .areaLevel("<=", earlyMaxAreaLevel)
+          .mixin(styleMixin(filterStyles.earlyShieldLink)),
       shieldConfig.enabled &&
-        (() => {
-          const builtRule = rule().itemClass("Shields").baseES("==", 0).mixin(styleMixin(filterStyles.earlyShieldBase))
-          builtRule.areaLevel("<=", earlyMaxAreaLevel)
-          return builtRule
-        })(),
+        rule().itemClass("Shields").baseES("==", 0).areaLevel("<=", earlyMaxAreaLevel).mixin(styleMixin(filterStyles.earlyShieldBase)),
       showRustic &&
-        (() => {
-          const builtRule = rule()
-            .baseType("Rustic")
-            .itemClass("Belts")
-            .areaLevel("<=", earlyMaxAreaLevel)
-            .icon("White", "Pentagon")
-            .mixin(styleMixin(filterStyles.rareAccessory))
-            .customSound(soundFile("rustic.mp3"))
-          return builtRule
-        })(),
+        rule()
+          .baseType("Rustic")
+          .itemClass("Belts")
+          .areaLevel("<=", earlyMaxAreaLevel)
+          .icon("White", "Pentagon")
+          .mixin(styleMixin(filterStyles.rareAccessory))
+          .customSound(soundFile("rustic.mp3")),
       ...(includeMomentumColors
         ? [
             momentumItemClasses.length > 0 && buildMomentumRule().itemClass(...momentumItemClasses),

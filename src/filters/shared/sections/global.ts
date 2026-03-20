@@ -35,12 +35,12 @@ export const divinationCards = () =>
         .icon("Green", "Circle")
         .mixin(styleMixin(filterStyles.divinationCard))
         .sound(2),
-      rule().itemClass("Divination Cards").mixin(styleMixin(filterStyles.divinationCard)),
       rule()
         .baseType(...DIV_CARD_HIDE_LIST)
         .itemClass("Divination Cards")
         .mixin(styleMixin(filterStyles.divinationCard))
         .hide(),
+      rule().itemClass("Divination Cards").mixin(styleMixin(filterStyles.divinationCard)),
     ),
   )
 
