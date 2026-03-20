@@ -1,1 +1,10 @@
-export type DelveStackableSocketableCurrency = "Primitive Alchemical Resonator" | "Potent Alchemical Resonator" | "Powerful Alchemical Resonator" | "Prime Alchemical Resonator" | "Primitive Chaotic Resonator" | "Potent Chaotic Resonator" | "Powerful Chaotic Resonator" | "Prime Chaotic Resonator" | (string & {})
+export type DelveStackableSocketableCurrency =
+  | "Primitive Alchemical Resonator"
+  | "Potent Alchemical Resonator"
+  | "Powerful Alchemical Resonator"
+  | "Prime Alchemical Resonator"
+  | "Primitive Chaotic Resonator"
+  | "Potent Chaotic Resonator"
+  | "Powerful Chaotic Resonator"
+  | "Prime Chaotic Resonator"
+  | (string & {})

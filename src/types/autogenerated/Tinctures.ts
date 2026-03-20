@@ -1,1 +1,12 @@
-export type Tinctures = "Prismatic Tincture" | "Rosethorn Tincture" | "Ironwood Tincture" | "Ashbark Tincture" | "Borealwood Tincture" | "Fulgurite Tincture" | "Poisonberry Tincture" | "Blood Sap Tincture" | "Oakbranch Tincture" | "Sporebloom Tincture" | (string & {})
+export type Tinctures =
+  | "Prismatic Tincture"
+  | "Rosethorn Tincture"
+  | "Ironwood Tincture"
+  | "Ashbark Tincture"
+  | "Borealwood Tincture"
+  | "Fulgurite Tincture"
+  | "Poisonberry Tincture"
+  | "Blood Sap Tincture"
+  | "Oakbranch Tincture"
+  | "Sporebloom Tincture"
+  | (string & {})

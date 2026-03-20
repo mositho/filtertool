@@ -29,9 +29,25 @@ FILTER_PATH="C:\Users\user\Documents\My Games\Path of Exile"
 
 For most standard filters, `config.ts` is the only file you need to touch. [`index.ts`](/src/filters/example/index.ts) usually only needs changes if you want a different section layout or custom logic.
 
-1. Extract the `poeft-sounds` zip file into your `FILTER_PATH` folder.
+1. Export your filter.
 
-This should create a `poeft-sounds/` folder next to your exported `.filter` file.
+```bash
+npm run export filtername
+```
+
+If your filter folder is `src/filters/yourfilter`, run:
+
+```bash
+npm run export yourfilter
+```
+
+This also generates and syncs the sound pack before exporting.
+
+## Sounds
+
+The repository stores its checked-in sound files in `sounds/`.
+
+By default, exported filters reference a `poeft-sounds/` folder next to your exported `.filter` file to avoid collisions, and the sound generation step copies the repo sounds there automatically.
 
 Example:
 
@@ -44,21 +60,23 @@ Path of Exile/
     ...
 ```
 
-6. Export your filter.
+If you want to use a different folder name, set `SOUNDS_FOLDER` in `.env`:
 
-```bash
-npm run export filtername
+```env
+FILTER_PATH="C:\Users\user\Documents\My Games\Path of Exile"
+SOUNDS_FOLDER="sounds"
 ```
 
-If your filter folder is `src/filters/yourfilter`, run:
+You can generate and sync the sound pack manually with:
 
 ```bash
-npm run export yourfilter
+npm run generate-sounds
 ```
 
 ## Notes
 
 - Most config fields have autocomplete for Path of Exile item classes, base types and link patterns
+- `SOUNDS_FOLDER` only controls the target sound folder used by exported filters and by sound-pack syncing
 - Custom filter folders under `src/filters/` are gitignored by default, while the shared example template stays tracked
 
 ---

@@ -1,1 +1,11 @@
-export type Blueprints = "Blueprint: Bunker" | "Blueprint: Smuggler's Den" | "Blueprint: Laboratory" | "Blueprint: Repository" | "Blueprint: Prohibited Library" | "Blueprint: Tunnels" | "Blueprint: Underbelly" | "Blueprint: Records Office" | "Blueprint: Mansion" | (string & {})
+export type Blueprints =
+  | "Blueprint: Bunker"
+  | "Blueprint: Smuggler's Den"
+  | "Blueprint: Laboratory"
+  | "Blueprint: Repository"
+  | "Blueprint: Prohibited Library"
+  | "Blueprint: Tunnels"
+  | "Blueprint: Underbelly"
+  | "Blueprint: Records Office"
+  | "Blueprint: Mansion"
+  | (string & {})

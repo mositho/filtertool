@@ -1,1 +1,8 @@
-export type HybridFlasks = "Small Hybrid Flask" | "Medium Hybrid Flask" | "Large Hybrid Flask" | "Colossal Hybrid Flask" | "Sacred Hybrid Flask" | "Hallowed Hybrid Flask" | (string & {})
+export type HybridFlasks =
+  | "Small Hybrid Flask"
+  | "Medium Hybrid Flask"
+  | "Large Hybrid Flask"
+  | "Colossal Hybrid Flask"
+  | "Sacred Hybrid Flask"
+  | "Hallowed Hybrid Flask"
+  | (string & {})

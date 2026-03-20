@@ -1,1 +1,7 @@
-export type SanctumResearch = "Forbidden Tome" | "Sanctum Archives Research" | "Sanctum Vaults Research" | "Sanctum Cathedral Research" | "Sanctum Necropolis Research" | (string & {})
+export type SanctumResearch =
+  | "Forbidden Tome"
+  | "Sanctum Archives Research"
+  | "Sanctum Vaults Research"
+  | "Sanctum Cathedral Research"
+  | "Sanctum Necropolis Research"
+  | (string & {})

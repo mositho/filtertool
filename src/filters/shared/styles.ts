@@ -1,8 +1,5 @@
 import type { Color, Mixin, Shape, StyleData } from "../../types"
-
-export const SOUND_FOLDER = "poeft-sounds/"
-
-export const soundFile = (file: string) => `${SOUND_FOLDER}${file}`
+export { getSoundPackFolder, soundFile } from "../../sounds/paths"
 
 // prettier-ignore
 export const filterStyles = {

@@ -1,1 +1,17 @@
-export type Quivers = "Serrated Arrow Quiver" | "Two-Point Arrow Quiver" | "Sharktooth Arrow Quiver" | "Blunt Arrow Quiver" | "Fire Arrow Quiver" | "Broadhead Arrow Quiver" | "Penetrating Arrow Quiver" | "Spike-Point Arrow Quiver" | "Ornate Quiver" | "Artillery Quiver" | "Feathered Arrow Quiver" | "Blazing Arrow Quiver" | "Vile Arrow Quiver" | "Heavy Arrow Quiver" | "Primal Arrow Quiver" | (string & {})
+export type Quivers =
+  | "Serrated Arrow Quiver"
+  | "Two-Point Arrow Quiver"
+  | "Sharktooth Arrow Quiver"
+  | "Blunt Arrow Quiver"
+  | "Fire Arrow Quiver"
+  | "Broadhead Arrow Quiver"
+  | "Penetrating Arrow Quiver"
+  | "Spike-Point Arrow Quiver"
+  | "Ornate Quiver"
+  | "Artillery Quiver"
+  | "Feathered Arrow Quiver"
+  | "Blazing Arrow Quiver"
+  | "Vile Arrow Quiver"
+  | "Heavy Arrow Quiver"
+  | "Primal Arrow Quiver"
+  | (string & {})

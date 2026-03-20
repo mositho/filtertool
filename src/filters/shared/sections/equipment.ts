@@ -139,7 +139,8 @@ export const socketBases = ({
   shieldProgression,
 }: SocketBasesConfig & BuildProfile & { itemClasses?: typeof SOCKETABLE_CLASSES }) => {
   const shieldConfig = normalizeShieldProgressionConfig(shieldProgression)
-  const effectiveItemClasses = itemClasses ?? (shieldConfig.enabled && shieldConfig.maxAreaLevel === undefined ? SOCKETABLE_CLASSES : ARMOUR_CLASSES)
+  const effectiveItemClasses =
+    itemClasses ?? (shieldConfig.enabled && shieldConfig.maxAreaLevel === undefined ? SOCKETABLE_CLASSES : ARMOUR_CLASSES)
 
   return withHeading(
     "Socket Bases",

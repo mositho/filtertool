@@ -1,25 +1,26 @@
-import path from 'path'
-import { createTTSFile } from './scripts/createTTS'
-import { Condition, Rule, RuleContent, StyleData } from './types'
+import path from "path"
+import { createTTSFile } from "./scripts/createTTS"
+import { getSoundPackFolder } from "./sounds/paths"
+import { Condition, Rule, RuleContent, StyleData } from "./types"
 
 const hexToRgb = (hex: `#${string}`): [number, number, number] => {
   const value = hex.slice(1)
-  const normalized = value.length === 3 ? value.split('').map((char) => `${char}${char}`).join('') : value
+  const normalized =
+    value.length === 3
+      ? value
+          .split("")
+          .map((char) => `${char}${char}`)
+          .join("")
+      : value
 
-  return [
-    parseInt(normalized.slice(0, 2), 16),
-    parseInt(normalized.slice(2, 4), 16),
-    parseInt(normalized.slice(4, 6), 16),
-  ]
+  return [parseInt(normalized.slice(0, 2), 16), parseInt(normalized.slice(2, 4), 16), parseInt(normalized.slice(4, 6), 16)]
 }
 
-const filterPath = process.env.FILTER_PATH || ''
-const soundsFolder = process.env.SOUNDS_FOLDER || ''
+const filterPath = process.env.FILTER_PATH || ""
 
 const getSoundPath = (file: string) => {
-  const cleanedFilterPath = filterPath.replace(/[\\/]+$/, '')
-  const cleanedSoundsFolder = soundsFolder.replace(/^[\\/]+|[\\/]+$/g, '')
-  const folder = [cleanedFilterPath, cleanedSoundsFolder].filter(Boolean).join(path.sep)
+  const cleanedFilterPath = filterPath.replace(/[\\/]+$/, "")
+  const folder = [cleanedFilterPath, getSoundPackFolder()].filter(Boolean).join(path.sep)
   return folder ? path.join(folder, file) : file
 }
 
@@ -56,9 +57,9 @@ const content = (rules: Rule[]): RuleContent => {
     // will compile all contained rules
     compile() {
       if (this.rules.length > 0) {
-        return this.rules.map((r) => r.compile()).join('\n\n')
+        return this.rules.map((r) => r.compile()).join("\n\n")
       } else {
-        return this.map.join('\n')
+        return this.map.join("\n")
       }
     },
   }
@@ -69,7 +70,7 @@ const content = (rules: Rule[]): RuleContent => {
  */
 const rule = (...rules: Rule[]): Rule => {
   return {
-    type: 'show',
+    type: "show",
     disabled: false,
     content: content(rules),
 
@@ -84,55 +85,55 @@ const rule = (...rules: Rule[]): Rule => {
 
     // Change rule type to hide and remove effects
     hide() {
-      this.type = 'hide'
-      this.content.clear('MinimapIcon')
-      this.content.clear('PlayAlertSound')
-      this.content.clear('PlayAlertSoundPositional')
-      this.content.clear('CustomAlertSound')
-      this.content.clear('CustomAlertSoundOptional')
-      this.content.clear('PlayEffect')
+      this.type = "hide"
+      this.content.clear("MinimapIcon")
+      this.content.clear("PlayAlertSound")
+      this.content.clear("PlayAlertSoundPositional")
+      this.content.clear("CustomAlertSound")
+      this.content.clear("CustomAlertSoundOptional")
+      this.content.clear("PlayEffect")
       return this
     },
 
     baseType(...baseType) {
-      this.content.set('BaseType', baseType.map((item) => `"${item}"`).join(' '))
+      this.content.set("BaseType", baseType.map((item) => `"${item}"`).join(" "))
       return this
     },
 
     baseTypeExact(...baseType) {
-      this.content.set('BaseType', '== ' + baseType.map((item) => `"${item}"`).join(' '))
+      this.content.set("BaseType", "== " + baseType.map((item) => `"${item}"`).join(" "))
       return this
     },
 
     itemClass(...itemClass) {
-      this.content.set('Class', itemClass.map((item) => `"${item}"`).join(' '))
+      this.content.set("Class", itemClass.map((item) => `"${item}"`).join(" "))
       return this
     },
 
     itemClassExact(...itemClass) {
-      this.content.set('Class', '== ' + itemClass.map((item) => `"${item}"`).join(' '))
+      this.content.set("Class", "== " + itemClass.map((item) => `"${item}"`).join(" "))
       return this
     },
 
     influence(...influences) {
-      this.content.set('HasInfluence', influences.map((influence) => `"${influence}"`).join(' '))
+      this.content.set("HasInfluence", influences.map((influence) => `"${influence}"`).join(" "))
       return this
     },
 
     effect(color, temp = false) {
-      this.content.set('PlayEffect', `${color} ${temp ? 'Temp' : ''}`)
+      this.content.set("PlayEffect", `${color} ${temp ? "Temp" : ""}`)
       return this
     },
 
     // Style actions
 
     size(size) {
-      this.content.set('SetFontSize', `${size}`)
+      this.content.set("SetFontSize", `${size}`)
       return this
     },
 
     sound(id, volume = 300, positional = false) {
-      this.content.set(`PlayAlertSound${positional ? 'Positional' : ''}`, `${id} ${volume}`)
+      this.content.set(`PlayAlertSound${positional ? "Positional" : ""}`, `${id} ${volume}`)
       return this
     },
 
@@ -141,32 +142,32 @@ const rule = (...rules: Rule[]): Rule => {
       if (generate) {
         createTTSFile(soundPath)
       }
-      this.content.set('CustomAlertSound', `"${soundPath}" ${volume}`)
+      this.content.set("CustomAlertSound", `"${soundPath}" ${volume}`)
       return this
     },
 
     customSound(path, volume = 300) {
-      this.content.set('CustomAlertSound', `"${path}" ${volume}`)
+      this.content.set("CustomAlertSound", `"${path}" ${volume}`)
       return this
     },
 
     icon(color, shape, size = 2) {
-      this.content.set('MinimapIcon', `${size} ${color} ${shape}`)
+      this.content.set("MinimapIcon", `${size} ${color} ${shape}`)
       return this
     },
 
     text(r, g, b, a) {
-      this.content.set('SetTextColor', `${r} ${g} ${b} ${a !== undefined ? a : ''}`)
+      this.content.set("SetTextColor", `${r} ${g} ${b} ${a !== undefined ? a : ""}`)
       return this
     },
 
     border(r, g, b, a) {
-      this.content.set('SetBorderColor', `${r} ${g} ${b} ${a !== undefined ? a : ''}`)
+      this.content.set("SetBorderColor", `${r} ${g} ${b} ${a !== undefined ? a : ""}`)
       return this
     },
 
     background(r, g, b, a) {
-      this.content.set('SetBackgroundColor', `${r} ${g} ${b} ${a !== undefined ? a : ''}`)
+      this.content.set("SetBackgroundColor", `${r} ${g} ${b} ${a !== undefined ? a : ""}`)
       return this
     },
 
@@ -193,102 +194,102 @@ const rule = (...rules: Rule[]): Rule => {
     // Operator conditions
 
     hasExplicitMod(operator, ...mods) {
-      this.content.set('HasExplicitMod', `${operator} ${mods.map((mod) => `"${mod}"`).join(' ')}`)
+      this.content.set("HasExplicitMod", `${operator} ${mods.map((mod) => `"${mod}"`).join(" ")}`)
       return this
     },
 
     rarity(operator, ...rarity) {
-      this.content.set('Rarity', `${operator} ${rarity.join(' ')}`)
+      this.content.set("Rarity", `${operator} ${rarity.join(" ")}`)
       return this
     },
 
     socketGroup(operator, ...socketGroup) {
-      this.content.set('SocketGroup', `${operator} ${socketGroup.map((s) => `"${s}"`).join(' ')}`)
+      this.content.set("SocketGroup", `${operator} ${socketGroup.map((s) => `"${s}"`).join(" ")}`)
       return this
     },
 
     hasEnchant(...enchants) {
-      this.content.set('HasEnchantment', enchants.map((e) => `"${e}"`).join(' '))
+      this.content.set("HasEnchantment", enchants.map((e) => `"${e}"`).join(" "))
       return this
     },
 
     sockets(operator, ...sockets) {
-      this.content.set('Sockets', `${operator} ${sockets.join(' ')}`)
+      this.content.set("Sockets", `${operator} ${sockets.join(" ")}`)
       return this
     },
 
     linkedSockets(operator, linkedSockets) {
-      this.content.set('LinkedSockets', `${operator} ${linkedSockets}`)
+      this.content.set("LinkedSockets", `${operator} ${linkedSockets}`)
       return this
     },
 
     stackSize(operator, stackSize) {
-      this.content.set('StackSize', `${operator} ${stackSize}`)
+      this.content.set("StackSize", `${operator} ${stackSize}`)
       return this
     },
 
     itemLevel(operator, itemLevel) {
-      this.content.set('ItemLevel', `${operator} ${itemLevel}`)
+      this.content.set("ItemLevel", `${operator} ${itemLevel}`)
       return this
     },
 
     areaLevel(operator, areaLevel) {
-      this.content.set('AreaLevel', `${operator} ${areaLevel}`)
+      this.content.set("AreaLevel", `${operator} ${areaLevel}`)
       return this
     },
 
     dropLevel(operator, dropLevel) {
-      this.content.set('DropLevel', `${operator} ${dropLevel}`)
+      this.content.set("DropLevel", `${operator} ${dropLevel}`)
       return this
     },
 
     width(operator, width) {
-      this.content.set('Width', `${operator} ${width}`)
+      this.content.set("Width", `${operator} ${width}`)
       return this
     },
 
     height(operator, height) {
-      this.content.set('Height', `${operator} ${height}`)
+      this.content.set("Height", `${operator} ${height}`)
       return this
     },
 
     baseArmour(operator, baseArmour) {
-      this.content.set('BaseArmour', `${operator} ${baseArmour}`)
+      this.content.set("BaseArmour", `${operator} ${baseArmour}`)
       return this
     },
 
     baseEvasion(operator, baseEvasion) {
-      this.content.set('BaseEvasion', `${operator} ${baseEvasion}`)
+      this.content.set("BaseEvasion", `${operator} ${baseEvasion}`)
       return this
     },
 
     baseES(operator, baseES) {
-      this.content.set('BaseEnergyShield', `${operator} ${baseES}`)
+      this.content.set("BaseEnergyShield", `${operator} ${baseES}`)
       return this
     },
 
     baseWard(operator, baseWard) {
-      this.content.set('BaseWard', `${operator} ${baseWard}`)
+      this.content.set("BaseWard", `${operator} ${baseWard}`)
       return this
     },
 
     baseDefencePercentile(operator, baseDefencePercentile) {
-      this.content.set('BaseDefencePercentile', `${operator} ${baseDefencePercentile}`)
+      this.content.set("BaseDefencePercentile", `${operator} ${baseDefencePercentile}`)
       return this
     },
 
     gemLevel(operator, gemLevel) {
-      this.content.set('GemLevel', `${operator} ${gemLevel}`)
+      this.content.set("GemLevel", `${operator} ${gemLevel}`)
       return this
     },
 
     mapTier(operator, mapTier) {
-      this.content.set('MapTier', `${operator} ${mapTier}`)
+      this.content.set("MapTier", `${operator} ${mapTier}`)
       return this
     },
 
     quality(operator, quality) {
-      this.content.set('Quality', `${operator} ${quality}`)
+      this.content.set("Quality", `${operator} ${quality}`)
       return this
     },
 
@@ -308,72 +309,72 @@ const rule = (...rules: Rule[]): Rule => {
     },
 
     transGem(transGem = true) {
-      this.content.set('TransfiguredGem', `${transGem}`)
+      this.content.set("TransfiguredGem", `${transGem}`)
       return this
     },
 
     anyEnchant(anyEnchant = true) {
-      this.content.set('AnyEnchantment', `${anyEnchant}`)
+      this.content.set("AnyEnchantment", `${anyEnchant}`)
       return this
     },
 
     blightMap(blightMap = true) {
-      this.content.set('BlightedMap', `${blightMap}`)
+      this.content.set("BlightedMap", `${blightMap}`)
       return this
     },
 
     blightRavagedMap(blightRavagedMap = true) {
-      this.content.set('UberBlightedMap', `${blightRavagedMap}`)
+      this.content.set("UberBlightedMap", `${blightRavagedMap}`)
       return this
     },
 
     corrupted(corrupted = true) {
-      this.content.set('Corrupted', `${corrupted}`)
+      this.content.set("Corrupted", `${corrupted}`)
       return this
     },
 
     elder(elder = true) {
-      this.content.set('ElderItem', `${elder}`)
+      this.content.set("ElderItem", `${elder}`)
       return this
     },
 
     elderMap(elderMap = true) {
-      this.content.set('ElderMap', `${elderMap}`)
+      this.content.set("ElderMap", `${elderMap}`)
       return this
     },
 
     synthItem(synthItem = true) {
-      this.content.set('SynthesisedItem', `${synthItem}`)
+      this.content.set("SynthesisedItem", `${synthItem}`)
       return this
     },
 
     shapedMap(shapedMap = true) {
-      this.content.set('ShapedMap', `${shapedMap}`)
+      this.content.set("ShapedMap", `${shapedMap}`)
       return this
     },
 
     fractured(fractured = true) {
-      this.content.set('FracturedItem', `${fractured}`)
+      this.content.set("FracturedItem", `${fractured}`)
       return this
     },
 
     identified(identified = true) {
-      this.content.set('Identified', `${identified}`)
+      this.content.set("Identified", `${identified}`)
       return this
     },
 
     mirrored(mirrored = true) {
-      this.content.set('Mirrored', `${mirrored}`)
+      this.content.set("Mirrored", `${mirrored}`)
       return this
     },
 
     hasImplicitMod(hasImplicitMod = true) {
-      this.content.set('HasImplicitMod', `${hasImplicitMod}`)
+      this.content.set("HasImplicitMod", `${hasImplicitMod}`)
       return this
     },
 
     replica(replica = true) {
-      this.content.set('Replica', `${replica}`)
+      this.content.set("Replica", `${replica}`)
       return this
     },
 
@@ -386,12 +387,12 @@ const rule = (...rules: Rule[]): Rule => {
     // Compile the rule object to .filter syntax string.
     compile() {
       // If disabled dont compile to anything
-      if (this.disabled) return ''
+      if (this.disabled) return ""
 
       if (rules.length > 0) {
         return this.content.compile()
       } else {
-        return `${this.type === 'show' ? 'Show' : 'Hide'}\n${this.content.compile()}`
+        return `${this.type === "show" ? "Show" : "Hide"}\n${this.content.compile()}`
       }
     },
   }

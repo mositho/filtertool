@@ -1,1 +1,15 @@
-export type Belts = "Chain Belt" | "Rustic Sash" | "Heavy Belt" | "Leather Belt" | "Cloth Belt" | "Studded Belt" | "Vanguard Belt" | "Crystal Belt" | "Stygian Vise" | "Micro-Distillery Belt" | "Mechanical Belt" | "Mechalarm Belt" | "Golden Obi" | (string & {})
+export type Belts =
+  | "Chain Belt"
+  | "Rustic Sash"
+  | "Heavy Belt"
+  | "Leather Belt"
+  | "Cloth Belt"
+  | "Studded Belt"
+  | "Vanguard Belt"
+  | "Crystal Belt"
+  | "Stygian Vise"
+  | "Micro-Distillery Belt"
+  | "Mechanical Belt"
+  | "Mechalarm Belt"
+  | "Golden Obi"
+  | (string & {})

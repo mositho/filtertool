@@ -1,1 +1,14 @@
-export type ManaFlasks = "Small Mana Flask" | "Medium Mana Flask" | "Large Mana Flask" | "Greater Mana Flask" | "Grand Mana Flask" | "Giant Mana Flask" | "Colossal Mana Flask" | "Sacred Mana Flask" | "Hallowed Mana Flask" | "Sanctified Mana Flask" | "Divine Mana Flask" | "Eternal Mana Flask" | (string & {})
+export type ManaFlasks =
+  | "Small Mana Flask"
+  | "Medium Mana Flask"
+  | "Large Mana Flask"
+  | "Greater Mana Flask"
+  | "Grand Mana Flask"
+  | "Giant Mana Flask"
+  | "Colossal Mana Flask"
+  | "Sacred Mana Flask"
+  | "Hallowed Mana Flask"
+  | "Sanctified Mana Flask"
+  | "Divine Mana Flask"
+  | "Eternal Mana Flask"
+  | (string & {})

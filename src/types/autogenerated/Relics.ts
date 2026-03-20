@@ -1,1 +1,9 @@
-export type Relics = "Urn Relic" | "Tome Relic" | "Coffer Relic" | "Censer Relic" | "Papyrus Relic" | "Candlestick Relic" | "Processional Relic" | (string & {})
+export type Relics =
+  | "Urn Relic"
+  | "Tome Relic"
+  | "Coffer Relic"
+  | "Censer Relic"
+  | "Papyrus Relic"
+  | "Candlestick Relic"
+  | "Processional Relic"
+  | (string & {})

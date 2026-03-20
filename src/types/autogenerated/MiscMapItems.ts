@@ -1,1 +1,11 @@
-export type MiscMapItems = "Chronicle of Atzoatl" | "Inscribed Ultimatum" | "Writhing Invitation" | "Screaming Invitation" | "Polaric Invitation" | "Incandescent Invitation" | "Mirrored Tablet" | "Primeval Remnant" | "Primordial Remnant" | (string & {})
+export type MiscMapItems =
+  | "Chronicle of Atzoatl"
+  | "Inscribed Ultimatum"
+  | "Writhing Invitation"
+  | "Screaming Invitation"
+  | "Polaric Invitation"
+  | "Incandescent Invitation"
+  | "Mirrored Tablet"
+  | "Primeval Remnant"
+  | "Primordial Remnant"
+  | (string & {})

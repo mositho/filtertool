@@ -11,7 +11,7 @@ import {
   Operator,
   Rarity,
   Shape,
-} from '.'
+} from "."
 
 export type HexColor = `#${string}`
 
@@ -31,7 +31,7 @@ export type RuleContent = {
 }
 
 export type Rule = {
-  type: 'show' | 'hide'
+  type: "show" | "hide"
   disabled: boolean
   content: RuleContent
   add: (...content: string[]) => Rule

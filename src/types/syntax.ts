@@ -1,90 +1,90 @@
-import { Rule } from '.'
+import { Rule } from "."
 
-export type Color = 'Red' | 'Green' | 'Blue' | 'Brown' | 'White' | 'Yellow' | 'Cyan' | 'Grey' | 'Orange' | 'Pink' | 'Purple'
+export type Color = "Red" | "Green" | "Blue" | "Brown" | "White" | "Yellow" | "Cyan" | "Grey" | "Orange" | "Pink" | "Purple"
 
 export type Shape =
-  | 'Circle'
-  | 'Diamond'
-  | 'Hexagon'
-  | 'Square'
-  | 'Star'
-  | 'Triangle'
-  | 'Cross'
-  | 'Moon'
-  | 'Raindrop'
-  | 'Kite'
-  | 'Pentagon'
-  | 'UpsideDownHouse'
+  | "Circle"
+  | "Diamond"
+  | "Hexagon"
+  | "Square"
+  | "Star"
+  | "Triangle"
+  | "Cross"
+  | "Moon"
+  | "Raindrop"
+  | "Kite"
+  | "Pentagon"
+  | "UpsideDownHouse"
 
 export type Condition =
-  | 'TransfiguredGem'
-  | 'AnyEnchantment'
-  | 'ArchnemesisMod'
-  | 'AreaLevel'
-  | 'BaseArmour'
-  | 'BaseDefencePercentile'
-  | 'BaseEnergyShield'
-  | 'BaseEvasion'
-  | 'BaseType'
-  | 'BaseWard'
-  | 'BlightedMap'
-  | 'Class'
-  | 'Corrupted'
-  | 'CorruptedMods'
-  | 'DropLevel'
-  | 'ElderItem'
-  | 'ElderMap'
-  | 'EnchantmentPassiveNode'
-  | 'EnchantmentPassiveNum'
-  | 'FracturedItem'
-  | 'GemLevel'
-  | 'GemQualityType'
-  | 'HasCruciblePassiveTree'
-  | 'HasEaterOfWorldsImplicit'
-  | 'HasEnchantment'
-  | 'HasExplicitMod'
-  | 'HasImplicitMod'
-  | 'HasInfluence'
-  | 'HasSearingExarchImplicit'
-  | 'Height'
-  | 'Identified'
-  | 'ItemLevel'
-  | 'LinkedSockets'
-  | 'MapTier'
-  | 'Mirrored'
-  | 'Quality'
-  | 'Rarity'
-  | 'Replica'
-  | 'Scourged'
-  | 'ShapedMap'
-  | 'ShaperItem'
-  | 'SocketGroup'
-  | 'Sockets'
-  | 'StackSize'
-  | 'SynthesisedItem'
-  | 'UberBlightedMap'
-  | 'Width'
-  | 'PlayAlertSound'
-  | 'PlayAlertSoundPositional'
-  | 'CustomAlertSound'
-  | 'CustomAlertSoundOptional'
-  | 'DisableDropSound'
-  | 'EnableDropSound'
-  | 'DisableDropSoundIfAlertSound'
-  | 'EnableDropSoundIfAlertSound'
-  | 'MinimapIcon'
-  | 'PlayEffect'
-  | 'SetBackgroundColor'
-  | 'SetBorderColor'
-  | 'SetFontSize'
-  | 'SetTextColor'
+  | "TransfiguredGem"
+  | "AnyEnchantment"
+  | "ArchnemesisMod"
+  | "AreaLevel"
+  | "BaseArmour"
+  | "BaseDefencePercentile"
+  | "BaseEnergyShield"
+  | "BaseEvasion"
+  | "BaseType"
+  | "BaseWard"
+  | "BlightedMap"
+  | "Class"
+  | "Corrupted"
+  | "CorruptedMods"
+  | "DropLevel"
+  | "ElderItem"
+  | "ElderMap"
+  | "EnchantmentPassiveNode"
+  | "EnchantmentPassiveNum"
+  | "FracturedItem"
+  | "GemLevel"
+  | "GemQualityType"
+  | "HasCruciblePassiveTree"
+  | "HasEaterOfWorldsImplicit"
+  | "HasEnchantment"
+  | "HasExplicitMod"
+  | "HasImplicitMod"
+  | "HasInfluence"
+  | "HasSearingExarchImplicit"
+  | "Height"
+  | "Identified"
+  | "ItemLevel"
+  | "LinkedSockets"
+  | "MapTier"
+  | "Mirrored"
+  | "Quality"
+  | "Rarity"
+  | "Replica"
+  | "Scourged"
+  | "ShapedMap"
+  | "ShaperItem"
+  | "SocketGroup"
+  | "Sockets"
+  | "StackSize"
+  | "SynthesisedItem"
+  | "UberBlightedMap"
+  | "Width"
+  | "PlayAlertSound"
+  | "PlayAlertSoundPositional"
+  | "CustomAlertSound"
+  | "CustomAlertSoundOptional"
+  | "DisableDropSound"
+  | "EnableDropSound"
+  | "DisableDropSoundIfAlertSound"
+  | "EnableDropSoundIfAlertSound"
+  | "MinimapIcon"
+  | "PlayEffect"
+  | "SetBackgroundColor"
+  | "SetBorderColor"
+  | "SetFontSize"
+  | "SetTextColor"
 
-export type Operator = '<' | '<=' | '>' | '>=' | '=' | '==' | '!='
+export type Operator = "<" | "<=" | ">" | ">=" | "=" | "==" | "!="
 
-export type ExtendedOperator = `${Operator}${number | ''}`
+export type ExtendedOperator = `${Operator}${number | ""}`
 
-export type Rarity = 'Normal' | 'Magic' | 'Rare' | 'Unique'
+export type Rarity = "Normal" | "Magic" | "Rare" | "Unique"
 
-export type Influence = 'Shaper' | 'Elder' | 'Crusader' | 'Hunter' | 'Redeemer' | 'Warlord' | 'None'
+export type Influence = "Shaper" | "Elder" | "Crusader" | "Hunter" | "Redeemer" | "Warlord" | "None"
 
 export type Mixin = (rule: Rule) => void

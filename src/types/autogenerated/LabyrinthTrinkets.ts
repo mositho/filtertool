@@ -1,1 +1,10 @@
-export type LabyrinthTrinkets = "Bane of the Loyal" | "Cogs of Disruption" | "Cube Of Absorption" | "Heart of the Gargoyle" | "Orb of Elemental Dispersion" | "Portal Shredder" | "Rod of Detonation" | "Sand of Eternity" | (string & {})
+export type LabyrinthTrinkets =
+  | "Bane of the Loyal"
+  | "Cogs of Disruption"
+  | "Cube Of Absorption"
+  | "Heart of the Gargoyle"
+  | "Orb of Elemental Dispersion"
+  | "Portal Shredder"
+  | "Rod of Detonation"
+  | "Sand of Eternity"
+  | (string & {})
