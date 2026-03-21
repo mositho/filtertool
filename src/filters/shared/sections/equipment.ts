@@ -134,6 +134,9 @@ export const sixSockets = () =>
     ),
   )
 
+export const uniques = () =>
+  withHeading("Uniques", compileRules(rule().rarity("==", "Unique").icon("Brown", "Star").mixin(styleMixin(filterStyles.unique)).sound(3)))
+
 export const highlightedEquipment = ({ highlights = [] }: HighlightedEquipmentConfig) =>
   withHeading("Highlighted Equipment", compileRules(...highlights.flatMap(buildHighlightedBaseTypeRules)))
 

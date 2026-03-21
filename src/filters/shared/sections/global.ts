@@ -3,9 +3,6 @@ import { filterStyles, styleMixin } from "../styles"
 import { DIV_CARD_HIDE_LIST } from "./div-cards"
 import { compileRules, REMAINING_EQUIPMENT_CLASSES, withHeading } from "./helpers"
 
-export const uniques = () =>
-  withHeading("Uniques", compileRules(rule().rarity("==", "Unique").icon("Brown", "Star").mixin(styleMixin(filterStyles.unique))))
-
 export const gems = () =>
   withHeading(
     "Gems",
