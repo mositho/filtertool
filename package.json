@@ -4,6 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "typecheck": "tsc --noEmit",
+    "check": "npm run typecheck && npm run format:check",
     "export": "ts-node ./src/scripts/export.ts",
     "export-all": "ts-node ./src/scripts/exportAll.ts",
     "format": "prettier --write .",
