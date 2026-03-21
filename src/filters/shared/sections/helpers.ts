@@ -169,6 +169,10 @@ export type LevelingAmuletBaseType = "Amber" | "Jade" | "Lapis"
 
 export type JewelleryConfig = {
   amulets?: readonly LevelingAmuletBaseType[]
+  basicRingMaxAreaLevel?: number
+  elementalRingMaxAreaLevel?: number
+  beltMaxAreaLevel?: number
+  amuletMaxAreaLevel?: number
 }
 
 export type WeaponHighlightConfig = {

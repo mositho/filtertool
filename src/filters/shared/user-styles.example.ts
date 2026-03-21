@@ -1,6 +1,7 @@
 import type { baseFilterStyles } from "./styles"
+import type { DeepPartial } from "./user-overrides"
 
-export const userFilterStyles: Partial<typeof baseFilterStyles> = {
+export const userFilterStyles: DeepPartial<typeof baseFilterStyles> = {
   // Example:
   // priorityA: {
   //   text: "#FFFFFF",
