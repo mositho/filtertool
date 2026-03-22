@@ -114,7 +114,7 @@ export type AnyTwoLinkPattern = `${SocketColor}${SocketColor}`
 export type AnyThreeLinkPattern = `${SocketColor}${SocketColor}${SocketColor}`
 export type AnyFourLinkPattern = `${SocketColor}${SocketColor}${SocketColor}${SocketColor}`
 export type TwoLinkPattern = "RR" | "RG" | "RB" | "GG" | "GB" | "BB"
-export type ThreeLinkPattern = "RRR" | "RRG" | "RRB" | "RGG" | "RGB" | "RBB" | "GGG" | "GGB" | "GBB" | "BBB"
+export type ThreeLinkPattern = "RRR" | "RRG" | "RRB" | "GGR" | "RGB" | "BBR" | "GGG" | "GGB" | "BBG" | "BBB"
 export type FourLinkPattern =
   | "RRRR"
   | "RRRG"
@@ -122,14 +122,14 @@ export type FourLinkPattern =
   | "RRGG"
   | "RRGB"
   | "RRBB"
-  | "RGGG"
-  | "RGGB"
-  | "RGBB"
-  | "RBBB"
+  | "GGGR"
+  | "GGRB"
+  | "BBRG"
+  | "BBBR"
   | "GGGG"
   | "GGGB"
   | "GGBB"
-  | "GBBB"
+  | "BBBG"
   | "BBBB"
 export type SocketPattern = TwoLinkPattern | ThreeLinkPattern | FourLinkPattern
 
@@ -181,12 +181,12 @@ const SOCKET_PATTERN_SOUND_PREFIXES = {
   RRR: "3r",
   RRG: "2r1g",
   RRB: "2r1b",
-  RGG: "2g1r",
+  GGR: "2g1r",
   RGB: "chrome",
-  RBB: "2b1r",
+  BBR: "2b1r",
   GGG: "3g",
   GGB: "2g1b",
-  GBB: "2b1g",
+  BBG: "2b1g",
   BBB: "3b",
   RRRR: "4r",
   RRRG: "3r1g",
@@ -194,14 +194,14 @@ const SOCKET_PATTERN_SOUND_PREFIXES = {
   RRGG: "2r2g",
   RRGB: "2r1g1b",
   RRBB: "2r2b",
-  RGGG: "3g1r",
-  RGGB: "2g1r1b",
-  RGBB: "2b1r1g",
-  RBBB: "3b1r",
+  GGGR: "3g1r",
+  GGRB: "2g1r1b",
+  BBRG: "2b1r1g",
+  BBBR: "3b1r",
   GGGG: "4g",
   GGGB: "3g1b",
   GGBB: "2g2b",
-  GBBB: "3b1g",
+  BBBG: "3b1g",
   BBBB: "4b",
 } as const satisfies Record<ThreeLinkPattern | FourLinkPattern, string>
 

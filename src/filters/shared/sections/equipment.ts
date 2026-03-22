@@ -54,7 +54,7 @@ export const links = ({
           linkedSockets: 3,
           pattern: "RGG",
           itemClasses: ["Shields"],
-          soundPrefix: getSocketPatternSoundPrefix("RGG"),
+          soundPrefix: getSocketPatternSoundPrefix("GGR"),
           iconColor: "Green",
           maxAreaLevel: shieldConfig.maxAreaLevel,
           style: styleMixin(filterStyles.selectedThreeLink),
