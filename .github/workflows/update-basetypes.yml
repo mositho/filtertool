@@ -1,0 +1,61 @@
+name: Update Base Types
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * 1"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-basetypes:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Update BaseTypes.csv from upstream
+        run: npm run update-basetypes
+
+      - name: Detect BaseTypes.csv changes
+        id: changes
+        run: |
+          if git diff --quiet -- src/assets/BaseTypes.csv; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Regenerate item types
+        if: steps.changes.outputs.changed == 'true'
+        run: npm run generate-types
+
+      - name: Typecheck
+        if: steps.changes.outputs.changed == 'true'
+        run: npm run typecheck
+
+      - name: Create pull request
+        if: steps.changes.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: chore/update-basetypes
+          commit-message: "chore: update BaseTypes.csv"
+          title: "chore: update BaseTypes.csv"
+          body: |
+            Updates `src/assets/BaseTypes.csv` from the upstream FilterBlade public assets repo.
+
+            This PR was created automatically by the scheduled workflow after downloading the latest upstream CSV and validating type generation.
+          add-paths: |
+            src/assets/BaseTypes.csv

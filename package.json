@@ -12,6 +12,7 @@
     "format:check": "prettier --check .",
     "preexport": "npm run generate-types && npm run generate-sounds",
     "preexport-all": "npm run generate-types && npm run generate-sounds",
+    "update-basetypes": "ts-node ./src/scripts/updateBaseTypes.ts",
     "generate-types": "ts-node ./src/scripts/generateTypes.ts",
     "generate-sounds": "ts-node ./src/scripts/generateSounds.ts"
   },

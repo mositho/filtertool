@@ -104,6 +104,8 @@ npm run generate-sounds
 - Most config fields have autocomplete for Path of Exile item classes, base types and link patterns
 - `soundFile("...")` also gets typed sound filename suggestions for literal filenames
 - Custom filter folders under `src/filters/` are gitignored by default
+- `src/assets/BaseTypes.csv` comes from the public FilterBlade assets repo and can be refreshed locally with `npm run update-base-types`
+- A GitHub Actions workflow at `.github/workflows/update-base-types.yml` checks upstream weekly and opens a PR when the CSV changes
 
 ---
 
