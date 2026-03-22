@@ -83,38 +83,6 @@ export const buildSpecificOptions: BuildSpecificOptions = {
     // Optional override if you want different generic 4-links than `preferredArmourTypes`.
     // genericFourLinks: ["armour", "armour-evasion", "evasion"],
   },
-  jewellery: {
-    // Select which amulets are visible. Doesn't affect rare amulets
-    amulets: ["Amber", "Lapis"],
-    // Optional override for leveling amulet cutoff.
-    // amuletMaxAreaLevel: 24,
-    // Optional override for the low-level iron/coral ring cutoff.
-    // basicRingMaxAreaLevel: 16,
-    // Optional override for the sapphire/ruby/topaz/two-stone ring cutoff.
-    // elementalRingMaxAreaLevel: 24,
-    // Optional override for leather/heavy belt cutoff.
-    // beltMaxAreaLevel: 24,
-  },
-  rareItems: {
-    // Optional override for how long the rare-item section stays visible.
-    // maxAreaLevel: 45,
-  },
-  magicItems: {
-    // Optional override for how long the magic-item section stays visible.
-    // maxAreaLevel: 9,
-  },
-  normalItems: {
-    // Optional override for how long the normal-item section stays visible.
-    // maxAreaLevel: 4,
-    // Optional specific bases for the normal-item section.
-    // weaponBaseTypes: ["Stone Axe", "Driftwood Maul"],
-  },
-  tinctures: {
-    baseTypes: [
-      // Optional tinctures for your build.
-      "Prismatic Tincture",
-    ],
-  },
   highlightedEquipment: {
     highlights: [
       // Specific bases you always want to keep visible as manual highlight overrides.
@@ -130,6 +98,18 @@ export const buildSpecificOptions: BuildSpecificOptions = {
       // { baseTypes: ["Corroded Blade"], soundFileName: "pop.mp3", maxAreaLevel: 16 },
       // { itemClasses: ["Two Hand Maces"], soundId: 1, maxAreaLevel: 16 },
     ],
+  },
+  jewellery: {
+    // Select which amulets are visible. Doesn't affect rare amulets
+    amulets: ["Amber", "Lapis"],
+    // Optional override for leveling amulet cutoff.
+    // amuletMaxAreaLevel: 24,
+    // Optional override for the low-level iron/coral ring cutoff.
+    // basicRingMaxAreaLevel: 16,
+    // Optional override for the sapphire/ruby/topaz/two-stone ring cutoff.
+    // elementalRingMaxAreaLevel: 24,
+    // Optional override for leather/heavy belt cutoff.
+    // beltMaxAreaLevel: 24,
   },
   early: {
     // Optional extra highlight overrides on top of `buildProfile.earlyWeapons`.
@@ -153,6 +133,26 @@ export const buildSpecificOptions: BuildSpecificOptions = {
     // weaponItemClasses: ["Two Hand Axes", "Two Hand Maces"],
     // weaponMinAps: 1.3,
     // Optional specific bases for the same early socket rules.
+    // weaponBaseTypes: ["Stone Axe", "Driftwood Maul"],
+  },
+  tinctures: {
+    baseTypes: [
+      // Optional tinctures for your build.
+      "Prismatic Tincture",
+    ],
+  },
+  rareItems: {
+    // Optional override for how long the rare-item section stays visible.
+    // maxAreaLevel: 45,
+  },
+  magicItems: {
+    // Optional override for how long the magic-item section stays visible.
+    // maxAreaLevel: 9,
+  },
+  normalItems: {
+    // Optional override for how long the normal-item section stays visible.
+    // maxAreaLevel: 4,
+    // Optional specific bases for the normal-item section.
     // weaponBaseTypes: ["Stone Axe", "Driftwood Maul"],
   },
 }

@@ -20,17 +20,11 @@ export const buildSpecificOptions: BuildSpecificOptions = {
     fourLinkPatterns: [],
     genericFourLinksEnabled: true,
   },
-  jewellery: {
-    amulets: [],
-  },
-  rareItems: {},
-  magicItems: {},
-  normalItems: {},
-  tinctures: {
-    baseTypes: [],
-  },
   highlightedEquipment: {
     highlights: [],
+  },
+  jewellery: {
+    amulets: [],
   },
   early: {
     weaponHighlights: [],
@@ -38,4 +32,10 @@ export const buildSpecificOptions: BuildSpecificOptions = {
     includeMomentumColors: true,
   },
   earlySockets: {},
+  tinctures: {
+    baseTypes: [],
+  },
+  rareItems: {},
+  magicItems: {},
+  normalItems: {},
 }
