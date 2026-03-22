@@ -3,11 +3,11 @@ import { type BuildProfile, type BuildSpecificOptions } from "../shared"
 export const buildProfile = {
   preferredArmourTypes: [],
   preferredWeaponItemClasses: [],
-  // earlyWeapons: {
-  //   itemClasses: [],
-  //   baseTypes: [],
-  //   // minAps: 1.3,
-  // },
+  earlyWeapons: {
+    itemClasses: [],
+    baseTypes: [],
+    // minAps: 1.3,
+  },
   shieldProgression: "early",
 } satisfies BuildProfile
 
