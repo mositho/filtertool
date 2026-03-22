@@ -12,6 +12,12 @@ dist/
 *.log
 .DS_Store
 
+# IDE/editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+
 # Generated/local filter configs
 src/filters/*
 !src/filters/example/
