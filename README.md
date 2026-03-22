@@ -23,11 +23,16 @@ npm install
 FILTER_PATH="C:\Users\user\Documents\My Games\Path of Exile"
 ```
 
-3. Copy [`src/filters/example`](src/filters/example) to a new folder under `src/filters/`.
+3. Copy one of these starter folders to a new folder under `src/filters/`:
 
-4. Edit [`config.ts`](src/filters/example/config.ts).
+- [`src/filters/template`](src/filters/template) for a clean copy-and-edit layout with no inline comments
+- [`src/filters/example`](src/filters/example) for the same layout with guided comments and examples
 
-For most standard filters, `config.ts` is the only file you need to touch. [`index.ts`](src/filters/example/index.ts) usually only needs changes if you want a different section layout or custom logic.
+`example` and `template` are starter folders only, so `npm run export-all` skips both of them.
+
+4. Edit your new filter's `config.ts`.
+
+For most standard filters, `config.ts` is the only file you need to touch. `index.ts` usually only needs changes if you want a different section layout or custom logic.
 
 5. Export your filter.
 

@@ -3,7 +3,7 @@ import fs from "fs"
 import path from "path"
 import { exportFilter } from "./export"
 
-const EXCLUDED_FILTERS = new Set(["example", "shared"])
+const EXCLUDED_FILTERS = new Set(["example", "shared", "template"])
 
 const main = async () => {
   const filtersRoot = path.join(__dirname, "../filters")

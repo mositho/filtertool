@@ -122,7 +122,7 @@ export type LinksConfig = {
   twoLinkMaxAreaLevel?: number
   threeLinkPatterns?: readonly (AnyThreeLinkPattern | SocketPatternConfig<AnyThreeLinkPattern>)[]
   threeLinkMaxAreaLevel?: number
-  genericThreeLinks?: boolean
+  genericThreeLinksEnabled?: boolean
   fourLinkPatterns?: readonly (AnyFourLinkPattern | SocketPatternConfig<AnyFourLinkPattern>)[]
   genericFourLinksEnabled?: boolean
   genericFourLinks?: readonly (DefenceBaseType | GenericFourLinkConfig)[]

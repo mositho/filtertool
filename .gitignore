@@ -3,6 +3,8 @@ node_modules
 src/filters/*
 !src/filters/example/
 !src/filters/example/**
+!src/filters/template/
+!src/filters/template/**
 !src/filters/shared.ts
 !src/filters/shared/
 !src/filters/shared/**

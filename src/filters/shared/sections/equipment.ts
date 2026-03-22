@@ -38,7 +38,7 @@ export const links = ({
   twoLinkMaxAreaLevel = filterDefaults.links.twoLinkMaxAreaLevel,
   threeLinkPatterns = [],
   threeLinkMaxAreaLevel = filterDefaults.links.threeLinkMaxAreaLevel,
-  genericThreeLinks = true,
+  genericThreeLinksEnabled = true,
   fourLinkPatterns = [],
   genericFourLinksEnabled = true,
   genericFourLinks,
@@ -103,7 +103,7 @@ export const links = ({
         })
       }),
       ...shieldThreeLinkRules,
-      genericThreeLinks &&
+      genericThreeLinksEnabled &&
         rule()
           .linkedSockets("==", 3)
           .itemClass(...ARMOUR_CLASSES)
