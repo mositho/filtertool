@@ -10,7 +10,8 @@ export const buildSpecificOptions: BuildSpecificOptions = {
   links: {
     twoLinkPatterns: [],
     threeLinkPatterns: [],
-    genericThreeLinksEnabled: true,
+    goodThreeLinksEnabled: true,
+    genericThreeLinksEnabled: false,
     fourLinkPatterns: [],
     genericFourLinksEnabled: true,
   },

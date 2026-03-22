@@ -55,8 +55,10 @@ export const buildSpecificOptions: BuildSpecificOptions = {
     ],
     // Shared cap for 3-links that you can override
     // threeLinkMaxAreaLevel: 33,
-    // Set to false if you only want to see the explicit 3-link patterns above.
-    genericThreeLinksEnabled: true,
+    // Set to false if you do not want the derived "good 3-link" matches from your 2-link patterns.
+    // goodThreeLinksEnabled: true,
+    // Set to true if you want to see any 3-links.
+    genericThreeLinksEnabled: false,
     fourLinkPatterns: [
       // 4-links for your build.
       "RRRG",

@@ -23,6 +23,7 @@ export const baseFilterStyles = {
   momentum:                   { text: "#FFA500", background: "#320000", border: "#FF0000" },
   twoLink:                    { text: "#DADADA", background: "#000000", border: "#FFC800", backgroundOpacity: BACKGROUND_OPACITY.high },
   selectedTwoLink:            { text: "#FFFFFF", background: "#000000", border: "#FFC800" },
+  goodThreeLink:              { text: "#FFFFFF", background: "#000000", border: "#51FF00" },
   threeLink:                  { text: "#FFFFFF", background: "#000000", border: "#51FF00", backgroundOpacity: BACKGROUND_OPACITY.high },
   selectedThreeLink:          { text: "#B9FF66", background: "#000000", border: "#B9FF66" },
   fourLink:                   { text: "#FFFFFF", background: "#000000", border: "#00FF88", backgroundOpacity: BACKGROUND_OPACITY.high },

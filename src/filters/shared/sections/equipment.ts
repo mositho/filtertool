@@ -38,7 +38,8 @@ export const links = ({
   twoLinkMaxAreaLevel = filterDefaults.links.twoLinkMaxAreaLevel,
   threeLinkPatterns = [],
   threeLinkMaxAreaLevel = filterDefaults.links.threeLinkMaxAreaLevel,
-  genericThreeLinksEnabled = true,
+  goodThreeLinksEnabled = true,
+  genericThreeLinksEnabled = false,
   fourLinkPatterns = [],
   genericFourLinksEnabled = true,
   genericFourLinks,
@@ -102,6 +103,25 @@ export const links = ({
           style: styleMixin(filterStyles.selectedThreeLink),
         })
       }),
+      ...(goodThreeLinksEnabled
+        ? twoLinkPatterns.map((entry) => {
+            const { pattern, maxAreaLevel, itemClasses } = normalizeSocketPatternConfig<TwoLinkPattern>(entry)
+            const effectiveItemClasses = itemClasses ?? ARMOUR_CLASSES
+            const effectiveMaxAreaLevel = maxAreaLevel ?? threeLinkMaxAreaLevel
+            const builtRule = rule()
+              .itemClass(...effectiveItemClasses)
+              .linkedSockets("==", 3)
+              .socketGroup(">=", pattern)
+              .icon("Green", "Diamond")
+              .mixin(styleMixin(filterStyles.goodThreeLink))
+
+            if (effectiveMaxAreaLevel !== undefined) {
+              builtRule.areaLevel("<=", effectiveMaxAreaLevel)
+            }
+
+            return builtRule
+          })
+        : []),
       ...shieldThreeLinkRules,
       genericThreeLinksEnabled &&
         rule()
