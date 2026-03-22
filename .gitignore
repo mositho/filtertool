@@ -1,5 +1,18 @@
-node_modules
+# Dependencies
+node_modules/
+
+# Local environment
 .env
+.env.*
+
+# Build output
+dist/
+
+# Local noise
+*.log
+.DS_Store
+
+# Generated/local filter configs
 src/filters/*
 !src/filters/example/
 !src/filters/example/**
