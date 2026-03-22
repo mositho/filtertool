@@ -4,7 +4,7 @@ export { getSoundPackFolder, soundFile } from "../../sounds"
 
 export const DEFAULT_STYLE_SETTINGS = {
   size: 45,
-  backgroundOpacity: 1,
+  backgroundOpacity: 245 / 255,
 } as const
 
 const BACKGROUND_OPACITY = {
