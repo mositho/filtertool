@@ -8,9 +8,13 @@ only covers `armour` and `evasion`, while `["armour-evasion"]` only covers
 `preferredArmourTypes` also feeds `links.genericFourLinks` by default, so you
 only need to set `links.genericFourLinks` if you want a different generic 4-link mix.
 
-`preferredWeaponItemClasses` is reused by the rare, normal, and early socket sections.
-Only set `rareItems.weaponItemClasses`, `normalItems.weaponItemClasses`, or
-`earlySockets.weaponItemClasses` if one of those sections should use a different list.
+`preferredWeaponItemClasses` creates a dedicated preferred-weapons section for
+your leveling weapons. `preferredWeaponMinAps` can narrow that list further.
+
+`preferredWeaponItemClasses` and `preferredWeaponMinAps` also feed the early socket
+and momentum-color sections by default. Only set `earlySockets.weaponItemClasses`,
+`earlySockets.weaponMinAps`, or `early.momentumColors` if one of those sections
+should use a different weapon query.
 
 `shieldProgression` controls:
 - the shield `RGG` 3-link rule
@@ -25,10 +29,11 @@ You can also use `{ mode: "early", maxAreaLevel: 10 }` to override the default e
 export const buildProfile = {
   preferredArmourTypes: ["armour", "evasion", "armour-evasion"] as const,
   preferredWeaponItemClasses: ["Two Hand Axes", "Two Hand Maces"] as const,
+  // preferredWeaponMinAps: 1.3,
   shieldProgression: "early",
 } as const satisfies BuildProfile
 
-export const buildSpecificOptions = {
+export const buildSpecificOptions: BuildSpecificOptions = {
   links: {
     // Useful override if your build wants 2-links longer or shorter than the shared default.
     // twoLinkMaxAreaLevel: 9,
@@ -82,8 +87,6 @@ export const buildSpecificOptions = {
   rareItems: {
     // Optional override for how long the rare-item section stays visible.
     // maxAreaLevel: 45,
-    // Optional override if your rare-item section should use different weapon classes.
-    // weaponItemClasses: ["Two Hand Axes", "Two Hand Maces"],
   },
   magicItems: {
     // Optional override for how long the magic-item section stays visible.
@@ -92,8 +95,7 @@ export const buildSpecificOptions = {
   normalItems: {
     // Optional override for how long the normal-item section stays visible.
     // maxAreaLevel: 4,
-    // Optional override if your normal-item section should use different weapon classes.
-    // weaponItemClasses: ["Two Hand Axes", "Two Hand Maces"],
+    // Optional specific bases for the normal-item section.
     // weaponBaseTypes: ["Stone Axe", "Driftwood Maul"],
   },
   tinctures: {
@@ -104,7 +106,7 @@ export const buildSpecificOptions = {
   },
   highlightedEquipment: {
     highlights: [
-      // Specific bases you always want to keep visible.
+      // Specific bases you always want to keep visible as manual highlight overrides.
       { baseTypes: ["Rusted Hatchet", "Boarding Axe"] },
       // You can also highlight an entire item class.
       { itemClasses: ["One Hand Axes"] },
@@ -131,12 +133,15 @@ export const buildSpecificOptions = {
     showRustic: true,
     // Disable if you're a ruthless enjoyer
     includeMomentumColors: true,
+    // Optional override if your momentum colors should use a different target set.
+    // momentumColors: { itemClasses: ["Two Hand Axes"], minAps: 1.3 },
   },
   earlySockets: {
     // These classes/bases only feed the early 2-socket / 3-socket socket section.
-    // weaponItemClasses defaults to `preferredWeaponItemClasses`.
+    // weaponItemClasses and weaponMinAps default to the preferred weapon query.
     // weaponItemClasses: ["Two Hand Axes", "Two Hand Maces"],
+    // weaponMinAps: 1.3,
     // Optional specific bases for the same early socket rules.
     // weaponBaseTypes: ["Stone Axe", "Driftwood Maul"],
   },
-} as const satisfies BuildSpecificOptions
+} as const

@@ -12,6 +12,7 @@ export {
   links,
   magicItems,
   normalItems,
+  preferredWeapons,
   rareItems,
   sixSockets,
   tinctures,

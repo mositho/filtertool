@@ -142,8 +142,33 @@ export const sixSockets = () =>
 export const uniques = () =>
   withHeading("Uniques", compileRules(rule().rarity("==", "Unique").icon("Brown", "Star").mixin(styleMixin(filterStyles.unique)).sound(3)))
 
-export const highlightedEquipment = ({ highlights = [] }: HighlightedEquipmentConfig) =>
-  withHeading("Highlighted Equipment", compileRules(...highlights.flatMap(buildHighlightedBaseTypeRules)))
+export const preferredWeapons = ({ preferredWeaponItemClasses = [], preferredWeaponMinAps }: Partial<BuildProfile>) => {
+  const compiledRules =
+    preferredWeaponItemClasses.length > 0 || preferredWeaponMinAps !== undefined
+      ? compileRules(
+          ...buildHighlightedBaseTypeRules({
+            itemClasses: preferredWeaponItemClasses.length > 0 ? preferredWeaponItemClasses : undefined,
+            minAps: preferredWeaponMinAps,
+          }),
+        )
+      : ""
+
+  if (!compiledRules) {
+    return ""
+  }
+
+  return withHeading("Preferred Weapons", compiledRules)
+}
+
+export const highlightedEquipment = ({ highlights = [] }: HighlightedEquipmentConfig) => {
+  const compiledRules = compileRules(...highlights.flatMap(buildHighlightedBaseTypeRules))
+
+  if (!compiledRules) {
+    return ""
+  }
+
+  return withHeading("Highlighted Equipment", compiledRules)
+}
 
 export const jewellery = ({
   amulets = filterDefaults.jewellery.amulets,
@@ -431,6 +456,7 @@ export const flasks = () =>
         { baseType: "Quartz", soundFileName: "quartz.mp3" },
         { baseType: "Quicksilver", soundFileName: "quicksilver.mp3" },
         { baseType: "Silver", soundFileName: "silver.mp3" },
+        { baseType: "Granite", soundFileName: "granite.mp3" },
       ]),
       rule()
         .itemClass("Utility Flasks")
@@ -455,8 +481,6 @@ export const tinctures = ({ baseTypes = filterDefaults.tinctures.baseTypes }: Ti
 
 export const rareItems = ({
   preferredArmourTypes,
-  preferredWeaponItemClasses = [],
-  weaponItemClasses = preferredWeaponItemClasses,
   maxAreaLevel = filterDefaults.rareItems.maxAreaLevel,
   shieldProgression,
 }: RareItemsConfig & BuildProfile) => {
@@ -477,12 +501,6 @@ export const rareItems = ({
           .mixin(styleMixin(filterStyles.rareArmour))
           .mixin(defenceMixinMap[baseType]),
       ),
-      weaponItemClasses.length > 0 &&
-        rule()
-          .itemClass(...weaponItemClasses)
-          .rarity("==", "Rare")
-          .icon("Cyan", "UpsideDownHouse")
-          .mixin(styleMixin(filterStyles.highlightedEquipment)),
       rule().width("==", 2).height(">=", 4).areaLevel("<=", earlyMaxAreaLevel).rarity("==", "Rare").size(40),
       rule().width("==", 2).height(">=", 4).areaLevel("<=", partOneMaxAreaLevel).rarity("==", "Rare").size(35),
       rule().width("==", 2).height(">=", 4).rarity("==", "Rare").size(30),
@@ -497,24 +515,16 @@ export const rareItems = ({
   )
 }
 
-export const magicItems = ({ maxAreaLevel = filterDefaults.magicItems.maxAreaLevel }: MagicItemsConfig = {}) => {
-  return withHeading("Magic Items", compileRules(rule().rarity("==", "Magic").areaLevel("<=", maxAreaLevel).size(40)))
-}
+export const magicItems = ({ maxAreaLevel = filterDefaults.magicItems.maxAreaLevel }: MagicItemsConfig = {}) =>
+  withHeading("Magic Items", compileRules(rule().rarity("==", "Magic").areaLevel("<=", maxAreaLevel).size(40)))
 
-export const normalItems = ({
-  preferredWeaponItemClasses = [],
-  weaponItemClasses = preferredWeaponItemClasses,
-  weaponBaseTypes = [],
-  maxAreaLevel = filterDefaults.normalItems.maxAreaLevel,
-}: NormalItemsConfig & Partial<BuildProfile> = {}) => {
-  const itemClasses = [...SOCKETABLE_CLASSES, ...weaponItemClasses]
-
+export const normalItems = ({ weaponBaseTypes = [], maxAreaLevel = filterDefaults.normalItems.maxAreaLevel }: NormalItemsConfig = {}) => {
   return withHeading(
     "Normal Items",
     compileRules(
       rule()
         .rarity("==", "Normal")
-        .itemClass(...itemClasses)
+        .itemClass(...SOCKETABLE_CLASSES)
         .areaLevel("<=", maxAreaLevel)
         .size(40),
       weaponBaseTypes.length > 0 &&
