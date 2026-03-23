@@ -14,6 +14,7 @@ import {
   defenceMixinMap,
   FourLinkPattern,
   getShieldProgressionMode,
+  getSocketPatternEffectColor,
   getSocketPatternSoundPrefix,
   HighlightedEquipmentConfig,
   JewelleryConfig,
@@ -56,7 +57,6 @@ export const links = ({
           pattern: "RGG",
           itemClasses: ["Shields"],
           soundPrefix: getSocketPatternSoundPrefix("GGR"),
-          iconColor: "Green",
           maxAreaLevel: shieldConfig.maxAreaLevel,
           style: styleMixin(filterStyles.selectedThreeLink),
         })
@@ -75,7 +75,6 @@ export const links = ({
           pattern,
           itemClasses,
           soundPrefix: getSocketPatternSoundPrefix(pattern),
-          iconColor: "Cyan",
           maxAreaLevel: maxAreaLevel ?? filterDefaults.links.fourLinkMaxAreaLevel,
           style: styleMixin(filterStyles.selectedFourLink),
         })
@@ -98,7 +97,6 @@ export const links = ({
           pattern,
           itemClasses,
           soundPrefix: getSocketPatternSoundPrefix(pattern),
-          iconColor: "Green",
           maxAreaLevel: maxAreaLevel ?? threeLinkMaxAreaLevel,
           style: styleMixin(filterStyles.selectedThreeLink),
         })
@@ -112,7 +110,8 @@ export const links = ({
               .itemClass(...effectiveItemClasses)
               .linkedSockets("==", 3)
               .socketGroup(">=", pattern)
-              .icon("Green", "Diamond")
+              .icon(getSocketPatternEffectColor(pattern), "Diamond")
+              .effect(getSocketPatternEffectColor(pattern))
               .mixin(styleMixin(filterStyles.goodThreeLink))
 
             if (effectiveMaxAreaLevel !== undefined) {
@@ -128,7 +127,6 @@ export const links = ({
           .linkedSockets("==", 3)
           .itemClass(...ARMOUR_CLASSES)
           .areaLevel("<=", threeLinkMaxAreaLevel)
-          .icon("Green", "Diamond")
           .mixin(styleMixin(filterStyles.threeLink))
           .size(40),
       ...twoLinkPatterns.map((entry) => {
@@ -138,7 +136,8 @@ export const links = ({
         const builtRule = rule()
           .itemClass(...effectiveItemClasses)
           .socketGroup("==", pattern)
-          .icon("Green", "Diamond")
+          .icon(getSocketPatternEffectColor(pattern), "Diamond")
+          .effect(getSocketPatternEffectColor(pattern))
           .mixin(styleMixin(filterStyles.selectedTwoLink))
 
         if (effectiveMaxAreaLevel !== undefined) {

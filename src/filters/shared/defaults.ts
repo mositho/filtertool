@@ -20,7 +20,7 @@ export const baseFilterDefaults = {
   // These do not affect the rare jewellery rules
   jewellery: {
     basicRingMaxAreaLevel: 16,
-    elementalRingMaxAreaLevel: 24,
+    elementalRingMaxAreaLevel: 33,
     beltMaxAreaLevel: 24,
     amuletMaxAreaLevel: 24,
     amulets: ["Amber", "Jade", "Lapis"],

@@ -201,6 +201,15 @@ const buildGenericFourLinkSoundFile = (defenceType: DefenceBaseType, itemClass: 
   `${genericFourLinkSoundMap[defenceType]}_${SLOT_SOUND_SUFFIX[itemClass]}.mp3` as SoundFile
 
 const SOCKET_COLOR_PRIORITY = { R: 0, G: 1, B: 2 } as const
+const SOCKET_EFFECT_COLOR_MAP = { R: "Red", G: "Green", B: "Blue" } as const satisfies Record<SocketColor, Color>
+const DEFENCE_TYPE_HIGHLIGHT_COLOR_MAP = {
+  "armour": "Red",
+  "evasion": "Green",
+  "es": "Blue",
+  "armour-evasion": "White",
+  "armour-es": "White",
+  "es-evasion": "White",
+} as const satisfies Record<DefenceBaseType, Color>
 
 export const normalizeSocketPattern = <TPattern extends SocketPattern>(pattern: string): TPattern => {
   const socketColors = [...pattern]
@@ -226,6 +235,31 @@ export const normalizeSocketPattern = <TPattern extends SocketPattern>(pattern: 
 
   return normalizedPattern as TPattern
 }
+
+export const getSocketPatternEffectColor = (pattern: string): Color => {
+  const socketColors = [...pattern]
+
+  if (!socketColors.every((color): color is SocketColor => color in SOCKET_COLOR_PRIORITY)) {
+    throw new Error(`Invalid socket pattern "${pattern}". Only R, G, and B are allowed.`)
+  }
+
+  const colorCounts = socketColors.reduce<Record<SocketColor, number>>(
+    (counts, color) => {
+      counts[color] += 1
+      return counts
+    },
+    { R: 0, G: 0, B: 0 },
+  )
+
+  const highestCount = Math.max(...Object.values(colorCounts))
+  const highestColors = (Object.entries(colorCounts) as [SocketColor, number][])
+    .filter(([, count]) => count === highestCount)
+    .map(([color]) => color)
+
+  return highestColors.length === 1 ? SOCKET_EFFECT_COLOR_MAP[highestColors[0]] : "White"
+}
+
+export const getDefenceTypeHighlightColor = (defenceType: DefenceBaseType): Color => DEFENCE_TYPE_HIGHLIGHT_COLOR_MAP[defenceType]
 
 export const normalizeSocketPatternConfig = <TNormalizedPattern extends SocketPattern, TRawPattern extends string = string>(
   entry: TRawPattern | SocketPatternConfig<TRawPattern>,
@@ -308,7 +342,6 @@ export const buildItemClassSocketRules = ({
   pattern,
   itemClasses = ARMOUR_CLASSES,
   soundPrefix,
-  iconColor,
   maxAreaLevel,
   style = styleMixin(filterStyles.fourLink),
 }: {
@@ -316,12 +349,17 @@ export const buildItemClassSocketRules = ({
   pattern: string
   itemClasses?: readonly SocketableItemClass[]
   soundPrefix?: SocketPatternSoundPrefix
-  iconColor: Color
   maxAreaLevel?: number
   style?: Mixin
 }): Rule[] =>
   itemClasses.map((itemClass) => {
-    const builtRule = rule().itemClass(itemClass).socketGroup("==", pattern).icon(iconColor, "Diamond").mixin(style)
+    const highlightColor = getSocketPatternEffectColor(pattern)
+    const builtRule = rule()
+      .itemClass(itemClass)
+      .socketGroup("==", pattern)
+      .icon(highlightColor, "Diamond")
+      .effect(highlightColor)
+      .mixin(style)
 
     if (maxAreaLevel !== undefined) {
       builtRule.areaLevel("<=", maxAreaLevel)
@@ -338,20 +376,23 @@ export const buildItemClassSocketRules = ({
     return builtRule.customSound(soundFile(buildSocketPatternSoundFile(soundPrefix, itemClass)))
   })
 
-export const buildGenericFourLinkRules = ({
-  defenceType,
-  maxAreaLevel = filterDefaults.links.fourLinkMaxAreaLevel,
-}: GenericFourLinkConfig) =>
-  ARMOUR_CLASSES.map((itemClass) =>
-    rule()
+export const buildGenericFourLinkRules = ({ defenceType, maxAreaLevel }: GenericFourLinkConfig) =>
+  ARMOUR_CLASSES.map((itemClass) => {
+    const builtRule = rule()
       .itemClass(itemClass)
       .linkedSockets("==", 4)
-      .areaLevel("<=", maxAreaLevel)
       .mixin(defenceMixinMap[defenceType])
-      .icon("Cyan", "Diamond")
+      .icon(getDefenceTypeHighlightColor(defenceType), "Diamond")
+      .effect(getDefenceTypeHighlightColor(defenceType))
       .mixin(styleMixin(filterStyles.fourLink))
-      .customSound(soundFile(buildGenericFourLinkSoundFile(defenceType, itemClass))),
-  )
+      .customSound(soundFile(buildGenericFourLinkSoundFile(defenceType, itemClass)))
+
+    if (maxAreaLevel !== undefined) {
+      builtRule.areaLevel("<=", maxAreaLevel)
+    }
+
+    return builtRule
+  })
 
 // Jewellery
 export const LEVELING_AMULETS = {
