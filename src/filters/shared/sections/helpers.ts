@@ -394,7 +394,7 @@ export const buildGoodFourLinkRules = ({ defenceType, maxAreaLevel }: GoodFourLi
       return ruleWithSound
     }
 
-    return [ruleWithSound.areaLevel("<=", maxAreaLevel), buildBaseRule().areaLevel(">", maxAreaLevel)]
+    return [ruleWithSound.areaLevel("<=", maxAreaLevel), buildBaseRule().areaLevel(">", maxAreaLevel).rarity("!=", "Magic")]
   })
 
 // Jewellery
