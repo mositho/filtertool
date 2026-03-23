@@ -124,9 +124,9 @@ export const early = ({
   const shieldConfig = normalizeShieldProgressionConfig(shieldProgression)
   const defaultMomentumItemClasses = shieldConfig.enabled ? SOCKETABLE_CLASSES : ARMOUR_CLASSES
   const { itemClasses: momentumItemClasses, baseTypes: momentumBaseTypes } = resolveMixedItemClassWeaponQuery({
-    itemClasses: momentumColors?.itemClasses ?? [...defaultMomentumItemClasses, ...preferredWeaponItemClasses],
-    baseTypes: momentumColors?.baseTypes,
-    minAps: momentumColors?.minAps ?? preferredWeaponMinAps,
+    itemClasses: momentumColors?.itemClasses ?? [...defaultMomentumItemClasses, ...resolvedEarlyWeapons.itemClasses],
+    baseTypes: momentumColors?.baseTypes ?? resolvedEarlyWeapons.baseTypes,
+    minAps: momentumColors?.minAps ?? resolvedEarlyWeapons.minAps,
   })
   const effectiveMomentumMaxAreaLevel = momentumColors?.maxAreaLevel ?? momentumMaxAreaLevel
   const buildMomentumRule = () =>

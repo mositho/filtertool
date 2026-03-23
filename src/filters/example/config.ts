@@ -11,10 +11,9 @@ only need to set `links.goodFourLinks` if you want a different preferred 4-link 
 `preferredWeaponItemClasses` creates a dedicated preferred-weapons section for
 your leveling weapons. `preferredWeaponMinAps` can narrow that list further.
 
-`preferredWeaponItemClasses` and `preferredWeaponMinAps` also feed the early socket
-and momentum-color sections by default. `earlyWeapons` is a separate shared query
-for the early weapon highlight and early socket sections, including explicit base types.
-If `earlyWeapons` is omitted or left empty, those sections fall back to the preferred weapon query.
+`earlyWeapons` is a separate shared query for the early weapon highlight, early socket,
+and momentum-color sections, including explicit base types. If `earlyWeapons` is omitted
+or left empty, those sections fall back to the preferred weapon query.
 Only set `early.weaponHighlights`, `earlySockets.weaponItemClasses`,
 `earlySockets.weaponBaseTypes`, `earlySockets.weaponMinAps`, or `early.momentumColors`
 if one of those sections should use a different weapon query.
