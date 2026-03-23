@@ -61,7 +61,7 @@ export const REMAINING_EQUIPMENT_CLASSES = [
   "Charms",
 ] as const satisfies readonly ItemClass[]
 
-// Build profile and section options
+// Shared build profile and top-level section options
 export type BuildProfile = {
   preferredArmourTypes: readonly DefenceBaseType[]
   preferredWeaponItemClasses?: readonly WeaponItemClass[]
@@ -526,7 +526,7 @@ export const buildHighlightedBaseTypeRules = ({
   return appliedRarities.map((selectedRarity) => buildRule(selectedRarity).rarity("==", selectedRarity))
 }
 
-// Early
+// Weapon queries and early sections
 export type WeaponBaseType = GeneratedWeaponBaseType
 
 export type WeaponBaseQuery = {
@@ -598,11 +598,31 @@ export const resolveMixedItemClassWeaponQuery = ({
   }
 }
 
-export type WeaponHighlightConfig = {
-  baseTypes?: readonly WeaponBaseType[]
-  itemClasses?: readonly WeaponItemClass[]
-  minAps?: number
-  maxAreaLevel?: number
+export const resolveSharedWeaponQuery = ({
+  sharedWeapons,
+  preferredWeaponItemClasses = [],
+  preferredWeaponMinAps,
+}: {
+  sharedWeapons?: SharedEarlyWeaponConfig
+  preferredWeaponItemClasses?: readonly WeaponItemClass[]
+  preferredWeaponMinAps?: number
+}) => {
+  const hasExplicitSharedWeaponTargets =
+    (sharedWeapons?.itemClasses?.length ?? 0) > 0 || (sharedWeapons?.baseTypes?.length ?? 0) > 0 || sharedWeapons?.minAps !== undefined
+
+  return hasExplicitSharedWeaponTargets
+    ? {
+        itemClasses: sharedWeapons?.itemClasses ?? [],
+        baseTypes: sharedWeapons?.baseTypes ?? [],
+        minAps: sharedWeapons?.minAps,
+        maxAreaLevel: sharedWeapons?.maxAreaLevel,
+      }
+    : {
+        itemClasses: preferredWeaponItemClasses,
+        baseTypes: [],
+        minAps: preferredWeaponMinAps,
+        maxAreaLevel: sharedWeapons?.maxAreaLevel,
+      }
 }
 
 export type SharedEarlyWeaponConfig = {
@@ -613,7 +633,6 @@ export type SharedEarlyWeaponConfig = {
 }
 
 export type EarlyConfig = {
-  weaponHighlights?: readonly WeaponHighlightConfig[]
   earlyMaxAreaLevel?: number
   showRustic?: boolean
   includeMomentumColors?: boolean
@@ -626,16 +645,9 @@ export type EarlyConfig = {
   momentumMaxAreaLevel?: number
 }
 
-export type ItemSectionConfig = {
-  weaponBaseTypes?: readonly WeaponBaseType[]
-}
+export type EarlySocketsConfig = {}
 
-export type EarlySocketsConfig = ItemSectionConfig & {
-  weaponItemClasses?: readonly WeaponItemClass[]
-  weaponMinAps?: number
-}
-
-// Rare, magic, normal items, and tinctures
+// Rare, magic, normal items, tinctures, and chromatics
 export type RareItemsConfig = {
   maxAreaLevel?: number
 }
@@ -644,7 +656,7 @@ export type MagicItemsConfig = {
   maxAreaLevel?: number
 }
 
-export type NormalItemsConfig = ItemSectionConfig & {
+export type NormalItemsConfig = {
   maxAreaLevel?: number
 }
 

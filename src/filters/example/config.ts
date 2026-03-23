@@ -14,9 +14,7 @@ your leveling weapons. `preferredWeaponMinAps` can narrow that list further.
 `earlyWeapons` is a separate shared query for the early weapon highlight, early socket,
 and momentum-color sections, including explicit base types. If `earlyWeapons` is omitted
 or left empty, those sections fall back to the preferred weapon query.
-Only set `early.weaponHighlights`, `earlySockets.weaponItemClasses`,
-`earlySockets.weaponBaseTypes`, `earlySockets.weaponMinAps`, or `early.momentumColors`
-if one of those sections should use a different weapon query.
+Only set `early.momentumColors` if momentum colors should use a different weapon query.
 
 `shieldProgression` controls:
 - the shield `RGG` 3-link rule
@@ -32,7 +30,7 @@ export const buildProfile = {
   preferredArmourTypes: ["armour", "evasion", "armour-evasion"],
   preferredWeaponItemClasses: ["Two Hand Axes", "Two Hand Maces"],
   // preferredWeaponMinAps: 1.3,
-  // Shared early weapon query for early highlights and early sockets.
+  // Shared early weapon query for early highlights, early sockets, and momentum colors.
   // earlyWeapons: {
   //   itemClasses: ["Two Hand Axes", "Two Hand Maces"],
   //   baseTypes: ["Stone Axe", "Driftwood Maul"],
@@ -113,28 +111,16 @@ export const buildSpecificOptions: BuildSpecificOptions = {
     // beltMaxAreaLevel: 24,
   },
   early: {
-    // Optional extra highlight overrides on top of `buildProfile.earlyWeapons`.
-    // weaponHighlights: [
-    //   { baseTypes: ["Stone Axe", "Driftwood Maul", "Corroded Blade"] },
-    //   { itemClasses: ["Two Hand Maces"] },
-    //   // And optionally give individual entries their own level cap.
-    //   // { baseTypes: ["Crude Bow"], maxAreaLevel: 10 },
-    // ],
     // Disable this for caster builds that don't care about rustic bases
     showRustic: true,
-    // Disable if you're a ruthless enjoyer
+    // Disable if you do not want the shared momentum-color handling.
     includeMomentumColors: true,
     // Optional override if your momentum colors should use a different target set.
     // momentumColors: { itemClasses: ["Two Hand Axes"], minAps: 1.3 },
   },
   earlySockets: {
-    // These classes/bases only feed the early 2-socket / 3-socket socket section.
-    // weaponItemClasses / weaponBaseTypes / weaponMinAps default to `buildProfile.earlyWeapons`
-    // if set, otherwise they fall back to the preferred weapon query.
-    // weaponItemClasses: ["Two Hand Axes", "Two Hand Maces"],
-    // weaponMinAps: 1.3,
-    // Optional specific bases for the same early socket rules.
-    // weaponBaseTypes: ["Stone Axe", "Driftwood Maul"],
+    // Enable the shared early 2-socket / 3-socket socket section.
+    // This always uses `buildProfile.earlyWeapons`, or the preferred weapon query if that is empty.
   },
   tinctures: {
     baseTypes: [
@@ -153,7 +139,5 @@ export const buildSpecificOptions: BuildSpecificOptions = {
   normalItems: {
     // Optional override for how long the normal-item section stays visible.
     // maxAreaLevel: 4,
-    // Optional specific bases for the normal-item section.
-    // weaponBaseTypes: ["Stone Axe", "Driftwood Maul"],
   },
 }

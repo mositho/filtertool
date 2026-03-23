@@ -28,7 +28,6 @@ export const buildSpecificOptions: BuildSpecificOptions = {
     amulets: [],
   },
   early: {
-    weaponHighlights: [],
     showRustic: true,
     includeMomentumColors: true,
   },

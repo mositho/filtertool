@@ -9,6 +9,7 @@ import {
   EarlyConfig,
   EarlySocketsConfig,
   normalizeShieldProgressionConfig,
+  resolveSharedWeaponQuery,
   resolveMixedItemClassWeaponQuery,
   resolveWeaponBaseTypes,
   SOCKETABLE_CLASSES,
@@ -27,49 +28,23 @@ export const twilightStrand = () =>
     ),
   )
 
-const resolveEarlyWeaponQuery = ({
-  earlyWeapons,
-  preferredWeaponItemClasses = [],
-  preferredWeaponMinAps,
-}: Pick<Partial<BuildProfile>, "earlyWeapons" | "preferredWeaponItemClasses" | "preferredWeaponMinAps">) => {
-  const hasExplicitEarlyWeaponTargets =
-    (earlyWeapons?.itemClasses?.length ?? 0) > 0 || (earlyWeapons?.baseTypes?.length ?? 0) > 0 || earlyWeapons?.minAps !== undefined
-
-  return hasExplicitEarlyWeaponTargets
-    ? {
-        itemClasses: earlyWeapons?.itemClasses ?? [],
-        baseTypes: earlyWeapons?.baseTypes ?? [],
-        minAps: earlyWeapons?.minAps,
-        maxAreaLevel: earlyWeapons?.maxAreaLevel,
-      }
-    : {
-        itemClasses: preferredWeaponItemClasses,
-        baseTypes: [],
-        minAps: preferredWeaponMinAps,
-        maxAreaLevel: earlyWeapons?.maxAreaLevel,
-      }
-}
-
 export const earlySockets = ({
   earlyWeapons,
   preferredWeaponItemClasses = [],
   preferredWeaponMinAps,
-  weaponItemClasses,
-  weaponBaseTypes,
-  weaponMinAps,
 }: EarlySocketsConfig & Partial<BuildProfile> = {}) => {
-  const resolvedEarlyWeapons = resolveEarlyWeaponQuery({
-    earlyWeapons,
+  const resolvedEarlyWeapons = resolveSharedWeaponQuery({
+    sharedWeapons: earlyWeapons,
     preferredWeaponItemClasses,
     preferredWeaponMinAps,
   })
   const resolvedWeaponBaseTypes = resolveWeaponBaseTypes({
-    itemClasses: weaponItemClasses ?? resolvedEarlyWeapons.itemClasses,
-    baseTypes: weaponBaseTypes ?? resolvedEarlyWeapons.baseTypes,
-    minAps: weaponMinAps ?? resolvedEarlyWeapons.minAps,
+    itemClasses: resolvedEarlyWeapons.itemClasses,
+    baseTypes: resolvedEarlyWeapons.baseTypes,
+    minAps: resolvedEarlyWeapons.minAps,
   })
-  const effectiveWeaponItemClasses = weaponItemClasses ?? resolvedEarlyWeapons.itemClasses
-  const effectiveWeaponMinAps = weaponMinAps ?? resolvedEarlyWeapons.minAps
+  const effectiveWeaponItemClasses = resolvedEarlyWeapons.itemClasses
+  const effectiveWeaponMinAps = resolvedEarlyWeapons.minAps
   const itemClasses = effectiveWeaponMinAps === undefined ? [...ARMOUR_CLASSES, ...effectiveWeaponItemClasses] : ARMOUR_CLASSES
   const twoSocketMaxAreaLevel = filterDefaults.early.twoSocketMaxAreaLevel
   const threeSocketMaxAreaLevel = filterDefaults.early.threeSocketMaxAreaLevel
@@ -107,7 +82,6 @@ export const early = ({
   earlyWeapons,
   preferredWeaponItemClasses = [],
   preferredWeaponMinAps,
-  weaponHighlights = [],
   earlyMaxAreaLevel = filterDefaults.campaign.earlyMaxAreaLevel,
   showRustic = filterDefaults.early.showRustic,
   includeMomentumColors = filterDefaults.early.includeMomentumColors,
@@ -115,15 +89,15 @@ export const early = ({
   momentumMaxAreaLevel = filterDefaults.early.momentumMaxAreaLevel,
   shieldProgression,
 }: EarlyConfig & Partial<BuildProfile>) => {
-  const resolvedEarlyWeapons = resolveEarlyWeaponQuery({
-    earlyWeapons,
+  const resolvedEarlyWeapons = resolveSharedWeaponQuery({
+    sharedWeapons: earlyWeapons,
     preferredWeaponItemClasses,
     preferredWeaponMinAps,
   })
   const earlyBootsMaxAreaLevel = filterDefaults.early.earlyBootsMaxAreaLevel
   const shieldConfig = normalizeShieldProgressionConfig(shieldProgression)
   const defaultMomentumItemClasses = shieldConfig.enabled ? SOCKETABLE_CLASSES : ARMOUR_CLASSES
-  const { itemClasses: momentumItemClasses, baseTypes: momentumBaseTypes } = resolveMixedItemClassWeaponQuery({
+  const { itemClasses: momentumItemClasses = [], baseTypes: momentumBaseTypes = [] } = resolveMixedItemClassWeaponQuery({
     itemClasses: momentumColors?.itemClasses ?? [...defaultMomentumItemClasses, ...resolvedEarlyWeapons.itemClasses],
     baseTypes: momentumColors?.baseTypes ?? resolvedEarlyWeapons.baseTypes,
     minAps: momentumColors?.minAps ?? resolvedEarlyWeapons.minAps,
@@ -178,7 +152,6 @@ export const early = ({
     "Early",
     compileRules(
       ...sharedEarlyWeaponHighlights.flatMap(buildWeaponHighlightRules),
-      ...weaponHighlights.flatMap(buildWeaponHighlightRules),
       rule()
         .itemClass("Boots")
         .areaLevel("<=", earlyBootsMaxAreaLevel)

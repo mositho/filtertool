@@ -27,6 +27,8 @@ import {
   normalizeShieldProgressionConfig,
   normalizeSocketPatternConfig,
   RareItemsConfig,
+  resolveSharedWeaponQuery,
+  resolveWeaponBaseTypes,
   SOCKETABLE_CLASSES,
   ThreeLinkPattern,
   TincturesConfig,
@@ -545,7 +547,7 @@ export const rareItems = ({
 export const magicItems = ({ maxAreaLevel = filterDefaults.magicItems.maxAreaLevel }: MagicItemsConfig = {}) =>
   withHeading("Magic Items", compileRules(rule().rarity("==", "Magic").areaLevel("<=", maxAreaLevel).size(40)))
 
-export const normalItems = ({ weaponBaseTypes = [], maxAreaLevel = filterDefaults.normalItems.maxAreaLevel }: NormalItemsConfig = {}) => {
+export const normalItems = ({ maxAreaLevel = filterDefaults.normalItems.maxAreaLevel }: NormalItemsConfig = {}) => {
   return withHeading(
     "Normal Items",
     compileRules(
@@ -554,12 +556,6 @@ export const normalItems = ({ weaponBaseTypes = [], maxAreaLevel = filterDefault
         .itemClass(...SOCKETABLE_CLASSES)
         .areaLevel("<=", maxAreaLevel)
         .size(40),
-      weaponBaseTypes.length > 0 &&
-        rule()
-          .rarity("==", "Normal")
-          .baseType(...weaponBaseTypes)
-          .areaLevel("<=", maxAreaLevel)
-          .size(40),
       rule().itemClass("Belts").rarity("==", "Normal").areaLevel("<=", maxAreaLevel).mixin(styleMixin(filterStyles.jewellery)),
     ),
   )
