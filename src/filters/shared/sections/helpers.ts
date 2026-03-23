@@ -113,7 +113,7 @@ export type SocketPatternConfig<TPattern extends string = SocketPattern> = {
   itemClasses?: readonly SocketableItemClass[]
 }
 
-export type GenericFourLinkConfig = {
+export type GoodFourLinkConfig = {
   defenceType: DefenceBaseType
   maxAreaLevel?: number
 }
@@ -126,8 +126,9 @@ export type LinksConfig = {
   goodThreeLinksEnabled?: boolean
   genericThreeLinksEnabled?: boolean
   fourLinkPatterns?: readonly (AnyFourLinkPattern | SocketPatternConfig<AnyFourLinkPattern>)[]
+  goodFourLinksEnabled?: boolean
   genericFourLinksEnabled?: boolean
-  genericFourLinks?: readonly (DefenceBaseType | GenericFourLinkConfig)[]
+  goodFourLinks?: readonly (DefenceBaseType | GoodFourLinkConfig)[]
 }
 
 export type ShieldProgressionMode = "none" | "early" | "full"
@@ -185,7 +186,7 @@ type SocketPatternSoundPrefix = (typeof SOCKET_PATTERN_SOUND_PREFIXES)[keyof typ
 export const getSocketPatternSoundPrefix = (pattern: ThreeLinkPattern | FourLinkPattern): SocketPatternSoundPrefix =>
   SOCKET_PATTERN_SOUND_PREFIXES[pattern]
 
-export const genericFourLinkSoundMap = {
+export const goodFourLinkSoundMap = {
   "armour": "4_link_armour",
   "armour-evasion": "4_link_armour_evasion",
   "armour-es": "4_link_armour_es",
@@ -197,8 +198,8 @@ export const genericFourLinkSoundMap = {
 const buildSocketPatternSoundFile = (soundPrefix: SocketPatternSoundPrefix, itemClass: SocketableItemClass): SoundFile =>
   `${soundPrefix}_${SLOT_SOUND_SUFFIX[itemClass]}.mp3` as SoundFile
 
-const buildGenericFourLinkSoundFile = (defenceType: DefenceBaseType, itemClass: ArmourItemClass): SoundFile =>
-  `${genericFourLinkSoundMap[defenceType]}_${SLOT_SOUND_SUFFIX[itemClass]}.mp3` as SoundFile
+const buildGoodFourLinkSoundFile = (defenceType: DefenceBaseType, itemClass: ArmourItemClass): SoundFile =>
+  `${goodFourLinkSoundMap[defenceType]}_${SLOT_SOUND_SUFFIX[itemClass]}.mp3` as SoundFile
 
 const SOCKET_COLOR_PRIORITY = { R: 0, G: 1, B: 2 } as const
 const SOCKET_EFFECT_COLOR_MAP = { R: "Red", G: "Green", B: "Blue" } as const satisfies Record<SocketColor, Color>
@@ -271,7 +272,7 @@ export const normalizeSocketPatternConfig = <TNormalizedPattern extends SocketPa
   }
 }
 
-export const normalizeGenericFourLinkConfig = (entry: DefenceBaseType | GenericFourLinkConfig): GenericFourLinkConfig =>
+export const normalizeGoodFourLinkConfig = (entry: DefenceBaseType | GoodFourLinkConfig): GoodFourLinkConfig =>
   typeof entry === "string" ? { defenceType: entry } : entry
 
 export const normalizeShieldProgressionConfig = (shieldProgression?: ShieldProgressionConfig): NormalizedShieldProgressionConfig => {
@@ -376,7 +377,7 @@ export const buildItemClassSocketRules = ({
     return builtRule.customSound(soundFile(buildSocketPatternSoundFile(soundPrefix, itemClass)))
   })
 
-export const buildGenericFourLinkRules = ({ defenceType, maxAreaLevel }: GenericFourLinkConfig) =>
+export const buildGoodFourLinkRules = ({ defenceType, maxAreaLevel }: GoodFourLinkConfig) =>
   ARMOUR_CLASSES.map((itemClass) => {
     const builtRule = rule()
       .itemClass(itemClass)
@@ -384,8 +385,8 @@ export const buildGenericFourLinkRules = ({ defenceType, maxAreaLevel }: Generic
       .mixin(defenceMixinMap[defenceType])
       .icon(getDefenceTypeHighlightColor(defenceType), "Diamond")
       .effect(getDefenceTypeHighlightColor(defenceType))
-      .mixin(styleMixin(filterStyles.fourLink))
-      .customSound(soundFile(buildGenericFourLinkSoundFile(defenceType, itemClass)))
+      .mixin(styleMixin(filterStyles.goodFourLink))
+      .customSound(soundFile(buildGoodFourLinkSoundFile(defenceType, itemClass)))
 
     if (maxAreaLevel !== undefined) {
       builtRule.areaLevel("<=", maxAreaLevel)

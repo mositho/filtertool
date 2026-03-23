@@ -5,8 +5,8 @@ import { type BuildProfile, type BuildSpecificOptions } from "../shared"
 only covers `armour` and `evasion`, while `["armour-evasion"]` only covers
 `armour-evasion`.
 
-`preferredArmourTypes` also feeds `links.genericFourLinks` by default, so you
-only need to set `links.genericFourLinks` if you want a different generic 4-link mix.
+`preferredArmourTypes` also feeds the "good" 4-link section by default, so you
+only need to set `links.goodFourLinks` if you want a different preferred 4-link mix.
 
 `preferredWeaponItemClasses` creates a dedicated preferred-weapons section for
 your leveling weapons. `preferredWeaponMinAps` can narrow that list further.
@@ -78,10 +78,12 @@ export const buildSpecificOptions: BuildSpecificOptions = {
     ],
     // Shared cap for 4-links that you can override
     // fourLinkMaxAreaLevel: 53,
-    // Set to false if you only want to see the explicit 4-link patterns above.
-    genericFourLinksEnabled: true,
-    // Optional override if you want different generic 4-links than `preferredArmourTypes`.
-    // genericFourLinks: ["armour", "armour-evasion", "evasion"],
+    // Set to false if you do not want the preferred/type-based "good" 4-links.
+    goodFourLinksEnabled: true,
+    // Set to true if you want to see any remaining 4-links beyond the selected and preferred ones.
+    genericFourLinksEnabled: false,
+    // Optional override if you want different preferred/type-based 4-links than `preferredArmourTypes`.
+    // goodFourLinks: ["armour", "armour-evasion", "evasion"],
   },
   highlightedEquipment: {
     highlights: [

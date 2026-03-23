@@ -4,7 +4,7 @@ import { filterStyles, soundFile, styleMixin } from "../styles"
 import {
   ARMOUR_CLASSES,
   buildFlaskSeries,
-  buildGenericFourLinkRules,
+  buildGoodFourLinkRules,
   buildHighlightedBaseTypeRules,
   buildItemClassSocketRules,
   BuildProfile,
@@ -22,7 +22,7 @@ import {
   LinksConfig,
   MagicItemsConfig,
   NormalItemsConfig,
-  normalizeGenericFourLinkConfig,
+  normalizeGoodFourLinkConfig,
   normalizeLevelingAmuletConfig,
   normalizeShieldProgressionConfig,
   normalizeSocketPatternConfig,
@@ -42,14 +42,15 @@ export const links = ({
   goodThreeLinksEnabled = true,
   genericThreeLinksEnabled = false,
   fourLinkPatterns = [],
-  genericFourLinksEnabled = true,
-  genericFourLinks,
+  goodFourLinksEnabled = true,
+  genericFourLinksEnabled = false,
+  goodFourLinks,
   preferredArmourTypes,
   shieldProgression,
 }: LinksConfig & Partial<BuildProfile>) => {
   const shieldConfig = normalizeShieldProgressionConfig(shieldProgression)
   const shieldProgressionMode = getShieldProgressionMode(shieldProgression)
-  const genericFourLinkEntries = genericFourLinks ?? preferredArmourTypes ?? []
+  const goodFourLinkEntries = goodFourLinks ?? preferredArmourTypes ?? []
   const shieldThreeLinkRules =
     shieldProgressionMode === "full"
       ? buildItemClassSocketRules({
@@ -79,16 +80,23 @@ export const links = ({
           style: styleMixin(filterStyles.selectedFourLink),
         })
       }),
-      ...(genericFourLinksEnabled
-        ? genericFourLinkEntries.flatMap((entry) => {
-            const { defenceType, maxAreaLevel } = normalizeGenericFourLinkConfig(entry)
+      ...(goodFourLinksEnabled
+        ? goodFourLinkEntries.flatMap((entry) => {
+            const { defenceType, maxAreaLevel } = normalizeGoodFourLinkConfig(entry)
 
-            return buildGenericFourLinkRules({
+            return buildGoodFourLinkRules({
               defenceType,
               maxAreaLevel,
             })
           })
         : []),
+      genericFourLinksEnabled &&
+        rule()
+          .linkedSockets("==", 4)
+          .itemClass(...ARMOUR_CLASSES)
+          .areaLevel("<=", filterDefaults.links.fourLinkMaxAreaLevel)
+          .mixin(styleMixin(filterStyles.fourLink))
+          .size(40),
       ...threeLinkPatterns.flatMap((entry) => {
         const { pattern, maxAreaLevel, itemClasses } = normalizeSocketPatternConfig<ThreeLinkPattern>(entry)
 

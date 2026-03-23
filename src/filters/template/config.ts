@@ -18,7 +18,8 @@ export const buildSpecificOptions: BuildSpecificOptions = {
     goodThreeLinksEnabled: true,
     genericThreeLinksEnabled: false,
     fourLinkPatterns: [],
-    genericFourLinksEnabled: true,
+    goodFourLinksEnabled: true,
+    genericFourLinksEnabled: false,
   },
   highlightedEquipment: {
     highlights: [],
