@@ -378,21 +378,23 @@ export const buildItemClassSocketRules = ({
   })
 
 export const buildGoodFourLinkRules = ({ defenceType, maxAreaLevel }: GoodFourLinkConfig) =>
-  ARMOUR_CLASSES.map((itemClass) => {
-    const builtRule = rule()
-      .itemClass(itemClass)
-      .linkedSockets("==", 4)
-      .mixin(defenceMixinMap[defenceType])
-      .icon(getDefenceTypeHighlightColor(defenceType), "Diamond")
-      .effect(getDefenceTypeHighlightColor(defenceType))
-      .mixin(styleMixin(filterStyles.goodFourLink))
-      .customSound(soundFile(buildGoodFourLinkSoundFile(defenceType, itemClass)))
+  ARMOUR_CLASSES.flatMap((itemClass) => {
+    const buildBaseRule = () =>
+      rule()
+        .itemClass(itemClass)
+        .linkedSockets("==", 4)
+        .mixin(defenceMixinMap[defenceType])
+        .icon(getDefenceTypeHighlightColor(defenceType), "Diamond")
+        .effect(getDefenceTypeHighlightColor(defenceType))
+        .mixin(styleMixin(filterStyles.goodFourLink))
 
-    if (maxAreaLevel !== undefined) {
-      builtRule.areaLevel("<=", maxAreaLevel)
+    const ruleWithSound = buildBaseRule().customSound(soundFile(buildGoodFourLinkSoundFile(defenceType, itemClass)))
+
+    if (maxAreaLevel === undefined) {
+      return ruleWithSound
     }
 
-    return builtRule
+    return [ruleWithSound.areaLevel("<=", maxAreaLevel), buildBaseRule().areaLevel(">", maxAreaLevel)]
   })
 
 // Jewellery

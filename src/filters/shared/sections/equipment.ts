@@ -86,7 +86,7 @@ export const links = ({
 
             return buildGoodFourLinkRules({
               defenceType,
-              maxAreaLevel,
+              maxAreaLevel: maxAreaLevel ?? filterDefaults.links.fourLinkMaxAreaLevel,
             })
           })
         : []),
