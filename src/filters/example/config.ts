@@ -93,6 +93,13 @@ export const buildSpecificOptions: BuildSpecificOptions = {
         baseTypes: ["Stone Axe", "Jade Chopper"],
         rarities: ["Normal", "Rare"],
       },
+      // Weapon item-class highlights get area cutoffs by default.
+      // Exact base-type highlights do not, unless you set `weaponCutoffEnabled: true`.
+      // `weaponCutoffOverlap` controls how many area levels a base overlaps with the next drop-level step.
+      // It defaults to 5.
+      // Set `weaponCutoffEnabled: false` if you want a weapon item class to stay highlighted indefinitely.
+      // { itemClasses: ["Two Hand Axes"], weaponCutoffEnabled: false },
+      // { baseTypes: ["Boarding Axe"], weaponCutoffEnabled: true, weaponCutoffOverlap: 8 },
       // You can also attach a custom sound or builtin sound id.
       // { baseTypes: ["Corroded Blade"], soundFileName: "pop.mp3", maxAreaLevel: 16 },
       // { itemClasses: ["Two Hand Maces"], soundId: 1, maxAreaLevel: 16 },

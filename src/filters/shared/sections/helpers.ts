@@ -437,6 +437,8 @@ export type HighlightedBaseTypeConfig = {
   baseTypes?: readonly BaseType[]
   itemClasses?: readonly ItemClass[]
   minAps?: number
+  weaponCutoffEnabled?: boolean
+  weaponCutoffOverlap?: number
   rarityOperator?: Operator
   rarity?: Rarity
   rarities?: readonly Rarity[]
@@ -457,6 +459,17 @@ const highlightedEquipmentStyleMap = {
 
 const HIGHLIGHTABLE_RARITIES = ["Normal", "Magic", "Rare"] as const satisfies readonly Rarity[]
 type HighlightableRarity = (typeof HIGHLIGHTABLE_RARITIES)[number]
+const WEAPON_BASE_INFO_MAP = new Map<WeaponBaseType, { itemClass: WeaponItemClass; dropLevel: number }>(
+  WEAPON_BASE_DATA.map((weapon) => [weapon.baseType, { itemClass: weapon.itemClass, dropLevel: weapon.dropLevel }]),
+)
+const WEAPON_CLASS_DROP_LEVELS_MAP = new Map<WeaponItemClass, number[]>(
+  WEAPON_CLASSES.map((itemClass) => [
+    itemClass,
+    [...new Set(WEAPON_BASE_DATA.filter((weapon) => weapon.itemClass === itemClass).map((weapon) => weapon.dropLevel))].sort(
+      (left, right) => left - right,
+    ),
+  ]),
+)
 
 const getRaritiesForOperator = (operator: Operator, rarity: HighlightableRarity) => {
   const pivotIndex = HIGHLIGHTABLE_RARITIES.indexOf(rarity)
@@ -479,10 +492,64 @@ const getRaritiesForOperator = (operator: Operator, rarity: HighlightableRarity)
   }
 }
 
+const isWeaponBaseType = (baseType: BaseType): baseType is WeaponBaseType => WEAPON_BASE_INFO_MAP.has(baseType as WeaponBaseType)
+
+const buildHighlightedRule = ({
+  selectedRarity,
+  baseTypes,
+  itemClasses,
+  maxAreaLevel,
+  soundId,
+  soundFileName,
+}: {
+  selectedRarity?: Rarity
+  baseTypes?: readonly BaseType[]
+  itemClasses?: readonly ItemClass[]
+  maxAreaLevel?: number
+  soundId?: NumberRange<1, 17>
+  soundFileName?: SoundFile
+}) => {
+  const style =
+    selectedRarity && selectedRarity in highlightedEquipmentStyleMap
+      ? highlightedEquipmentStyleMap[selectedRarity as keyof typeof highlightedEquipmentStyleMap]
+      : filterStyles.highlightedEquipment
+  const builtRule = applyHighlightTargets(rule().icon("Cyan", "UpsideDownHouse").mixin(styleMixin(style)), {
+    baseTypes,
+    itemClasses,
+  })
+
+  if (maxAreaLevel !== undefined) {
+    builtRule.areaLevel("<=", maxAreaLevel)
+  }
+
+  if (soundFileName) {
+    builtRule.customSound(soundFile(soundFileName))
+  } else if (soundId !== undefined) {
+    builtRule.sound(soundId)
+  }
+
+  return builtRule
+}
+
+const getAutomaticWeaponCutoffMaxAreaLevel = (baseType: WeaponBaseType, weaponCutoffOverlap: number) => {
+  const weaponBaseInfo = WEAPON_BASE_INFO_MAP.get(baseType)
+
+  if (!weaponBaseInfo) {
+    return undefined
+  }
+
+  const classDropLevels = WEAPON_CLASS_DROP_LEVELS_MAP.get(weaponBaseInfo.itemClass) ?? []
+  const nextDropLevel = classDropLevels.find((dropLevel) => dropLevel > weaponBaseInfo.dropLevel)
+
+  return nextDropLevel !== undefined ? nextDropLevel + weaponCutoffOverlap - 1 : undefined
+}
+
 export const buildHighlightedBaseTypeRules = ({
   baseTypes,
   itemClasses,
   minAps,
+  weaponCutoffEnabled,
+  weaponCutoffOverlap = 5,
   rarityOperator,
   rarity,
   rarities,
@@ -495,35 +562,68 @@ export const buildHighlightedBaseTypeRules = ({
     : rarityOperator && rarity && HIGHLIGHTABLE_RARITIES.includes(rarity as HighlightableRarity)
       ? getRaritiesForOperator(rarityOperator, rarity as HighlightableRarity)
       : [...HIGHLIGHTABLE_RARITIES]
-  const { itemClasses: resolvedItemClasses, baseTypes: resolvedBaseTypes } = resolveMixedItemClassWeaponQuery({
-    itemClasses,
-    baseTypes,
-    minAps,
-  })
-  const buildRule = (selectedRarity?: Rarity) => {
-    const style =
-      selectedRarity && selectedRarity in highlightedEquipmentStyleMap
-        ? highlightedEquipmentStyleMap[selectedRarity as keyof typeof highlightedEquipmentStyleMap]
-        : filterStyles.highlightedEquipment
-    const builtRule = applyHighlightTargets(rule().icon("Cyan", "UpsideDownHouse").mixin(styleMixin(style)), {
-      baseTypes: resolvedBaseTypes.length > 0 ? resolvedBaseTypes : undefined,
-      itemClasses: resolvedItemClasses,
+  const weaponItemClasses = itemClasses?.filter(isWeaponItemClass)
+  const nonWeaponItemClasses = itemClasses?.filter((itemClass) => !isWeaponItemClass(itemClass))
+  const effectiveWeaponCutoffEnabled = weaponCutoffEnabled ?? (weaponItemClasses?.length ?? 0) > 0
+
+  if (!effectiveWeaponCutoffEnabled) {
+    const { itemClasses: resolvedItemClasses, baseTypes: resolvedBaseTypes } = resolveMixedItemClassWeaponQuery({
+      itemClasses,
+      baseTypes,
+      minAps,
     })
 
-    if (maxAreaLevel !== undefined) {
-      builtRule.areaLevel("<=", maxAreaLevel)
-    }
-
-    if (soundFileName) {
-      builtRule.customSound(soundFile(soundFileName))
-    } else if (soundId !== undefined) {
-      builtRule.sound(soundId)
-    }
-
-    return builtRule
+    return appliedRarities.map((selectedRarity) =>
+      buildHighlightedRule({
+        selectedRarity,
+        baseTypes: resolvedBaseTypes.length > 0 ? resolvedBaseTypes : undefined,
+        itemClasses: resolvedItemClasses,
+        maxAreaLevel,
+        soundId,
+        soundFileName,
+      }).rarity("==", selectedRarity),
+    )
   }
 
-  return appliedRarities.map((selectedRarity) => buildRule(selectedRarity).rarity("==", selectedRarity))
+  const explicitWeaponBaseTypes = baseTypes?.filter((baseType): baseType is WeaponBaseType => isWeaponBaseType(baseType)) ?? []
+  const nonWeaponBaseTypes = baseTypes?.filter((baseType) => !isWeaponBaseType(baseType)) ?? []
+  const resolvedWeaponBaseTypes = resolveWeaponBaseTypes({
+    itemClasses: weaponItemClasses,
+    baseTypes: explicitWeaponBaseTypes,
+    minAps,
+  })
+  const weaponRules = resolvedWeaponBaseTypes.flatMap((baseType) => {
+    const automaticMaxAreaLevel = getAutomaticWeaponCutoffMaxAreaLevel(baseType, weaponCutoffOverlap)
+    const effectiveMaxAreaLevel =
+      maxAreaLevel !== undefined && automaticMaxAreaLevel !== undefined
+        ? Math.min(maxAreaLevel, automaticMaxAreaLevel)
+        : (maxAreaLevel ?? automaticMaxAreaLevel)
+
+    return appliedRarities.map((selectedRarity) =>
+      buildHighlightedRule({
+        selectedRarity,
+        baseTypes: [baseType],
+        maxAreaLevel: effectiveMaxAreaLevel,
+        soundId,
+        soundFileName,
+      }).rarity("==", selectedRarity),
+    )
+  })
+  const nonWeaponRules =
+    (nonWeaponItemClasses?.length ?? 0) > 0 || nonWeaponBaseTypes.length > 0
+      ? appliedRarities.map((selectedRarity) =>
+          buildHighlightedRule({
+            selectedRarity,
+            baseTypes: nonWeaponBaseTypes.length > 0 ? nonWeaponBaseTypes : undefined,
+            itemClasses: nonWeaponItemClasses?.length ? nonWeaponItemClasses : undefined,
+            maxAreaLevel,
+            soundId,
+            soundFileName,
+          }).rarity("==", selectedRarity),
+        )
+      : []
+
+  return [...weaponRules, ...nonWeaponRules]
 }
 
 // Weapon queries and early sections
@@ -561,13 +661,10 @@ export const resolveWeaponBaseTypes = ({
   baseTypes?: readonly WeaponBaseType[]
   minAps?: number
 }): WeaponBaseType[] => {
-  const queriedBaseTypes =
-    minAps !== undefined
-      ? findWeaponBaseTypes({
-          itemClasses: itemClasses.length > 0 ? itemClasses : undefined,
-          minAps,
-        })
-      : []
+  const queriedBaseTypes = findWeaponBaseTypes({
+    itemClasses: itemClasses.length > 0 ? itemClasses : undefined,
+    minAps,
+  })
 
   return [...new Set([...baseTypes, ...queriedBaseTypes])]
 }
