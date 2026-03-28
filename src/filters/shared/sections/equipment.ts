@@ -400,7 +400,7 @@ export const jewellery = ({
         .icon("Orange", "Pentagon")
         .mixin(styleMixin(filterStyles.jewellery))
         .customSound(soundFile("heavy_belt.mp3")),
-      rule().itemClass("Belts").rarity("==", "Rare").mixin(styleMixin(filterStyles.jewellery)),
+      rule().itemClass("Belts").rarity("==", "Rare").mixin(styleMixin(filterStyles.rareJewellery)),
       ...amulets.flatMap((entry) => {
         const { shortBaseType, soundFileName } = normalizeLevelingAmuletConfig(entry)
         return buildAmuletRules(shortBaseType, soundFileName)
