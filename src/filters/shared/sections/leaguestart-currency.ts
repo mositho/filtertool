@@ -136,24 +136,7 @@ export const LEAGUESTART_BLESSINGS = [
   "Tainted Blessing",
 ] as const
 
-export const LEAGUESTART_OMENS = [
-  "Omen of Acceleration",
-  "Omen of Adrenaline",
-  "Omen of Amelioration",
-  "Omen of Bequeathal",
-  "Omen of Blanching",
-  "Omen of Brilliance",
-  "Omen of Connections",
-  "Omen of Death's Door",
-  "Omen of Death-dancing",
-  "Omen of Fortune",
-  "Omen of Refreshment",
-  "Omen of Resurgence",
-  "Omen of Return",
-  "Omen of Revenge",
-  "Omen of the Jeweller",
-  "Omen of the Soul Devourer",
-] as const
+export const LEAGUESTART_OMENS = [] as const
 
 export const LEAGUESTART_TATTOOS = [
   "Journey Tattoo of the Body",
