@@ -251,7 +251,7 @@ export type SupportGems =
   | "Greater Unleash Support"
   | "Pacifism Support"
   | "Bloodsoaked Banner Support"
-  | "Minion Pact Support"
+  | "Communion Support"
   | "Unholy Trinity Support"
   | "Overloaded Intensity Support"
   | "Transfusion Support"
@@ -259,4 +259,6 @@ export type SupportGems =
   | "Exemplar Support"
   | "Blessed Call Support"
   | "Hallow Support"
+  | "Coursing Current Support"
+  | "Crystalfall Support"
   | (string & {})
