@@ -454,4 +454,8 @@ export type DivinationCards =
   | "Desecrated Virtue"
   | "The Journey"
   | "The Messenger"
+  | "Pearls Before Swine"
+  | "Energy Sword"
+  | "Divine Shard"
+  | "The Side Quest"
   | (string & {})

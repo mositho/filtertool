@@ -29,4 +29,5 @@ export type OneHandSwords =
   | "Capricious Spiritblade"
   | "Anarchic Spiritblade"
   | "Golden Blade"
+  | "Ghostflame Blade"
   | (string & {})

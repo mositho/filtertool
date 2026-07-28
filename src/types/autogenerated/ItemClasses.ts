@@ -41,7 +41,6 @@ export type ItemClasses =
   | "Abyss Jewels"
   | "Incursion Items"
   | "Delve Stackable Socketable Currency"
-  | "Incubators"
   | "Trinkets"
   | "Heist Targets"
   | "Contracts"
@@ -64,4 +63,6 @@ export type ItemClasses =
   | "Idols"
   | "Wombgifts"
   | "Pieces"
+  | "Enshrouded Items"
+  | "Chart"
   | (string & {})
