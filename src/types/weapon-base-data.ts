@@ -3958,4 +3958,15 @@ export const WEAPON_BASE_DATA = [
     crit: 0.05,
     implicits: ["+16-24 to all Attributes"],
   },
+  {
+    baseType: "Ghostflame Blade",
+    itemClass: "One Hand Swords",
+    dropLevel: 1,
+    aps: 1.55,
+    damageFrom: 4,
+    damageTo: 9,
+    dps: 10.08,
+    crit: 0.05,
+    implicits: [],
+  },
 ] satisfies readonly WeaponBaseInfo[]
