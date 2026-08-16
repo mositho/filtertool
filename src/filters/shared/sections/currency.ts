@@ -27,6 +27,8 @@ export const currency = () => {
     "A Tier",
     buildTierCurrency("priorityB", [
       { baseTypes: ["Exalted Orb"], iconColor: "Pink", iconShape: "Circle", soundId: 1 },
+      { baseTypes: ["Ancient Orb"], iconColor: "Pink", iconShape: "Circle", soundId: 1 },
+      { baseTypes: ["Gemcutter's Prism"], iconColor: "Pink", iconShape: "Circle", soundId: 1 },
       { baseTypes: ["Regal Orb"], iconColor: "Pink", iconShape: "Hexagon", tts: MANIFEST_BY_ID.regal_orb },
       { baseTypes: ["Orb of Chance"], iconColor: "Pink", iconShape: "Square", tts: MANIFEST_BY_ID.orb_of_chance },
       { baseTypes: ["Orb of Binding"], iconColor: "Pink", iconShape: "Diamond", tts: MANIFEST_BY_ID.orb_of_binding },
