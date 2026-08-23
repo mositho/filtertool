@@ -6,9 +6,10 @@ import { globSync } from "glob"
 import { SOUND_MANIFEST } from "../sounds/manifest"
 import { generateTtsFile, writeTtsSettings } from "../sounds/tts"
 import { generatedSoundTextToFileName, getSoundPackTargetDir, SOUND_PACK_SOURCE_DIR } from "../sounds/paths"
+import { findTtsConfigLiterals } from "../sounds/discover-tts"
+import { syncSoundPack } from "./syncSounds"
 
 const SOURCE_DIR = `./${SOUND_PACK_SOURCE_DIR}`
-const ttsRegex: RegExp = /(?<=[\{,]\s*tts\s*:\s*["'`])([^"'`]+)(?=["'`])/g
 
 interface CliFlags {
   locale: string
@@ -89,10 +90,7 @@ function discoverTtsEntries(): TtsEntry[] {
   const files = globSync("./src/filters/**/*.ts")
   for (const file of files) {
     const content = fs.readFileSync(file, "utf-8")
-    ttsRegex.lastIndex = 0
-    let match: RegExpExecArray | null
-    while ((match = ttsRegex.exec(content)) !== null) {
-      const text = match[0]
+    for (const text of findTtsConfigLiterals(content)) {
       const filename = generatedSoundTextToFileName(text)
       if (!seen.has(filename)) {
         seen.add(filename)
@@ -131,27 +129,6 @@ async function generateWithRetry(text: string, outputPath: string, settings: Cli
         await new Promise((resolve) => setTimeout(resolve, delay))
       } else {
         throw new Error(`Failed to generate TTS for "${text}": ${error?.message ?? error}`)
-      }
-    }
-  }
-}
-
-function syncTarget(): void {
-  const targetDir = getSoundPackTargetDir()
-  if (!fs.existsSync(targetDir)) {
-    fs.mkdirSync(targetDir, { recursive: true })
-  }
-
-  const sourceFiles = new Set(fs.readdirSync(SOURCE_DIR))
-
-  for (const file of sourceFiles) {
-    fs.copyFileSync(path.join(SOURCE_DIR, file), path.join(targetDir, file))
-  }
-
-  if (fs.existsSync(targetDir)) {
-    for (const file of fs.readdirSync(targetDir)) {
-      if (file.endsWith(".mp3") && !sourceFiles.has(file)) {
-        fs.unlinkSync(path.join(targetDir, file))
       }
     }
   }
@@ -203,7 +180,7 @@ async function main(): Promise<void> {
     writeTtsSettings({ locale: flags.locale, slow: flags.slow, speed: flags.speed })
     console.log("Generation settings saved.")
 
-    syncTarget()
+    syncSoundPack()
     console.log(`Synced to ${getSoundPackTargetDir()}.`)
   } catch (error: any) {
     console.error("Generation failed:", error?.message ?? error)

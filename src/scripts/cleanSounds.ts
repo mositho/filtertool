@@ -1,34 +1,25 @@
 import * as fs from "fs"
 
 import { globSync } from "glob"
-import { SOUND_PACK_SOURCE_DIR } from "../sounds/paths"
+import { generatedSoundTextToFileName, SOUND_PACK_SOURCE_DIR } from "../sounds/paths"
 import { SOUND_MANIFEST } from "../sounds/manifest"
+import { findSoundFileLiterals, findSoundFileNameLiterals, findSoundFileTtsLiterals, findTtsConfigLiterals } from "../sounds/discover-tts"
 
-const ttsConfigRegex: RegExp = /(?<=[\{,]\s*tts\s*:\s*["'`])([^"'`]+)(?=["'`])/g
-const ttsCallRegex: RegExp = /soundFileTTS\(\s*["'`]([^"'`]+)["'`]\s*\)/g
+function discoverReferencedFiles(): Set<string> {
+  const files = new Set<string>(SOUND_MANIFEST.map((entry) => `${entry.id}.mp3`))
 
-function discoverReferencedTexts(): Set<string> {
-  const texts = new Set<string>()
-
-  for (const entry of SOUND_MANIFEST) {
-    texts.add(entry.text)
-  }
-
-  const files = globSync("./src/filters/**/*.ts")
-  for (const file of files) {
+  const sourceFiles = globSync("./src/filters/**/*.ts")
+  for (const file of sourceFiles) {
     const content = fs.readFileSync(file, "utf-8")
-    ttsConfigRegex.lastIndex = 0
-    let match: RegExpExecArray | null
-    while ((match = ttsConfigRegex.exec(content)) !== null) {
-      texts.add(match[0])
+    for (const text of [...findTtsConfigLiterals(content), ...findSoundFileTtsLiterals(content)]) {
+      files.add(generatedSoundTextToFileName(text))
     }
-    ttsCallRegex.lastIndex = 0
-    while ((match = ttsCallRegex.exec(content)) !== null) {
-      texts.add(match[1])
+    for (const name of [...findSoundFileNameLiterals(content), ...findSoundFileLiterals(content)]) {
+      files.add(name)
     }
   }
 
-  return texts
+  return files
 }
 
 export async function clean(): Promise<void> {
@@ -39,11 +30,7 @@ export async function clean(): Promise<void> {
     return
   }
 
-  const manifestIds = new Set(SOUND_MANIFEST.map((e) => `${e.id}.mp3`))
-  const referencedTexts = discoverReferencedTexts()
-  const adHocTexts = Array.from(referencedTexts).filter((t) => !SOUND_MANIFEST.some((e) => e.text === t))
-  const adHocNames = new Set(adHocTexts.map((t) => t.split(" ").join("_") + ".mp3"))
-  const validNames = new Set([...manifestIds, ...adHocNames])
+  const validNames = discoverReferencedFiles()
 
   const files = fs.readdirSync(soundDir)
   let removedCount = 0
@@ -63,7 +50,7 @@ export async function clean(): Promise<void> {
   }
 }
 
-if (require.main === module || (process.argv[1] && process.argv[1].includes("cleanSounds"))) {
+if (require.main === module) {
   clean().catch((err) => {
     console.error("Sound cleanup failed:", err)
   })

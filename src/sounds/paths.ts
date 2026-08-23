@@ -2,12 +2,13 @@ import path from "path"
 import type { SoundManifestEntry } from "./manifest"
 
 export const SOUND_PACK_SOURCE_DIR = "sounds"
-export const SOUND_PACK_TARGET_DIR_V2 = "poeft-sounds-v2"
+export const SOUND_PACK_VERSION = 2
+export const DEFAULT_SOUND_PACK_FOLDER = `poeft-sounds-v${SOUND_PACK_VERSION}`
 
 const normalizeFolder = (folder: string) => folder.replace(/^[\\/]+|[\\/]+$/g, "")
 
 export function getSoundPackFolder(): string {
-  return normalizeFolder(process.env.SOUNDS_FOLDER || SOUND_PACK_TARGET_DIR_V2)
+  return normalizeFolder(process.env.SOUNDS_FOLDER || DEFAULT_SOUND_PACK_FOLDER)
 }
 
 export function soundFile(file: string): string {

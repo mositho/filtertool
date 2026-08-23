@@ -21,8 +21,15 @@ export function syncSoundPack() {
     fs.mkdirSync(targetDir, { recursive: true })
   }
 
+  const sourceFiles = new Set(files)
   for (const file of files) {
     fs.copyFileSync(path.join(SOURCE_DIR, file), path.join(targetDir, file))
+  }
+
+  for (const file of fs.readdirSync(targetDir)) {
+    if (file.endsWith(".mp3") && !sourceFiles.has(file)) {
+      fs.unlinkSync(path.join(targetDir, file))
+    }
   }
 }
 

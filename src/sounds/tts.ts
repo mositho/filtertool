@@ -93,3 +93,9 @@ export async function createTTSFile(filename: string): Promise<void> {
   pendingGenerations.set(target, promise)
   return promise
 }
+
+export async function waitForPendingGenerations(): Promise<void> {
+  while (pendingGenerations.size > 0) {
+    await Promise.allSettled(Array.from(pendingGenerations.values()))
+  }
+}

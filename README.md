@@ -88,7 +88,7 @@ npm run generate-sounds
 
 ### Cleaning up stale sounds
 
-When you change or remove TTS entries, old `.mp3` files can accumulate. Clean them up with:
+Stale `.mp3` files (sounds no longer referenced by any filter) are removed automatically on every export. You can also clean the repo `sounds/` folder manually:
 
 ```bash
 npm run clean-tts
@@ -96,14 +96,16 @@ npm run clean-tts
 
 ### Sound pack syncing
 
-Exported filters reference a `poeft-sounds-v2/` folder next to your `.filter` file so sounds don't collide with other tools. The export step copies the repo sounds there automatically.
+Exported filters reference a `poeft-sounds-{version}/` folder next to your `.filter` file so sounds don't collide with other tools. The export step copies the repo sounds there automatically and removes files that are no longer referenced.
+
+The `{version}` comes from `SOUND_PACK_VERSION` in `src/sounds/paths.ts` — bump it there and every script, type, and test follows automatically.
 
 Example:
 
 ```text
 Path of Exile/
   Example.filter
-  poeft-sounds-v2/
+  poeft-sounds-{version}/
     chaos_orb.mp3
     six_link.mp3
     ...

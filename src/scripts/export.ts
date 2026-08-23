@@ -4,6 +4,8 @@ import os from "os"
 import path from "path"
 import readline from "readline"
 import { getSoundPackFolder, SOUND_PACK_SOURCE_DIR } from "../sounds/paths"
+import { waitForPendingGenerations } from "../sounds/tts"
+import { syncSoundPack } from "./syncSounds"
 
 const DEFAULT_WIN_FILTER_PATH = path.join(os.homedir(), "Documents", "My Games", "Path of Exile")
 
@@ -95,6 +97,9 @@ export const exportFilter = async (filterName: string, filterPath?: string, skip
   }
 
   fs.writeFileSync(filterFilePath, getFilter())
+
+  await waitForPendingGenerations()
+  syncSoundPack()
 
   if (!filterExists) {
     console.log(`Sound pack folder: ${soundFolder}/`)

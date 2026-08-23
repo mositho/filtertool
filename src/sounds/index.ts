@@ -5,7 +5,8 @@ export {
   soundFileTTS,
   manifestSoundFile,
   SOUND_PACK_SOURCE_DIR,
-  SOUND_PACK_TARGET_DIR_V2,
+  SOUND_PACK_VERSION,
+  DEFAULT_SOUND_PACK_FOLDER,
 } from "./paths"
 export {
   CURRENCY_SOUNDS,

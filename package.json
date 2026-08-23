@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "test": "node --test --require ts-node/register --require ./test/setup.ts test/*.test.ts",
     "typecheck": "tsc --noEmit",
     "check": "npm run typecheck && npm test && npm run format:check",
     "postinstall": "npm run generate-types && npm run generate-sound-types",
@@ -11,8 +10,8 @@
     "export-all": "ts-node ./src/scripts/exportAll.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "preexport": "npm run generate-types && npm run generate-sound-types && npm run sync-sounds",
-    "preexport-all": "npm run generate-types && npm run generate-sound-types && npm run sync-sounds",
+    "preexport": "npm run prepare-sounds",
+    "preexport-all": "npm run prepare-sounds",
     "update-basetypes": "ts-node ./src/scripts/updateBaseTypes.ts",
     "generate": "npm run generate-types && npm run generate-sound-types",
     "generate-types": "ts-node ./src/scripts/generateTypes.ts",
@@ -20,6 +19,7 @@
     "generate-sounds": "ts-node ./src/scripts/generateSounds.ts",
     "sync-sounds": "ts-node ./src/scripts/syncSounds.ts",
     "clean-tts": "ts-node ./src/scripts/cleanSounds.ts",
+    "prepare-sounds": "npm run generate-types && npm run clean-tts && npm run generate-sound-types && npm run sync-sounds",
     "test": "vitest run",
     "test:watch": "vitest"
   },

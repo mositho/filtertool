@@ -1,7 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest"
-import { generatedSoundTextToFileName, soundFileTTS, manifestSoundFile } from "../../src/sounds/paths"
-
-const V2_FOLDER = "poeft-sounds-v2"
+import { DEFAULT_SOUND_PACK_FOLDER, generatedSoundTextToFileName, soundFileTTS, manifestSoundFile } from "../../src/sounds/paths"
 
 beforeEach(() => {
   delete process.env.SOUNDS_FOLDER
@@ -19,12 +17,16 @@ describe("generatedSoundTextToFileName", () => {
   it("handles multiple spaces", () => {
     expect(generatedSoundTextToFileName("Three  Link  Body Armour")).toBe("Three__Link__Body_Armour.mp3")
   })
+
+  it("keeps apostrophes in the filename", () => {
+    expect(generatedSoundTextToFileName("Cat's Paw")).toBe("Cat's_Paw.mp3")
+  })
 })
 
 describe("soundFileTTS", () => {
-  it("returns path in v2 folder by default", () => {
+  it("returns path in the default sound pack folder", () => {
     const result = soundFileTTS("Chaos Orb")
-    expect(result).toBe(`${V2_FOLDER}/Chaos_Orb.mp3`)
+    expect(result).toBe(`${DEFAULT_SOUND_PACK_FOLDER}/Chaos_Orb.mp3`)
   })
 
   it("respects SOUNDS_FOLDER override", () => {
@@ -37,7 +39,7 @@ describe("soundFileTTS", () => {
 describe("manifestSoundFile", () => {
   it("returns path based on entry id", () => {
     const result = manifestSoundFile({ id: "chaos_orb", text: "Chaos Orb" })
-    expect(result).toBe(`${V2_FOLDER}/chaos_orb.mp3`)
+    expect(result).toBe(`${DEFAULT_SOUND_PACK_FOLDER}/chaos_orb.mp3`)
   })
 
   it("respects SOUNDS_FOLDER override", () => {
