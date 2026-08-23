@@ -19,7 +19,7 @@ export const CURRENCY_SOUNDS = [
   { id: "jewellers_orb", text: "Jeweller's" },
   { id: "chromatic_orb", text: "Chrome" },
   { id: "armourers_scrap", text: "Scrap" },
-  { id: "orb_of_augmentation", text: "Aug" },
+  { id: "orb_of_augmentation", text: "Augment" },
   { id: "orb_of_transmutation", text: "Trans" },
   { id: "blacksmiths_whetstone", text: "Whet" },
   { id: "wisdom_scroll", text: "Wisdom" },
