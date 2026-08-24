@@ -1,5 +1,5 @@
 import "dotenv/config"
-import { execSync, spawn } from "child_process"
+import { execSync, spawn, type ChildProcess } from "child_process"
 import fs from "fs"
 import path from "path"
 import { ensureSettings, repoRoot } from "../config/settings"
@@ -7,12 +7,23 @@ import { ensureSettings, repoRoot } from "../config/settings"
 const FRONTEND_PORT = 5173
 const API_PORT = Number(process.env.PORT || 3001)
 
+const isWindows = process.platform === "win32"
+
+/** Runs a command through the shell so `npm` resolves on every platform. */
 function run(command: string, args: string[]): void {
   execSync([command, ...args].join(" "), { stdio: "inherit", cwd: repoRoot() })
 }
 
+/** True when the local binary for `bin` (e.g. "ts-node", "vite") is installed. */
+function hasLocalBin(bin: string): boolean {
+  const names = isWindows ? [`${bin}.cmd`, bin] : [bin]
+  return names.some((name) => fs.existsSync(path.join(repoRoot(), "node_modules", ".bin", name)))
+}
+
 function installIfNeeded(): void {
-  if (fs.existsSync(path.join(repoRoot(), "node_modules"))) return
+  // Check for the binaries the server (ts-node) and frontend (vite) actually
+  // need, so a missing or incomplete node_modules still triggers an install.
+  if (hasLocalBin("ts-node") && hasLocalBin("vite")) return
   console.log("Installing dependencies…")
   run("npm", ["install"])
 }
@@ -25,16 +36,24 @@ function ensureTypes(): void {
 }
 
 function openBrowser(url: string): void {
-  const platform = process.platform
-  const command = platform === "darwin" ? "open" : platform === "win32" ? "start" : "xdg-open"
+  if (isWindows) {
+    spawn("cmd", ["/c", "start", "", url], { stdio: "ignore", detached: true }).unref()
+    return
+  }
+  const command = process.platform === "darwin" ? "open" : "xdg-open"
   spawn(command, [url], { stdio: "ignore", detached: true }).unref()
+}
+
+function spawnNpx(args: string[]): ChildProcess {
+  // On Windows `npx` is a `.cmd` shim that only runs through a shell.
+  return spawn("npx", args, { stdio: "inherit", cwd: repoRoot(), shell: isWindows })
 }
 
 function start(): void {
   process.env.VITE_CONFIG_NATIVE_IGNORE_WARNING = "true"
   const children = [
-    spawn("npx", ["--no-install", "ts-node", "./src/server/index.ts"], { stdio: "inherit", cwd: repoRoot() }),
-    spawn("npx", ["--no-install", "vite", "--config", "frontend/vite.config.ts"], { stdio: "inherit", cwd: repoRoot() }),
+    spawnNpx(["--no-install", "ts-node", "./src/server/index.ts"]),
+    spawnNpx(["--no-install", "vite", "--config", "frontend/vite.config.ts"]),
   ]
 
   setTimeout(() => openBrowser(`http://localhost:${FRONTEND_PORT}`), 2500)
