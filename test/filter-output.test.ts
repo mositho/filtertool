@@ -1,14 +1,14 @@
 import { describe, expect, test } from "vitest"
-import { buildProfile as templateProfile, buildSpecificOptions as templateOptions } from "../src/filters/template/config"
+import { buildProfile as emptyProfile, buildSpecificOptions as emptyOptions } from "./fixtures/empty-config"
 import { early, filterDefaults, highlightedEquipment, jewellery, links, sixSockets } from "../src/filters/shared"
 import { joinSections } from "../src/filters/shared/sections/composition"
-import { normalizeShieldProgressionConfig } from "../src/filters/shared/sections/options"
+import { resolveShieldProgressionMode } from "../src/filters/shared/sections/options"
 import { resolveMixedItemClassWeaponQuery, resolveWeaponBaseTypes } from "../src/filters/shared/sections/weapon-queries"
 
-describe("template configuration", () => {
+describe("empty filter configuration", () => {
   test("exposes every configurable section", () => {
-    expect(templateProfile).toEqual({})
-    expect(templateOptions).toEqual({
+    expect(emptyProfile).toEqual({})
+    expect(emptyOptions).toEqual({
       links: {},
       highlightedEquipment: {},
       jewellery: {},
@@ -42,6 +42,101 @@ describe("highlighted equipment", () => {
     expect(output).not.toMatch(/Rarity == Rare/)
     expect(output).not.toMatch(/Rarity == Magic/)
   })
+
+  test("applies per-rarity icons", () => {
+    const output = highlightedEquipment({
+      highlights: [
+        {
+          baseTypes: ["Rusted Hatchet"],
+          rarities: ["Normal", "Rare"],
+          perRarityCustomization: true,
+          normal: { iconColor: "Cyan", iconShape: "UpsideDownHouse" },
+          rare: { iconColor: "Yellow", iconShape: "UpsideDownHouse" },
+        },
+      ],
+    })
+
+    expect(output).toMatch(/MinimapIcon 2 Cyan UpsideDownHouse/)
+    expect(output).toMatch(/MinimapIcon 2 Yellow UpsideDownHouse/)
+  })
+
+  test("omits the minimap icon when no per-rarity icon is configured", () => {
+    const output = highlightedEquipment({
+      highlights: [{ baseTypes: ["Rusted Hatchet"], rarities: ["Normal"] }],
+    })
+
+    expect(output).not.toMatch(/MinimapIcon/)
+  })
+
+  test("applies a configured per-rarity icon", () => {
+    const output = highlightedEquipment({
+      highlights: [
+        {
+          baseTypes: ["Rusted Hatchet"],
+          rarities: ["Normal"],
+          perRarityCustomization: true,
+          normal: { iconColor: "Red", iconShape: "Star" },
+        },
+      ],
+    })
+
+    expect(output).toMatch(/MinimapIcon 2 Red Star/)
+  })
+
+  test("applies a whole-highlight icon to every rarity", () => {
+    const output = highlightedEquipment({
+      highlights: [{ baseTypes: ["Rusted Hatchet"], rarities: ["Normal", "Rare"], iconColor: "Red", iconShape: "Star" }],
+    })
+
+    expect(output.match(/MinimapIcon 2 Red Star/g)).toHaveLength(2)
+  })
+
+  test("applies a whole-highlight sound to every rarity", () => {
+    const output = highlightedEquipment({
+      highlights: [{ baseTypes: ["Rusted Hatchet"], rarities: ["Normal", "Rare"], soundId: 5 }],
+    })
+
+    expect(output.match(/PlayAlertSound 5/g)).toHaveLength(2)
+  })
+
+  test("requires a minimum number of sockets", () => {
+    const output = highlightedEquipment({
+      highlights: [{ baseTypes: ["Rusted Hatchet"], rarities: ["Normal"], minSockets: 4 }],
+    })
+
+    expect(output).toMatch(/Sockets >= 4/)
+  })
+
+  test("per-rarity customization overrides whole-highlight styling", () => {
+    const output = highlightedEquipment({
+      highlights: [
+        {
+          baseTypes: ["Rusted Hatchet"],
+          rarities: ["Normal", "Rare"],
+          perRarityCustomization: true,
+          iconColor: "Red",
+          iconShape: "Star",
+          soundId: 5,
+          normal: { iconColor: "Cyan", iconShape: "UpsideDownHouse" },
+          rare: { iconColor: "Yellow", iconShape: "UpsideDownHouse" },
+        },
+      ],
+    })
+
+    expect(output).toMatch(/MinimapIcon 2 Cyan UpsideDownHouse/)
+    expect(output).toMatch(/MinimapIcon 2 Yellow UpsideDownHouse/)
+    expect(output).not.toMatch(/MinimapIcon 2 Red Star/)
+    expect(output).not.toMatch(/PlayAlertSound 5/)
+  })
+
+  test("omits highlights with no targets", () => {
+    const output = highlightedEquipment({
+      highlights: [{}],
+    })
+
+    expect(output).toBe("")
+    expect(output).not.toMatch(/Rarity/)
+  })
 })
 
 describe("links", () => {
@@ -67,8 +162,8 @@ describe("links", () => {
   })
 
   test("omits generic three-links when disabled but keeps selected links", () => {
-    const withGenerics = links({ prefColors: ["R", "G"] })
-    const withoutGenerics = links({ prefColors: ["R", "G"], genericThreeLinksEnabled: false })
+    const withGenerics = links({ preferredColors: ["R", "G"], genericThreeLinksEnabled: true })
+    const withoutGenerics = links({ preferredColors: ["R", "G"], genericThreeLinksEnabled: false })
 
     expect(withGenerics).toMatch("LinkedSockets == 3")
     expect(withoutGenerics).toMatch("LinkedSockets == 3")
@@ -76,8 +171,8 @@ describe("links", () => {
   })
 
   test("omits generic four-links when disabled but keeps selected links", () => {
-    const withGenerics = links({ prefColors: ["R", "G"] })
-    const withoutGenerics = links({ prefColors: ["R", "G"], genericFourLinksEnabled: false })
+    const withGenerics = links({ preferredColors: ["R", "G"], genericFourLinksEnabled: true })
+    const withoutGenerics = links({ preferredColors: ["R", "G"], genericFourLinksEnabled: false })
 
     expect(withGenerics).toMatch("LinkedSockets == 4")
     expect(withoutGenerics).toMatch("LinkedSockets == 4")
@@ -85,15 +180,15 @@ describe("links", () => {
   })
 
   test("produces shield rules when shield progression is enabled", () => {
-    const withoutShields = links({ shieldProgression: "none" })
-    const withShields = links({ shieldProgression: "full" })
+    const withoutShields = early({ shieldProgression: "none" })
+    const withShields = early({ shieldProgression: "full" })
 
     expect(withShields).toMatch('Class "Shields"')
     expect(withShields.length).toBeGreaterThan(withoutShields.length)
   })
 
-  test("applies socket group filters when prefColors is set", () => {
-    const output = links({ prefColors: ["R"] })
+  test("applies socket group filters when preferredColors is set", () => {
+    const output = links({ preferredColors: ["R"] })
 
     expect(output).toMatch(/SocketGroup >=/)
   })
@@ -114,16 +209,10 @@ describe("early", () => {
     expect(output).toMatch('Class "Boots"')
   })
 
-  test("shows rustic belt when enabled", () => {
-    const output = early({ showRustic: true })
+  test("always shows rustic belt", () => {
+    const output = early({})
 
     expect(output).toMatch('"Rustic"')
-  })
-
-  test("omits rustic belt when disabled", () => {
-    const output = early({ showRustic: false })
-
-    expect(output).not.toMatch('"Rustic"')
   })
 })
 
@@ -134,12 +223,10 @@ describe("section composition", () => {
 })
 
 describe("shield progression", () => {
-  test("normalization applies mode defaults", () => {
-    expect(normalizeShieldProgressionConfig("full")).toEqual({ enabled: true, maxAreaLevel: undefined })
-    expect(normalizeShieldProgressionConfig("none")).toEqual({
-      enabled: false,
-      maxAreaLevel: filterDefaults.shieldProgression.earlyMaxAreaLevel,
-    })
+  test("resolves the configured mode", () => {
+    expect(resolveShieldProgressionMode("full")).toBe("full")
+    expect(resolveShieldProgressionMode("none")).toBe("none")
+    expect(resolveShieldProgressionMode(undefined)).toBe(filterDefaults.shieldProgression)
   })
 })
 

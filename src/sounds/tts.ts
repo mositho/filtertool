@@ -4,38 +4,23 @@ import { Readable } from "stream"
 import ffmpegPath from "ffmpeg-static"
 import axios from "axios"
 import * as tts from "google-tts-api"
+import { ensureSettings, clampTtsSpeed, loadSettings, repoRoot, saveSettings, type TtsSettings } from "../config/settings"
+import { MANIFEST_BY_ID, type SoundManifestEntry } from "./manifest"
 
 const ffmpeg = require("fluent-ffmpeg")
 ffmpeg.setFfmpegPath(ffmpegPath)
 
-export interface TtsSettings {
-  locale: string
-  slow: boolean
-  speed: number
-}
-
-export const DEFAULT_TTS_SETTINGS: TtsSettings = {
-  locale: "en-US",
-  slow: false,
-  speed: 1.6,
-}
-
-const SETTINGS_FILE = ".tts-settings.json"
+export { DEFAULT_TTS_SETTINGS } from "../config/settings"
+export type { TtsSettings } from "../config/settings"
 
 export function readTtsSettings(): TtsSettings {
-  try {
-    if (fs.existsSync(SETTINGS_FILE)) {
-      const data = fs.readFileSync(SETTINGS_FILE, "utf-8")
-      return { ...DEFAULT_TTS_SETTINGS, ...JSON.parse(data) }
-    }
-  } catch {
-    // ignore malformed file, use defaults
-  }
-  return { ...DEFAULT_TTS_SETTINGS }
+  return loadSettings().tts
 }
 
 export function writeTtsSettings(settings: TtsSettings): void {
-  fs.writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2) + "\n")
+  const current = ensureSettings()
+  current.tts = { ...current.tts, ...settings }
+  saveSettings(repoRoot(), current)
 }
 
 async function processedMp3(bufferData: Buffer, outputPath: string, speedMultiplier: number): Promise<void> {
@@ -43,7 +28,7 @@ async function processedMp3(bufferData: Buffer, outputPath: string, speedMultipl
     const inputStream = Readable.from(bufferData)
     ffmpeg(inputStream)
       .audioCodec("libmp3lame")
-      .audioFilters(`atempo=${speedMultiplier},apad=pad_len=22050,treble=g=6,volume=4dB`)
+      .audioFilters(`atempo=${clampTtsSpeed(speedMultiplier)},apad=pad_len=22050,treble=g=6,volume=4dB`)
       .on("end", () => resolve())
       .on("error", (err: any) => reject(err))
       .save(outputPath)
@@ -53,7 +38,6 @@ async function processedMp3(bufferData: Buffer, outputPath: string, speedMultipl
 export async function generateTtsFile(text: string, outputPath: string, settings: TtsSettings): Promise<void> {
   const url = tts.getAudioUrl(text, {
     lang: settings.locale,
-    slow: settings.slow,
     host: "https://translate.google.com",
   })
   const response = await axios.get(url, { responseType: "arraybuffer" })
@@ -66,7 +50,20 @@ export async function generateTtsFile(text: string, outputPath: string, settings
 
 const pendingGenerations = new Map<string, Promise<void>>()
 
+/**
+ * The text a generated sound file should speak. Manifest sounds (whose filename
+ * matches a manifest id) use the manifest's `text`; ad-hoc sounds fall back to
+ * the filename with underscores turned into spaces.
+ */
+export function ttsTextForFile(filename: string): string {
+  const id = path.basename(filename, path.extname(filename))
+  const manifestEntry = (MANIFEST_BY_ID as Record<string, SoundManifestEntry | undefined>)[id]
+  return manifestEntry?.text ?? id.replace(/_/g, " ")
+}
+
 export async function createTTSFile(filename: string): Promise<void> {
+  if (process.env.FILTER_DISABLE_TTS_GENERATION === "1") return
+
   const target = filename.endsWith(".mp3") ? filename : `${filename}.mp3`
 
   if (fs.existsSync(target)) {
@@ -79,7 +76,7 @@ export async function createTTSFile(filename: string): Promise<void> {
 
   const promise = (async () => {
     try {
-      const text = path.basename(target, path.extname(target)).replace(/_/g, " ")
+      const text = ttsTextForFile(target)
       const settings = readTtsSettings()
       console.log(`[TTS] Generating local TTS for "${text}" -> ${target}`)
       await generateTtsFile(text, target, settings)

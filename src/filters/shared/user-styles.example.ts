@@ -3,7 +3,7 @@ import type { DeepPartial } from "./user-overrides"
 
 export const userFilterStyles: DeepPartial<typeof baseFilterStyles> = {
   // Example:
-  // priorityA: {
+  // currencyA: {
   //   text: "#FFFFFF",
   //   background: "#1A1A1A",
   //   border: "#FFFFFF",

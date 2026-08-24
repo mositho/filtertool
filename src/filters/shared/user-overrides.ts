@@ -1,3 +1,6 @@
+import fs from "fs"
+import path from "path"
+
 type PlainObject = Record<string, unknown>
 export type DeepPartial<T> = T extends readonly (infer TValue)[]
   ? readonly DeepPartial<TValue>[]
@@ -41,5 +44,36 @@ export const loadOptionalOverride = <T>(modulePath: string, exportName: string):
     }
 
     throw error
+  }
+}
+
+const jsonOverrideCache = new Map<string, { mtimeMs: number; value: unknown }>()
+
+/**
+ * Loads a UI-owned JSON override (e.g. `user-defaults.json`). Returns an empty
+ * override when the file is missing, disabled, or malformed. Results are cached
+ * by file mtime so a long-running server picks up edits without restarting.
+ */
+export const loadJsonOverride = <T>(fileName: string): DeepPartial<T> => {
+  if (process.env.FILTER_DISABLE_USER_OVERRIDES === "1") {
+    return {} as DeepPartial<T>
+  }
+
+  const jsonPath = path.join(__dirname, fileName)
+  if (!fs.existsSync(jsonPath)) {
+    return {} as DeepPartial<T>
+  }
+
+  try {
+    const stat = fs.statSync(jsonPath)
+    const cached = jsonOverrideCache.get(jsonPath)
+    if (cached && cached.mtimeMs === stat.mtimeMs) {
+      return cached.value as DeepPartial<T>
+    }
+    const value = JSON.parse(fs.readFileSync(jsonPath, "utf-8")) as DeepPartial<T>
+    jsonOverrideCache.set(jsonPath, { mtimeMs: stat.mtimeMs, value })
+    return value
+  } catch {
+    return {} as DeepPartial<T>
   }
 }

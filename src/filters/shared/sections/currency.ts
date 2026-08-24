@@ -17,7 +17,7 @@ export const currency = () => {
 
   const sTierCurrency = withSubheading(
     "S Tier",
-    buildTierCurrency("priorityA", [
+    buildTierCurrency("currencyA", [
       { baseTypes: ["Mirror of Kalandra", "Divine Orb"], iconColor: "Red", iconShape: "Star", soundId: 6 },
       { baseTypes: ["Orb of Annulment"], iconColor: "Red", iconShape: "Circle", soundId: 1 },
     ]),
@@ -25,7 +25,7 @@ export const currency = () => {
 
   const aTierCurrency = withSubheading(
     "A Tier",
-    buildTierCurrency("priorityB", [
+    buildTierCurrency("currencyB", [
       { baseTypes: ["Exalted Orb"], iconColor: "Pink", iconShape: "Circle", soundId: 1 },
       { baseTypes: ["Ancient Orb"], iconColor: "Pink", iconShape: "Circle", soundId: 1 },
       { baseTypes: ["Gemcutter's Prism"], iconColor: "Pink", iconShape: "Circle", soundId: 1 },
@@ -43,7 +43,7 @@ export const currency = () => {
 
   const bTierCurrency = withSubheading(
     "B Tier",
-    buildTierCurrency("priorityC", [
+    buildTierCurrency("currencyC", [
       { baseTypes: ["Orb of Fusing"], iconColor: "Yellow", iconShape: "Diamond", tts: MANIFEST_BY_ID.orb_of_fusing },
       { baseTypes: ["Jeweller's Orb"], iconColor: "Yellow", iconShape: "Diamond", tts: MANIFEST_BY_ID.jewellers_orb },
       { baseTypes: ["Chromatic Orb"], iconColor: "Purple", iconShape: "Pentagon", tts: MANIFEST_BY_ID.chromatic_orb },
@@ -61,7 +61,7 @@ export const currency = () => {
       rule()
         .baseTypeExact(...LEAGUESTART_CURRENCY_EXACT)
         .icon("Blue", "Circle")
-        .mixin(styleMixin(filterStyles.priorityC)),
+        .mixin(styleMixin(filterStyles.currencyC)),
     ),
   )
 

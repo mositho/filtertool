@@ -1,5 +1,5 @@
 import path from "path"
-import { DEFAULT_STYLE_SETTINGS } from "./filters/shared/styles"
+import { DEFAULT_STYLE_SETTINGS, MIN_STYLE_SIZE } from "./filters/shared/styles"
 import { createTTSFile } from "./sounds/tts"
 import { soundFile, SOUND_PACK_SOURCE_DIR } from "./sounds/paths"
 import { Condition, Rule, RuleContent, StyleData } from "./types"
@@ -179,7 +179,7 @@ const rule = (...rules: Rule[]): Rule => {
         const [r, g, b] = hexToRgb(styleData.border)
         this.border(r, g, b)
       }
-      this.size(styleData.size ?? DEFAULT_STYLE_SETTINGS.size)
+      this.size(Math.max(MIN_STYLE_SIZE, styleData.size ?? DEFAULT_STYLE_SETTINGS.size))
       return this
     },
 

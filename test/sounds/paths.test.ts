@@ -1,8 +1,20 @@
-import { describe, it, expect, beforeEach } from "vitest"
+import { describe, it, expect, beforeEach, afterEach } from "vitest"
+import fs from "fs"
+import os from "os"
+import path from "path"
 import { DEFAULT_SOUND_PACK_FOLDER, generatedSoundTextToFileName, soundFileTTS, manifestSoundFile } from "../../src/sounds/paths"
+import { saveSettings } from "../../src/config/settings"
+
+let settingsDir: string
 
 beforeEach(() => {
-  delete process.env.SOUNDS_FOLDER
+  settingsDir = fs.mkdtempSync(path.join(os.tmpdir(), "filtertool-paths-"))
+  process.env.FILTER_SETTINGS_DIR = settingsDir
+})
+
+afterEach(() => {
+  delete process.env.FILTER_SETTINGS_DIR
+  fs.rmSync(settingsDir, { recursive: true, force: true })
 })
 
 describe("generatedSoundTextToFileName", () => {
@@ -25,26 +37,22 @@ describe("generatedSoundTextToFileName", () => {
 
 describe("soundFileTTS", () => {
   it("returns path in the default sound pack folder", () => {
-    const result = soundFileTTS("Chaos Orb")
-    expect(result).toBe(`${DEFAULT_SOUND_PACK_FOLDER}/Chaos_Orb.mp3`)
+    expect(soundFileTTS("Chaos Orb")).toBe(`${DEFAULT_SOUND_PACK_FOLDER}/Chaos_Orb.mp3`)
   })
 
-  it("respects SOUNDS_FOLDER override", () => {
-    process.env.SOUNDS_FOLDER = "custom-sounds"
-    const result = soundFileTTS("Exalted Orb")
-    expect(result).toBe("custom-sounds/Exalted_Orb.mp3")
+  it("respects the soundsFolder setting", () => {
+    saveSettings(settingsDir, { soundsFolder: "custom-sounds", tts: { locale: "en-US", speed: 1.6 } })
+    expect(soundFileTTS("Exalted Orb")).toBe("custom-sounds/Exalted_Orb.mp3")
   })
 })
 
 describe("manifestSoundFile", () => {
   it("returns path based on entry id", () => {
-    const result = manifestSoundFile({ id: "chaos_orb", text: "Chaos Orb" })
-    expect(result).toBe(`${DEFAULT_SOUND_PACK_FOLDER}/chaos_orb.mp3`)
+    expect(manifestSoundFile({ id: "chaos_orb", text: "Chaos", name: "Chaos Orb" })).toBe(`${DEFAULT_SOUND_PACK_FOLDER}/chaos_orb.mp3`)
   })
 
-  it("respects SOUNDS_FOLDER override", () => {
-    process.env.SOUNDS_FOLDER = "custom-sounds"
-    const result = manifestSoundFile({ id: "exalted_orb", text: "Exalted Orb" })
-    expect(result).toBe("custom-sounds/exalted_orb.mp3")
+  it("respects the soundsFolder setting", () => {
+    saveSettings(settingsDir, { soundsFolder: "custom-sounds", tts: { locale: "en-US", speed: 1.6 } })
+    expect(manifestSoundFile({ id: "exalted_orb", text: "Exalted", name: "Exalted Orb" })).toBe("custom-sounds/exalted_orb.mp3")
   })
 })

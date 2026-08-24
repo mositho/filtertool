@@ -2,7 +2,7 @@ import type { BaseType, ItemClass } from "../../../types"
 import type { WeaponBaseType as GeneratedWeaponBaseType } from "../../../types/weapon-base-data"
 import { WEAPON_BASE_DATA } from "../../../types/weapon-base-data"
 import { WEAPON_CLASSES, type WeaponItemClass } from "./item-classes"
-import type { SharedEarlyWeaponConfig } from "./options"
+import type { HighlightedBaseTypeConfig } from "./options"
 
 export type WeaponBaseType = GeneratedWeaponBaseType
 export type WeaponBaseQuery = { itemClasses?: readonly WeaponItemClass[]; minAps?: number; maxDropLevel?: number }
@@ -51,22 +51,20 @@ export const resolveMixedItemClassWeaponQuery = ({
   }
 }
 export const resolveSharedWeaponQuery = ({
-  sharedWeapons,
-  preferredWeaponItemClasses = [],
-  preferredWeaponMinAps,
+  earlyWeapons,
+  preferredWeapons,
 }: {
-  sharedWeapons?: SharedEarlyWeaponConfig
-  preferredWeaponItemClasses?: readonly WeaponItemClass[]
-  preferredWeaponMinAps?: number
+  earlyWeapons?: HighlightedBaseTypeConfig
+  preferredWeapons?: HighlightedBaseTypeConfig
 }) => {
-  const hasExplicitTargets =
-    (sharedWeapons?.itemClasses?.length ?? 0) > 0 || (sharedWeapons?.baseTypes?.length ?? 0) > 0 || sharedWeapons?.minAps !== undefined
+  const hasExplicitTargets = (earlyWeapons?.itemClasses?.length ?? 0) > 0 || (earlyWeapons?.baseTypes?.length ?? 0) > 0
   return hasExplicitTargets
     ? {
-        itemClasses: sharedWeapons?.itemClasses ?? [],
-        baseTypes: sharedWeapons?.baseTypes ?? [],
-        minAps: sharedWeapons?.minAps,
-        maxAreaLevel: sharedWeapons?.maxAreaLevel,
+        itemClasses: earlyWeapons?.itemClasses?.filter(isWeaponItemClass) ?? [],
+        baseTypes: earlyWeapons?.baseTypes?.filter(isWeaponBaseType) ?? [],
       }
-    : { itemClasses: preferredWeaponItemClasses, baseTypes: [], minAps: preferredWeaponMinAps, maxAreaLevel: sharedWeapons?.maxAreaLevel }
+    : {
+        itemClasses: preferredWeapons?.itemClasses?.filter(isWeaponItemClass) ?? [],
+        baseTypes: preferredWeapons?.baseTypes?.filter(isWeaponBaseType) ?? [],
+      }
 }

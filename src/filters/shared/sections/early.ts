@@ -4,11 +4,13 @@ import { filterStyles, styleMixin } from "../styles"
 import { manifestSoundFile } from "../../../sounds/paths"
 import { MANIFEST_BY_ID } from "../../../sounds/manifest"
 import { compileRules, withHeading } from "./composition"
-import { applyHighlightTargets } from "./highlighted-equipment"
-import { ARMOUR_CLASSES, SOCKETABLE_CLASSES } from "./item-classes"
+import { buildHighlightedBaseTypeRules } from "./highlighted-equipment"
+import { ARMOUR_CLASSES, defenceMixinMap } from "./item-classes"
 import type { BuildProfile, EarlyConfig } from "./options"
-import { normalizeShieldProgressionConfig } from "./options"
-import { resolveMixedItemClassWeaponQuery, resolveSharedWeaponQuery, resolveWeaponBaseTypes } from "./weapon-queries"
+import { resolveShieldProgressionMode } from "./options"
+import { resolveSharedWeaponQuery, resolveWeaponBaseTypes } from "./weapon-queries"
+
+const RUSTIC_BELT_MAX_AREA_LEVEL = 12
 
 export const twilightStrand = () =>
   withHeading(
@@ -22,22 +24,18 @@ export const twilightStrand = () =>
     ),
   )
 
-export const earlySockets = ({ earlyWeapons, preferredWeaponItemClasses = [], preferredWeaponMinAps }: Partial<BuildProfile> = {}) => {
-  const resolvedEarlyWeapons = resolveSharedWeaponQuery({
-    sharedWeapons: earlyWeapons,
-    preferredWeaponItemClasses,
-    preferredWeaponMinAps,
-  })
+export const earlySockets = ({
+  earlyWeapons,
+  preferredWeapons,
+  twoSocketMaxAreaLevel = filterDefaults.early.twoSocketMaxAreaLevel,
+  threeSocketMaxAreaLevel = filterDefaults.early.threeSocketMaxAreaLevel,
+}: Partial<BuildProfile> & EarlyConfig = {}) => {
+  const resolvedEarlyWeapons = resolveSharedWeaponQuery({ earlyWeapons, preferredWeapons })
   const resolvedWeaponBaseTypes = resolveWeaponBaseTypes({
     itemClasses: resolvedEarlyWeapons.itemClasses,
     baseTypes: resolvedEarlyWeapons.baseTypes,
-    minAps: resolvedEarlyWeapons.minAps,
   })
-  const effectiveWeaponItemClasses = resolvedEarlyWeapons.itemClasses
-  const effectiveWeaponMinAps = resolvedEarlyWeapons.minAps
-  const itemClasses = effectiveWeaponMinAps === undefined ? [...ARMOUR_CLASSES, ...effectiveWeaponItemClasses] : ARMOUR_CLASSES
-  const twoSocketMaxAreaLevel = filterDefaults.early.twoSocketMaxAreaLevel
-  const threeSocketMaxAreaLevel = filterDefaults.early.threeSocketMaxAreaLevel
+  const itemClasses = [...ARMOUR_CLASSES, ...resolvedEarlyWeapons.itemClasses]
 
   return withHeading(
     "Early Sockets",
@@ -70,105 +68,47 @@ export const earlySockets = ({ earlyWeapons, preferredWeaponItemClasses = [], pr
 
 export const early = ({
   earlyWeapons,
-  preferredWeaponItemClasses = [],
-  preferredWeaponMinAps,
-  earlyMaxAreaLevel = filterDefaults.campaign.earlyMaxAreaLevel,
-  showRustic = filterDefaults.early.showRustic,
-  includeMomentumColors = filterDefaults.early.includeMomentumColors,
-  momentumColors,
-  momentumMaxAreaLevel = filterDefaults.early.momentumMaxAreaLevel,
   shieldProgression,
-}: EarlyConfig & Partial<BuildProfile>) => {
-  const resolvedEarlyWeapons = resolveSharedWeaponQuery({
-    sharedWeapons: earlyWeapons,
-    preferredWeaponItemClasses,
-    preferredWeaponMinAps,
-  })
-  const earlyBootsMaxAreaLevel = filterDefaults.early.earlyBootsMaxAreaLevel
-  const shieldConfig = normalizeShieldProgressionConfig(shieldProgression)
-  const defaultMomentumItemClasses = shieldConfig.enabled ? SOCKETABLE_CLASSES : ARMOUR_CLASSES
-  const { itemClasses: momentumItemClasses = [], baseTypes: momentumBaseTypes = [] } = resolveMixedItemClassWeaponQuery({
-    itemClasses: momentumColors?.itemClasses ?? [...defaultMomentumItemClasses, ...resolvedEarlyWeapons.itemClasses],
-    baseTypes: momentumColors?.baseTypes ?? resolvedEarlyWeapons.baseTypes,
-    minAps: momentumColors?.minAps ?? resolvedEarlyWeapons.minAps,
-  })
-  const effectiveMomentumMaxAreaLevel = momentumColors?.maxAreaLevel ?? momentumMaxAreaLevel
-  const buildMomentumRule = () =>
-    rule()
-      .socketGroup(">=", "RGG")
-      .areaLevel("<=", effectiveMomentumMaxAreaLevel)
-      .mixin(styleMixin(filterStyles.momentum))
-      .icon("Orange", "Kite")
-  const buildWeaponHighlightRules = ({
-    baseTypes,
-    itemClasses,
-    minAps,
-    maxAreaLevel = earlyMaxAreaLevel,
-  }: {
-    baseTypes?: readonly string[]
-    itemClasses?: readonly string[]
-    minAps?: number
-    maxAreaLevel?: number
-  }) => {
-    const { itemClasses: resolvedItemClasses, baseTypes: resolvedBaseTypes } = resolveMixedItemClassWeaponQuery({
-      itemClasses,
-      baseTypes,
-      minAps,
-    })
-    const hasTargets = (resolvedItemClasses?.length ?? 0) > 0 || (resolvedBaseTypes?.length ?? 0) > 0
-
-    if (!hasTargets) {
-      return []
-    }
-
-    const buildBaseRule = (rarity: "Rare" | "Magic" | "Normal") =>
-      applyHighlightTargets(rule().rarity("==", rarity).areaLevel("<=", maxAreaLevel), {
-        baseTypes: resolvedBaseTypes.length > 0 ? resolvedBaseTypes : undefined,
-        itemClasses: resolvedItemClasses,
-      })
-
-    return [
-      buildBaseRule("Rare").mixin(styleMixin(filterStyles.highlightedEquipmentRare)).icon("Yellow", "UpsideDownHouse").sound(3),
-      buildBaseRule("Magic").mixin(styleMixin(filterStyles.highlightedEquipmentMagic)).icon("Blue", "UpsideDownHouse"),
-      buildBaseRule("Normal").mixin(styleMixin(filterStyles.highlightedEquipmentNormal)).icon("Cyan", "UpsideDownHouse"),
-    ]
-  }
-  const sharedEarlyWeaponHighlights =
-    resolvedEarlyWeapons.baseTypes.length > 0 || resolvedEarlyWeapons.itemClasses.length > 0 || resolvedEarlyWeapons.minAps !== undefined
-      ? [resolvedEarlyWeapons]
+  preferredArmour = filterDefaults.preferredArmour,
+  earlyMaxAreaLevel = filterDefaults.early.earlyMaxAreaLevel,
+  earlyBootsMaxAreaLevel = filterDefaults.early.earlyBootsMaxAreaLevel,
+}: Partial<BuildProfile> & EarlyConfig) => {
+  const shieldMode = resolveShieldProgressionMode(shieldProgression)
+  const hasEarlyWeaponTargets = (earlyWeapons?.itemClasses?.length ?? 0) > 0 || (earlyWeapons?.baseTypes?.length ?? 0) > 0
+  const earlyWeaponHighlights =
+    earlyWeapons && hasEarlyWeaponTargets
+      ? buildHighlightedBaseTypeRules({ ...earlyWeapons, maxAreaLevel: earlyWeapons.maxAreaLevel ?? earlyMaxAreaLevel })
       : []
 
   return withHeading(
     "Early",
     compileRules(
-      ...sharedEarlyWeaponHighlights.flatMap(buildWeaponHighlightRules),
+      ...earlyWeaponHighlights,
       rule()
         .itemClass("Boots")
         .areaLevel("<=", earlyBootsMaxAreaLevel)
         .rarity("==", "Rare")
         .mixin(styleMixin(filterStyles.rareArmour))
         .tts(manifestSoundFile(MANIFEST_BY_ID.rare_boots)),
-      shieldConfig.enabled &&
-        rule()
-          .itemClass("Shields")
-          .socketGroup(">=", "RG")
-          .areaLevel("<=", earlyMaxAreaLevel)
-          .mixin(styleMixin(filterStyles.earlyShieldLink)),
-      shieldConfig.enabled && rule().itemClass("Shields").areaLevel("<=", 8).mixin(styleMixin(filterStyles.earlyShieldBase)),
-      showRustic &&
-        rule()
-          .baseType("Rustic")
-          .itemClass("Belts")
-          .areaLevel("<=", earlyMaxAreaLevel)
-          .icon("White", "Pentagon")
-          .mixin(styleMixin(filterStyles.jewellery))
-          .tts(manifestSoundFile(MANIFEST_BY_ID.rustic_belt)),
-      ...(includeMomentumColors
-        ? [
-            momentumItemClasses.length > 0 && buildMomentumRule().itemClass(...momentumItemClasses),
-            momentumBaseTypes && momentumBaseTypes.length > 0 && buildMomentumRule().baseType(...momentumBaseTypes),
-          ]
+      shieldMode !== "none" &&
+        rule().itemClass("Shields").areaLevel("<=", earlyMaxAreaLevel).mixin(styleMixin(filterStyles.earlyShieldBase)),
+      ...(shieldMode === "full"
+        ? preferredArmour.map((defenceType) =>
+            rule()
+              .itemClass("Shields")
+              .areaLevel(">", earlyMaxAreaLevel)
+              .rarity("==", "Rare")
+              .mixin(styleMixin(filterStyles.rareArmour))
+              .mixin(defenceMixinMap[defenceType]),
+          )
         : []),
+      rule()
+        .baseType("Rustic")
+        .itemClass("Belts")
+        .areaLevel("<=", RUSTIC_BELT_MAX_AREA_LEVEL)
+        .icon("White", "Pentagon")
+        .mixin(styleMixin(filterStyles.jewellery))
+        .tts(manifestSoundFile(MANIFEST_BY_ID.rustic_belt)),
     ),
   )
 }

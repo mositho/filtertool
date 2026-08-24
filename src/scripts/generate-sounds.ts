@@ -4,45 +4,40 @@ import path from "path"
 import readline from "readline"
 import { globSync } from "glob"
 import { SOUND_MANIFEST } from "../sounds/manifest"
-import { generateTtsFile, writeTtsSettings } from "../sounds/tts"
+import { generateTtsFile, readTtsSettings, writeTtsSettings } from "../sounds/tts"
 import { generatedSoundTextToFileName, getSoundPackTargetDir, SOUND_PACK_SOURCE_DIR } from "../sounds/paths"
 import { findTtsConfigLiterals } from "../sounds/discover-tts"
-import { syncSoundPack } from "./syncSounds"
+import { syncSoundPack } from "./sync-sounds"
 
 const SOURCE_DIR = `./${SOUND_PACK_SOURCE_DIR}`
 
 interface CliFlags {
   locale: string
-  slow: boolean
   speed: number
   yes: boolean
 }
 
 function parseArgs(): CliFlags {
   const args = process.argv.slice(2)
-  const flags: CliFlags = { locale: "en-US", slow: false, speed: 1.6, yes: false }
-  const known = new Set(["--locale", "--slow", "--speed", "--yes", "--help"])
+  const flags: CliFlags = { locale: "en-US", speed: 1.6, yes: false }
+  const known = new Set(["--locale", "--speed", "--yes", "--help"])
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]
     if (!known.has(arg)) {
       console.error(`Unknown flag: ${arg}`)
-      console.error(`Usage: ts-node generateSounds.ts [--locale en-US] [--slow] [--speed 1.6] [--yes]`)
+      console.error(`Usage: ts-node generate-sounds.ts [--locale en-US] [--speed 1.6] [--yes]`)
       process.exit(1)
     }
     if (arg === "--help") {
-      console.log(`Usage: ts-node generateSounds.ts [--locale en-US] [--slow] [--speed 1.6] [--yes]
+      console.log(`Usage: ts-node generate-sounds.ts [--locale en-US] [--speed 1.6] [--yes]
   --locale   Language locale (default: en-US)
-  --slow     Use slow speech mode (default: false)
   --speed    FFmpeg speed multiplier (default: 1.6)
   --yes      Skip confirmation prompt`)
       process.exit(0)
     }
     if (arg === "--yes") {
       flags.yes = true
-    }
-    if (arg === "--slow") {
-      flags.slow = true
     }
     if (arg === "--locale") {
       i++
@@ -113,12 +108,16 @@ async function confirm(flags: CliFlags): Promise<boolean> {
   })
 }
 
-async function generateWithRetry(text: string, outputPath: string, settings: CliFlags, maxRetries = 3): Promise<void> {
+async function generateWithRetry(
+  text: string,
+  outputPath: string,
+  settings: { locale: string; speed: number },
+  maxRetries = 3,
+): Promise<void> {
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       await generateTtsFile(text, outputPath, {
         locale: settings.locale,
-        slow: settings.slow,
         speed: settings.speed,
       })
       return
@@ -147,22 +146,31 @@ function replaceSourcePack(stagingDir: string): void {
   }
 }
 
-async function main(): Promise<void> {
-  const flags = parseArgs()
+export interface GenerateSoundsOptions {
+  locale?: string
+  speed?: number
+  onProgress?: (done: number, total: number, text: string) => void
+}
+
+export interface GenerateSoundsResult {
+  generated: number
+}
+
+export async function generateSounds(options: GenerateSoundsOptions = {}): Promise<GenerateSoundsResult> {
+  const current = readTtsSettings()
+  const settings = { locale: options.locale ?? current.locale, speed: options.speed ?? current.speed }
   const entries = discoverTtsEntries()
+
+  // The server streams progress to the UI via `onProgress`, so keep the console
+  // quiet in that mode; the CLI (no `onProgress`) keeps the full console output.
+  const log: (message: string) => void = options.onProgress ? () => {} : (message) => console.log(message)
 
   const dynamicEntries = entries.filter((e) => e.source === "discovered")
   if (dynamicEntries.length > 0) {
-    console.log(`Discovered ${dynamicEntries.length} TTS literal(s) from filter source`)
+    log(`Discovered ${dynamicEntries.length} TTS literal(s) from filter source`)
   }
 
-  console.log(`Total entries to generate: ${entries.length}`)
-
-  const confirmed = await confirm(flags)
-  if (!confirmed) {
-    console.log("Aborted.")
-    process.exit(0)
-  }
+  log(`Total entries to generate: ${entries.length}`)
 
   const stagingDir = fs.mkdtempSync("tts-staging-")
 
@@ -170,22 +178,26 @@ async function main(): Promise<void> {
     for (let i = 0; i < entries.length; i++) {
       const entry = entries[i]
       const outputPath = path.join(stagingDir, entry.filename)
-      console.log(`[${i + 1}/${entries.length}] Generating "${entry.text}" -> ${entry.filename}`)
-      await generateWithRetry(entry.text, outputPath, flags)
+      log(`[${i + 1}/${entries.length}] Generating "${entry.text}" -> ${entry.filename}`)
+      options.onProgress?.(i, entries.length, entry.text)
+      await generateWithRetry(entry.text, outputPath, settings)
     }
+    options.onProgress?.(entries.length, entries.length, "")
 
     replaceSourcePack(stagingDir)
-    console.log("Sound pack generated successfully.")
+    log("Sound pack generated successfully.")
 
-    writeTtsSettings({ locale: flags.locale, slow: flags.slow, speed: flags.speed })
-    console.log("Generation settings saved.")
+    writeTtsSettings({ locale: settings.locale, speed: settings.speed })
+    log("Generation settings saved.")
 
     syncSoundPack()
-    console.log(`Synced to ${getSoundPackTargetDir()}.`)
+    log(`Synced to ${getSoundPackTargetDir()}.`)
+
+    return { generated: entries.length }
   } catch (error: any) {
     console.error("Generation failed:", error?.message ?? error)
     console.error("Sound pack was not modified.")
-    process.exit(1)
+    throw error
   } finally {
     if (fs.existsSync(stagingDir)) {
       for (const file of fs.readdirSync(stagingDir)) {
@@ -193,6 +205,21 @@ async function main(): Promise<void> {
       }
       fs.rmdirSync(stagingDir)
     }
+  }
+}
+
+async function main(): Promise<void> {
+  const flags = parseArgs()
+  const confirmed = await confirm(flags)
+  if (!confirmed) {
+    console.log("Aborted.")
+    return
+  }
+  try {
+    await generateSounds({ locale: flags.locale, speed: flags.speed })
+  } catch (error: any) {
+    console.error("Generation failed:", error?.message ?? error)
+    process.exit(1)
   }
 }
 

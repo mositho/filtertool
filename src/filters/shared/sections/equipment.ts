@@ -1,4 +1,5 @@
 import rule from "../../../rule"
+import type { Rule } from "../../../types"
 import { filterDefaults } from "../defaults"
 import { filterStyles, styleMixin } from "../styles"
 import { manifestSoundFile } from "../../../sounds/paths"
@@ -7,10 +8,10 @@ import type { SoundManifestEntry } from "../../../sounds/manifest"
 import { compileRules, withHeading } from "./composition"
 import { buildHighlightedBaseTypeRules } from "./highlighted-equipment"
 import { ARMOUR_CLASSES, defenceMixinMap, SOCKETABLE_CLASSES } from "./item-classes"
-import { LEVELING_AMULETS, normalizeLevelingAmuletConfig, normalizeShieldProgressionConfig } from "./options"
+import { LEVELING_AMULETS, normalizeLevelingAmuletConfig, resolveShieldProgressionMode } from "./options"
 import type {
   BuildProfile,
-  ChromaticItemsConfig,
+  EarlyConfig,
   HighlightedEquipmentConfig,
   JewelleryConfig,
   LinksConfig,
@@ -27,38 +28,12 @@ export const links = ({
   fourLinkMaxAreaLevel = filterDefaults.links.fourLinkMaxAreaLevel,
   fourLinkTtsCutoffLevel = filterDefaults.links.fourLinkTtsCutoffLevel,
   threeLinkTtsCutoffLevel = filterDefaults.links.threeLinkTtsCutoffLevel,
-  prefColors = ["R", "G", "B"],
-  genericThreeLinksEnabled = true,
-  genericFourLinksEnabled = true,
-  preferredArmourTypes = [],
-  shieldProgression,
+  preferredColors = filterDefaults.preferredColors,
+  genericThreeLinksEnabled = filterDefaults.links.genericThreeLinksEnabled,
+  genericFourLinksEnabled = filterDefaults.links.genericFourLinksEnabled,
+  preferredArmour = filterDefaults.preferredArmour,
 }: LinksConfig & Partial<BuildProfile>) => {
-  const shieldConfig = normalizeShieldProgressionConfig(shieldProgression)
-  const preferredColors = [...new Set(prefColors)]
-  const shieldThreeLinkRules: ReturnType<typeof rule>[] = []
-
-  if (shieldConfig.enabled) {
-    const withSoundMax =
-      shieldConfig.maxAreaLevel !== undefined ? Math.min(threeLinkTtsCutoffLevel, shieldConfig.maxAreaLevel) : threeLinkTtsCutoffLevel
-
-    shieldThreeLinkRules.push(
-      rule()
-        .itemClass("Shields")
-        .linkedSockets("==", 3)
-        .mixin(styleMixin(filterStyles.selectedThreeLink))
-        .tts(manifestSoundFile(MANIFEST_BY_ID["3_shield"]))
-        .areaLevel("<=", withSoundMax),
-    )
-
-    const silentNeeded = shieldConfig.maxAreaLevel === undefined || shieldConfig.maxAreaLevel > threeLinkTtsCutoffLevel
-    if (silentNeeded) {
-      const silent = rule().itemClass("Shields").linkedSockets("==", 3).mixin(styleMixin(filterStyles.selectedThreeLink))
-      if (shieldConfig.maxAreaLevel !== undefined) {
-        silent.areaLevel("<=", shieldConfig.maxAreaLevel)
-      }
-      shieldThreeLinkRules.push(silent)
-    }
-  }
+  const uniqueColors = [...new Set(preferredColors)]
 
   const buildLinkRules = ({
     linkedSockets,
@@ -94,8 +69,8 @@ export const links = ({
     }
 
     const selectedRules = itemClasses.flatMap((itemClass) =>
-      preferredArmourTypes.flatMap((defenceType) =>
-        preferredColors.flatMap((color) => {
+      preferredArmour.flatMap((defenceType) =>
+        uniqueColors.flatMap((color) => {
           const base = () =>
             buildBaseRule(itemClass)
               .mixin(defenceMixinMap[defenceType])
@@ -109,7 +84,7 @@ export const links = ({
     )
 
     const colourRules = itemClasses.flatMap((itemClass) =>
-      preferredColors.flatMap((color) => {
+      uniqueColors.flatMap((color) => {
         const base = () => buildBaseRule(itemClass).socketGroup(">=", color).mixin(styleMixin(filterStyles[goodStyle]))
         const withSound = applySound(base(), itemClass).areaLevel("<=", ttsCutoffLevel)
         const silent = base().areaLevel("<=", maxAreaLevel)
@@ -118,7 +93,7 @@ export const links = ({
     )
 
     const armourRules = itemClasses.flatMap((itemClass) =>
-      preferredArmourTypes.flatMap((defenceType) => {
+      preferredArmour.flatMap((defenceType) => {
         const base = () => buildBaseRule(itemClass).mixin(defenceMixinMap[defenceType]).mixin(styleMixin(filterStyles[goodStyle]))
         const withSound = applySound(base(), itemClass).areaLevel("<=", ttsCutoffLevel)
         const silent = base().areaLevel("<=", maxAreaLevel)
@@ -146,12 +121,12 @@ export const links = ({
       rule()
         .linkedSockets("=", 6)
         .icon("Red", "Diamond")
-        .mixin(styleMixin(filterStyles.priorityA))
+        .mixin(styleMixin(filterStyles.currencyA))
         .tts(manifestSoundFile(MANIFEST_BY_ID.six_link)),
       rule()
         .linkedSockets("=", 5)
         .icon("Orange", "Diamond")
-        .mixin(styleMixin(filterStyles.priorityB))
+        .mixin(styleMixin(filterStyles.currencyB))
         .tts(manifestSoundFile(MANIFEST_BY_ID.five_link)),
       ...buildLinkRules({
         linkedSockets: 4,
@@ -171,7 +146,6 @@ export const links = ({
         selectedStyle: "selectedThreeLink",
         genericEnabled: genericThreeLinksEnabled,
       }),
-      ...shieldThreeLinkRules,
       ...buildLinkRules({
         linkedSockets: 2,
         maxAreaLevel: twoLinkMaxAreaLevel,
@@ -199,16 +173,15 @@ export const sixSockets = () =>
 export const uniques = () =>
   withHeading("Uniques", compileRules(rule().rarity("==", "Unique").icon("Brown", "Star").mixin(styleMixin(filterStyles.unique)).sound(3)))
 
-export const preferredWeapons = ({ preferredWeaponItemClasses = [], preferredWeaponMinAps }: Partial<BuildProfile>) => {
-  const compiledRules =
-    preferredWeaponItemClasses.length > 0 || preferredWeaponMinAps !== undefined
-      ? compileRules(
-          ...buildHighlightedBaseTypeRules({
-            itemClasses: preferredWeaponItemClasses.length > 0 ? preferredWeaponItemClasses : undefined,
-            minAps: preferredWeaponMinAps,
-          }),
-        )
-      : ""
+export const preferredWeapons = ({ preferredWeapons }: Partial<BuildProfile>) => {
+  if (!preferredWeapons) return ""
+  const hasTargets =
+    (preferredWeapons.itemClasses?.length ?? 0) > 0 ||
+    (preferredWeapons.baseTypes?.length ?? 0) > 0 ||
+    preferredWeapons.minAps !== undefined
+  if (!hasTargets) return ""
+
+  const compiledRules = compileRules(...buildHighlightedBaseTypeRules(preferredWeapons))
 
   if (!compiledRules) {
     return ""
@@ -234,12 +207,18 @@ export const jewellery = ({
   beltMaxAreaLevel = filterDefaults.jewellery.beltMaxAreaLevel,
   amuletMaxAreaLevel = filterDefaults.jewellery.amuletMaxAreaLevel,
 }: JewelleryConfig = {}) => {
-  const buildAmuletRules = (baseType: string, entry: SoundManifestEntry) =>
-    [
-      { rarity: "Rare" as const, style: filterStyles.rareJewellery },
-      { rarity: "Magic" as const, style: filterStyles.magicJewellery },
-      { rarity: "Normal" as const, style: filterStyles.jewellery },
-    ].map(({ rarity, style }) =>
+  const buildAmuletRules = (baseType: string, entry: SoundManifestEntry) => {
+    const rare = rule()
+      .baseType(baseType)
+      .itemClass("Amulets")
+      .rarity("==", "Rare")
+      .icon("Red", "Cross")
+      .mixin(styleMixin(filterStyles.rareJewellery))
+      .tts(manifestSoundFile(entry))
+    const buildNonRare = (
+      rarity: "Magic" | "Normal",
+      style: (typeof filterStyles)["magicJewellery"] | (typeof filterStyles)["jewellery"],
+    ) =>
       rule()
         .baseType(baseType)
         .itemClass("Amulets")
@@ -247,8 +226,9 @@ export const jewellery = ({
         .rarity("==", rarity)
         .icon("Red", "Cross")
         .mixin(styleMixin(style))
-        .tts(manifestSoundFile(entry)),
-    )
+        .tts(manifestSoundFile(entry))
+    return [rare, buildNonRare("Magic", filterStyles.magicJewellery), buildNonRare("Normal", filterStyles.jewellery)]
+  }
 
   return withHeading(
     "Jewellery",
@@ -288,20 +268,6 @@ export const jewellery = ({
         .icon("White", "Pentagon")
         .mixin(styleMixin(filterStyles.rareJewellery))
         .tts(manifestSoundFile(MANIFEST_BY_ID.rare_rustic)),
-      rule()
-        .baseType("Amethyst")
-        .itemClass("Rings")
-        .rarity("==", "Magic")
-        .icon("Cyan", "Moon")
-        .mixin(styleMixin(filterStyles.magicJewellery))
-        .tts(manifestSoundFile(MANIFEST_BY_ID.amethyst_ring)),
-      rule()
-        .baseType("Amethyst")
-        .itemClass("Rings")
-        .rarity("==", "Normal")
-        .icon("Cyan", "Moon")
-        .mixin(styleMixin(filterStyles.jewellery))
-        .tts(manifestSoundFile(MANIFEST_BY_ID.amethyst_ring)),
       rule()
         .baseType("Iron")
         .itemClass("Rings")
@@ -434,7 +400,7 @@ export const jewellery = ({
         return buildAmuletRules(shortBaseType, amuletEntry)
       }),
       rule()
-        .baseType(...Object.keys(LEVELING_AMULETS), "Turquoise", "Onyx", "Agate", "Citrine")
+        .baseType(...Object.keys(LEVELING_AMULETS), "Onyx")
         .itemClass("Amulets")
         .rarity("==", "Rare")
         .mixin(styleMixin(filterStyles.rareJewellery)),
@@ -442,10 +408,7 @@ export const jewellery = ({
   )
 }
 
-export const chromaticItems = ({
-  smallMaxAreaLevel = filterDefaults.chromaticItems.smallMaxAreaLevel,
-  largeMaxAreaLevel = filterDefaults.chromaticItems.largeMaxAreaLevel,
-}: ChromaticItemsConfig = {}) =>
+export const chromaticItems = () =>
   withHeading(
     "Chromatic Items",
     compileRules(
@@ -453,21 +416,18 @@ export const chromaticItems = ({
         .width("==", 1)
         .height("==", 3)
         .socketGroup("==", "RGB")
-        .areaLevel("<=", smallMaxAreaLevel)
         .mixin(styleMixin(filterStyles.chromatic))
         .tts(manifestSoundFile(MANIFEST_BY_ID.chromatic_recipe)),
       rule()
         .width("==", 2)
         .height("==", 2)
         .socketGroup("==", "RGB")
-        .areaLevel("<=", smallMaxAreaLevel)
         .mixin(styleMixin(filterStyles.chromatic))
         .tts(manifestSoundFile(MANIFEST_BY_ID.chromatic_recipe)),
       rule()
         .width("==", 2)
         .height("==", 4)
         .socketGroup("==", "RGB")
-        .areaLevel("<=", largeMaxAreaLevel)
         .mixin(styleMixin(filterStyles.chromatic))
         .tts(manifestSoundFile(MANIFEST_BY_ID.chromatic_recipe)),
     ),
@@ -540,36 +500,40 @@ export const tinctures = ({ baseTypes = filterDefaults.tinctures.baseTypes }: Ti
   )
 
 export const rareItems = ({
-  preferredArmourTypes = [],
+  preferredArmour = filterDefaults.preferredArmour,
   maxAreaLevel = filterDefaults.rareItems.maxAreaLevel,
   shieldProgression,
-}: RareItemsConfig & Partial<BuildProfile>) => {
-  const earlyMaxAreaLevel = filterDefaults.campaign.earlyMaxAreaLevel
-  const partOneMaxAreaLevel = maxAreaLevel
-  const shieldConfig = normalizeShieldProgressionConfig(shieldProgression)
-  const preferredRareItemClasses = shieldConfig.enabled ? [...ARMOUR_CLASSES, "Shields"] : ARMOUR_CLASSES
+  earlyMaxAreaLevel = filterDefaults.early.earlyMaxAreaLevel,
+}: RareItemsConfig & Partial<BuildProfile> & EarlyConfig) => {
+  const partOneMaxAreaLevel = filterDefaults.rareItems.partOneMaxAreaLevel
+  const shieldMode = resolveShieldProgressionMode(shieldProgression)
+  const preferredRareItemClasses = shieldMode !== "none" ? [...ARMOUR_CLASSES, "Shields"] : ARMOUR_CLASSES
+
+  const earlyLevel = maxAreaLevel === undefined ? earlyMaxAreaLevel : Math.min(earlyMaxAreaLevel, maxAreaLevel)
+  const partOneLevel = maxAreaLevel === undefined ? partOneMaxAreaLevel : Math.min(partOneMaxAreaLevel, maxAreaLevel)
+  const cap = (rareRule: Rule) => (maxAreaLevel === undefined ? rareRule : rareRule.areaLevel("<=", maxAreaLevel))
 
   return withHeading(
     "Rare Items",
     compileRules(
-      ...preferredArmourTypes.map((baseType) =>
+      ...preferredArmour.map((defenceType) =>
         rule()
           .itemClass(...preferredRareItemClasses)
-          .areaLevel("<=", maxAreaLevel)
+          .areaLevel("<=", partOneLevel)
           .rarity("==", "Rare")
           .mixin(styleMixin(filterStyles.rareArmour))
-          .mixin(defenceMixinMap[baseType]),
+          .mixin(defenceMixinMap[defenceType]),
       ),
-      rule().width("==", 2).height(">=", 4).areaLevel("<=", earlyMaxAreaLevel).rarity("==", "Rare").size(40),
-      rule().width("==", 2).height(">=", 4).areaLevel("<=", partOneMaxAreaLevel).rarity("==", "Rare").size(35),
-      rule().width("==", 2).height(">=", 4).rarity("==", "Rare").size(30),
-      rule().width("==", 2).height("==", 3).areaLevel("<=", earlyMaxAreaLevel).rarity("==", "Rare").size(45),
-      rule().width("==", 2).height("==", 3).areaLevel("<=", partOneMaxAreaLevel).rarity("==", "Rare").size(40),
-      rule().width("==", 2).height("==", 3).rarity("==", "Rare").size(35),
-      rule().width("==", 1).height("==", 1).rarity("==", "Rare").size(45),
-      rule().areaLevel("<=", earlyMaxAreaLevel).rarity("==", "Rare").size(45),
-      rule().areaLevel("<=", partOneMaxAreaLevel).rarity("==", "Rare").size(40),
-      rule().rarity("==", "Rare").size(38),
+      rule().width("==", 2).height(">=", 4).areaLevel("<=", earlyLevel).rarity("==", "Rare").size(40),
+      rule().width("==", 2).height(">=", 4).areaLevel("<=", partOneLevel).rarity("==", "Rare").size(35),
+      cap(rule().width("==", 2).height(">=", 4).rarity("==", "Rare").size(30)),
+      rule().width("==", 2).height("==", 3).areaLevel("<=", earlyLevel).rarity("==", "Rare").size(45),
+      rule().width("==", 2).height("==", 3).areaLevel("<=", partOneLevel).rarity("==", "Rare").size(40),
+      cap(rule().width("==", 2).height("==", 3).rarity("==", "Rare").size(35)),
+      cap(rule().width("==", 1).height("==", 1).rarity("==", "Rare").size(45)),
+      rule().areaLevel("<=", earlyLevel).rarity("==", "Rare").size(45),
+      rule().areaLevel("<=", partOneLevel).rarity("==", "Rare").size(40),
+      cap(rule().rarity("==", "Rare").size(38)),
     ),
   )
 }

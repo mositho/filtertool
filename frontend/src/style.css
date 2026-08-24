@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  background-color: #0b0e14;
+  color: #e5e7eb;
+}
+
+button:not(:disabled),
+[role="button"]:not(:disabled),
+[role="switch"]:not(:disabled) {
+  cursor: pointer;
+}

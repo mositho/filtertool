@@ -1,11 +1,13 @@
 import type { Color, Mixin, Shape, StyleData } from "../../types"
-import { loadOptionalOverride, mergeDeep } from "./user-overrides"
+import { loadJsonOverride, loadOptionalOverride, mergeDeep } from "./user-overrides"
 export { getSoundPackFolder, soundFile } from "../../sounds"
 
 export const DEFAULT_STYLE_SETTINGS = {
   size: 45,
   backgroundOpacity: 245 / 255,
 } as const
+
+export const MIN_STYLE_SIZE = 20
 
 const BACKGROUND_OPACITY = {
   low: 100 / 255,
@@ -15,12 +17,11 @@ const BACKGROUND_OPACITY = {
 
 // prettier-ignore
 export const baseFilterStyles = {
-  priorityA:                  { text: "#00A8FF", background: "#FFFFFF", border: "#00A8FF" },
-  priorityB:                  { text: "#FFFFFF", background: "#00A8FF", border: "#FFFFFF" },
-  priorityC:                  { text: "#00FFFF", background: "#000000", border: "#00FFFF" },
+  currencyA:                  { text: "#00A8FF", background: "#FFFFFF", border: "#00A8FF" },
+  currencyB:                  { text: "#FFFFFF", background: "#00A8FF", border: "#FFFFFF" },
+  currencyC:                  { text: "#00FFFF", background: "#000000", border: "#00FFFF" },
   earlyShieldLink:            { text: "#000000", background: "#ffffff", border: "#ff0000" },
   earlyShieldBase:            { text: "#000000", background: "#d2d2d2", border: "#000000" },
-  momentum:                   { text: "#FFA500", background: "#320000", border: "#FF0000" },
   twoLink:                    { text: "#DADADA", background: "#000000", border: "#fdfb4e", backgroundOpacity: BACKGROUND_OPACITY.high },
   goodTwoLink:                { text: "#DADADA", background: "#000000", border: "#FFC800" },
   selectedTwoLink:            { text: "#FFFFFF", background: "#000000", border: "#FFC800" },
@@ -33,8 +34,8 @@ export const baseFilterStyles = {
   lifeFlask:                  { text: "#D26464", background: "#000000", border: "#D26464" },
   manaFlask:                  { text: "#2386FF", background: "#000000", border: "#2386FF" },
   utilityFlask:               { text: "#32C87D", background: "#003228", border: "#32C87D" },
-  gold:                       { text: null, background: "#000000", border: "#000000", backgroundOpacity: BACKGROUND_OPACITY.low, size: 25 },
-  goldHighStack:              { text: null, background: "#000000", border: "#000000", backgroundOpacity: BACKGROUND_OPACITY.medium, size: 25 },
+  gold:                       { text: "#DADADA", background: "#000000", border: "#000000", backgroundOpacity: BACKGROUND_OPACITY.low, size: 25 },
+  goldHighStack:              { text: "#DADADA", background: "#000000", border: "#000000", backgroundOpacity: BACKGROUND_OPACITY.medium, size: 25 },
   unique:                     { text: "#FF4400", background: "#000000", border: "#FF4400" },
   wisdom:                     { text: "#FF7D4E", background: "#000000", border: "#FF7D4E" },
   portal:                     { text: "#6A94FD", background: "#000000", border: "#6A94FD" },
@@ -58,7 +59,23 @@ export const baseFilterStyles = {
   unknownItem:                { text: "#E100FF", background: "#000000", border: "#E100FF" },
 } satisfies Record<string, StyleData>
 
-export const filterStyles = mergeDeep(baseFilterStyles, loadOptionalOverride<typeof baseFilterStyles>("./user-styles", "userFilterStyles"))
+export const filterStyles = mergeDeep(baseFilterStyles, loadUserStyles())
+
+function loadUserStyles() {
+  return mergeDeep(
+    loadOptionalOverride<typeof baseFilterStyles>("./user-styles", "userFilterStyles"),
+    loadJsonOverride<typeof baseFilterStyles>("user-styles.json"),
+  )
+}
+
+/** Re-reads user styles and updates `filterStyles` in place so a running server reflects edits. */
+export function refreshFilterStyles(): void {
+  const fresh = mergeDeep(baseFilterStyles, loadUserStyles())
+  for (const key of Object.keys(filterStyles)) {
+    delete (filterStyles as Record<string, unknown>)[key]
+  }
+  Object.assign(filterStyles, fresh)
+}
 
 export const styleMixin =
   (style: StyleData): Mixin =>

@@ -22,6 +22,9 @@ dist/
 # TTS settings
 .tts-settings.json
 
+# UI-owned settings and global config
+/settings.json
+
 # Generated sound files
 /sounds/
 /poeft-sounds-v2/
@@ -36,5 +39,9 @@ src/filters/*
 !src/filters/shared.ts
 !src/filters/shared/
 !src/filters/shared/**
+
+# User overrides (personal)
+src/filters/shared/user-defaults.json
+src/filters/shared/user-styles.json
 src/filters/shared/user-defaults.ts
 src/filters/shared/user-styles.ts

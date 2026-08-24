@@ -46,7 +46,7 @@ export const misc = () =>
   withHeading(
     "Misc",
     compileRules(
-      rule().itemClass("Vault Keys").style(filterStyles.priorityA).icon("Purple", "Star").sound(6).size(45),
+      rule().itemClass("Vault Keys").style(filterStyles.currencyA).icon("Purple", "Star").sound(6).size(45),
       rule().itemClass("Maps", "Expedition Logbooks").style(filterStyles.maps).icon("White", "Square").sound(5),
       rule().itemClass("Map Fragments", "Misc Map Items").style(filterStyles.fragments).icon("Purple", "Circle").sound(4),
       rule().itemClass("Sanctum Research", "Relics").style(filterStyles.relics).icon("Red", "UpsideDownHouse").sound(5),

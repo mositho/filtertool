@@ -2,10 +2,9 @@ import { type BuildProfile, type BuildSpecificOptions } from "../shared"
 
 // Build-wide preferences used by links, weapons, early items, and shields.
 export const buildProfile = {
-  // prefColors: ["R", "G", "B"],
-  // preferredArmourTypes: ["armour", "evasion", "armour-evasion"],
-  // preferredWeaponItemClasses: ["Two Hand Axes", "Two Hand Maces"],
-  // preferredWeaponMinAps: 1.3,
+  // preferredColors: ["R", "G", "B"],
+  // preferredArmour: ["armour", "evasion", "armour-evasion"],
+  // preferredWeapons: { itemClasses: ["Two Hand Axes", "Two Hand Maces"], minAps: 1.3 },
   // earlyWeapons: {
   //   itemClasses: ["Two Hand Axes", "Two Hand Maces"],
   //   baseTypes: ["Stone Axe", "Driftwood Maul"],
@@ -35,15 +34,12 @@ export const buildSpecificOptions = {
     // elementalRingMaxAreaLevel: 24,
     // beltMaxAreaLevel: 24,
   },
-  early: {
-    // showRustic: false,
-    // earlyMaxAreaLevel: 12,
-  },
+  early: {},
   tinctures: {
     // baseTypes: ["Prismatic Tincture"],
   },
   rareItems: {
-    // maxAreaLevel: 45,
+    // maxAreaLevel: 70, // hard cutoff; rare items are uncapped when this is unset
   },
   magicItems: {
     // maxAreaLevel: 9,

@@ -22,12 +22,12 @@ function discoverReferencedFiles(): Set<string> {
   return files
 }
 
-export async function clean(): Promise<void> {
+export async function clean(): Promise<number> {
   const soundDir = `./${SOUND_PACK_SOURCE_DIR}`
 
   if (!fs.existsSync(soundDir)) {
     console.log("Sound directory not found, nothing to clean.")
-    return
+    return 0
   }
 
   const validNames = discoverReferencedFiles()
@@ -48,10 +48,16 @@ export async function clean(): Promise<void> {
   } else {
     console.log(`Removed ${removedCount} unused audio file(s).`)
   }
+
+  return removedCount
 }
 
 if (require.main === module) {
-  clean().catch((err) => {
-    console.error("Sound cleanup failed:", err)
-  })
+  clean()
+    .then((removed) => {
+      if (removed > 0) console.log(`Cleaned up ${removed} file(s).`)
+    })
+    .catch((err) => {
+      console.error("Sound cleanup failed:", err)
+    })
 }

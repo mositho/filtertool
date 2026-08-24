@@ -12,7 +12,7 @@ export const buildTierCurrency = (
     baseTypes: string[]
     iconColor: Color
     iconShape: Shape
-    soundId?: NumberRange<1, 17>
+    soundId?: NumberRange<1, 16>
     soundFileName?: string
     tts?: TtsFile
   }>,

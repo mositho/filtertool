@@ -7,5 +7,6 @@
     "strict": true,
     "noImplicitThis": true,
     "skipLibCheck": true
-  }
+  },
+  "exclude": ["frontend", "node_modules", "dist"]
 }

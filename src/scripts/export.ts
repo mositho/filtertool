@@ -1,25 +1,24 @@
 import "dotenv/config"
 import fs from "fs"
-import os from "os"
 import path from "path"
 import readline from "readline"
+import { DEFAULT_WIN_FILTER_PATH, ensureSettings } from "../config/settings"
+import { slugToFilterFileName } from "../config/filter-identity"
 import { getSoundPackFolder, SOUND_PACK_SOURCE_DIR } from "../sounds/paths"
 import { waitForPendingGenerations } from "../sounds/tts"
-import { syncSoundPack } from "./syncSounds"
-
-const DEFAULT_WIN_FILTER_PATH = path.join(os.homedir(), "Documents", "My Games", "Path of Exile")
+import { syncSoundPack } from "./sync-sounds"
 
 export function resolveFilterPath(): string {
-  const envPath = process.env.FILTER_PATH
-  if (envPath) return envPath
+  const settings = ensureSettings()
+  if (settings.filterPath) return settings.filterPath
 
-  if (process.platform === "win32" && !envPath) {
-    console.log(`FILTER_PATH not set in .env, defaulting to ${DEFAULT_WIN_FILTER_PATH}`)
+  if (process.platform === "win32" && !settings.filterPath) {
+    console.log(`FILTER_PATH not set, defaulting to ${DEFAULT_WIN_FILTER_PATH}`)
     return DEFAULT_WIN_FILTER_PATH
   }
 
   throw new Error(
-    "FILTER_PATH not set in .env and no default is available for this platform. Set FILTER_PATH in your .env file to your Path of Exile directory.",
+    "No filter path set. Set your Path of Exile directory in the filtertool settings (or FILTER_PATH in .env for the first run).",
   )
 }
 
@@ -42,27 +41,37 @@ function confirm(question: string): Promise<boolean> {
   })
 }
 
-export const exportFilter = async (filterName: string, filterPath?: string, skipConfirm = false) => {
-  const normalizedFilterName = filterName.toLowerCase()
+function resolveFilterModuleDir(filtersRoot: string, filterName: string): string {
+  const exact = path.join(filtersRoot, filterName)
+  if (fs.existsSync(exact)) return exact
+
+  const entries = fs.existsSync(filtersRoot) ? fs.readdirSync(filtersRoot, { withFileTypes: true }) : []
+  const match = entries.find((entry) => entry.isDirectory() && entry.name.toLowerCase() === filterName.toLowerCase())
+  if (match) return path.join(filtersRoot, match.name)
+
+  throw new Error(`Filter "${filterName}" not found.`)
+}
+
+export const exportFilter = async (
+  filterName: string,
+  filterPath?: string,
+  skipConfirm = false,
+  filtersRoot: string = path.join(__dirname, "../filters"),
+) => {
   const resolvedPath = filterPath ?? resolveFilterPath()
 
   if (!resolvedPath) {
     throw new Error("No filter path set in environment variables.")
   }
 
-  const { getFilter } = require(path.join(__dirname, "../filters", normalizedFilterName))
+  const filterModuleDir = resolveFilterModuleDir(filtersRoot, filterName)
+  const { getFilter } = require(filterModuleDir)
 
   if (!getFilter) {
     throw new Error("Invalid filter file.")
   }
 
-  const filterFileName =
-    [
-      normalizedFilterName
-        .split("-")
-        .map((s) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase())
-        .join(""),
-    ].join("_") + ".filter"
+  const filterFileName = slugToFilterFileName(filterName)
 
   const filterFilePath = path.join(resolvedPath, filterFileName)
   const filterExists = fs.existsSync(filterFilePath)
@@ -93,7 +102,7 @@ export const exportFilter = async (filterName: string, filterPath?: string, skip
   if (!fs.existsSync(`./${SOUND_PACK_SOURCE_DIR}`) || fs.readdirSync(`./${SOUND_PACK_SOURCE_DIR}`).length === 0) {
     console.log("No generated sound files found. Running generate-sounds to create them...")
     const { execSync } = require("child_process")
-    execSync("npx ts-node ./src/scripts/generateSounds.ts --yes", { stdio: "inherit" })
+    execSync("npx ts-node ./src/scripts/generate-sounds.ts --yes", { stdio: "inherit" })
   }
 
   fs.writeFileSync(filterFilePath, getFilter())
@@ -110,7 +119,7 @@ export const exportFilter = async (filterName: string, filterPath?: string, skip
 
 export const main = async () => {
   const rawArgs = process.argv.slice(2)
-  const filterName = rawArgs.find((a) => !a.startsWith("--"))?.toLowerCase()
+  const filterName = rawArgs.find((a) => !a.startsWith("--"))
   const skipConfirm = rawArgs.includes("--yes")
 
   if (!filterName) {
@@ -124,7 +133,7 @@ export const main = async () => {
       console.log(`Successfully exported filter: ${filterFileName}\n`)
     }
   } catch (err) {
-    console.log("Error while compiling filter.", err)
+    console.error("Error while compiling filter.", err)
   }
 }
 

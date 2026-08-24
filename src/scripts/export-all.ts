@@ -1,21 +1,14 @@
 import "dotenv/config"
-import fs from "fs"
 import path from "path"
+import { listFilters } from "../config/lifecycle"
 import { exportFilter, resolveFilterPath } from "./export"
-
-const EXCLUDED_FILTERS = new Set(["shared", "template"])
 
 const main = async () => {
   const filtersRoot = path.join(__dirname, "../filters")
   const filterPath = resolveFilterPath()
   const skipConfirm = process.argv.includes("--yes")
 
-  const filterNames = fs
-    .readdirSync(filtersRoot, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => entry.name)
-    .filter((entry) => !EXCLUDED_FILTERS.has(entry))
-    .sort()
+  const filterNames = listFilters(filtersRoot)
 
   if (filterNames.length === 0) {
     console.log("No filters found to export.\n")
@@ -29,7 +22,7 @@ const main = async () => {
         console.log(`Successfully exported filter: ${filterFileName}`)
       }
     } catch (error) {
-      console.log(`Error while compiling filter "${filterName}".`, error)
+      console.error(`Error while compiling filter "${filterName}".`, error)
     }
   }
 

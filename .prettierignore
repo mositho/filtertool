@@ -1,0 +1,6 @@
+node_modules
+frontend/dist
+dist
+package-lock.json
+sounds
+src/types/sounds/generated-sounds.ts
