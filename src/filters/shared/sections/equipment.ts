@@ -503,8 +503,9 @@ export const flasks = () =>
     ),
   )
 
-export const tinctures = ({ baseTypes = filterDefaults.tinctures.baseTypes }: TincturesConfig = {}) =>
-  withHeading(
+export const tinctures = ({ baseTypes = filterDefaults.tinctures.baseTypes }: TincturesConfig = {}) => {
+  if (baseTypes.length === 0) return ""
+  return withHeading(
     "Tinctures",
     compileRules(
       rule()
@@ -514,6 +515,7 @@ export const tinctures = ({ baseTypes = filterDefaults.tinctures.baseTypes }: Ti
         .sound(6),
     ),
   )
+}
 
 export const rareItems = ({
   preferredArmour = filterDefaults.preferredArmour,

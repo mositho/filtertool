@@ -1,9 +1,10 @@
 import { describe, expect, test } from "vitest"
 import { buildProfile as emptyProfile, buildSpecificOptions as emptyOptions } from "./fixtures/empty-config"
-import { early, filterDefaults, highlightedEquipment, jewellery, links, sixSockets } from "../src/filters/shared"
+import { early, filterDefaults, highlightedEquipment, jewellery, links, sixSockets, tinctures } from "../src/filters/shared"
 import { joinSections } from "../src/filters/shared/sections/composition"
 import { resolveShieldProgressionMode } from "../src/filters/shared/sections/options"
 import { resolveMixedItemClassWeaponQuery, resolveWeaponBaseTypes } from "../src/filters/shared/sections/weapon-queries"
+import rule from "../src/rule"
 
 describe("empty filter configuration", () => {
   test("exposes every configurable section", () => {
@@ -241,6 +242,32 @@ describe("early", () => {
     const output = early({})
 
     expect(output).toMatch('"Rustic"')
+  })
+
+  test("a manual early weapon max area level overrides the early max area level", () => {
+    const withoutManual = early({ earlyWeapons: { itemClasses: ["One Hand Axes"] }, earlyMaxAreaLevel: 12 })
+    const withManual = early({ earlyWeapons: { itemClasses: ["One Hand Axes"], maxAreaLevel: 30 }, earlyMaxAreaLevel: 12 })
+
+    expect(withoutManual).toMatch(/AreaLevel <= 12/)
+    expect(withoutManual).not.toMatch(/AreaLevel <= 30/)
+    expect(withManual).toMatch(/AreaLevel <= 30/)
+  })
+})
+
+describe("tinctures", () => {
+  test("emits a rule for the default base types", () => {
+    expect(tinctures({})).toMatch('BaseType "Prismatic Tincture"')
+  })
+
+  test("omits the section entirely when no base types are configured", () => {
+    expect(tinctures({ baseTypes: [] })).toBe("")
+  })
+})
+
+describe("rule validity", () => {
+  test("does not emit a dangling condition for empty values", () => {
+    expect(rule().baseType().compile()).not.toMatch(/BaseType/)
+    expect(rule().itemClass().compile()).not.toMatch(/Class/)
   })
 })
 

@@ -35,8 +35,10 @@ const content = (rules: Rule[]): RuleContent => {
     // Set condition in map. If acting as a container will set condition in all
     // contained rules. A condition is replaced only when the same comparison
     // operator is set again, so ranges like `ItemLevel >= 44` + `ItemLevel <= 70`
-    // can coexist as two conditions in one block.
+    // can coexist as two conditions in one block. Empty values are ignored so a
+    // rule never emits a dangling condition (e.g. `BaseType `).
     set(condition, value) {
+      if (typeof value !== "string" || value.trim() === "") return
       if (this.rules.length > 0) {
         this.rules.map((r) => r.content.set(condition, value))
       } else {
