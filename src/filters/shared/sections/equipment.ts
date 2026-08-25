@@ -248,6 +248,22 @@ export const jewellery = ({
         .mixin(styleMixin(filterStyles.rareJewellery))
         .tts(manifestSoundFile(MANIFEST_BY_ID.rare_amethyst)),
       rule()
+        .baseType("Amethyst")
+        .itemClass("Rings")
+        .itemLevel(">=", 44)
+        .rarity("==", "Magic")
+        .icon("Cyan", "Moon")
+        .mixin(styleMixin(filterStyles.magicJewellery))
+        .tts(manifestSoundFile(MANIFEST_BY_ID.amethyst_ring)),
+      rule()
+        .baseType("Amethyst")
+        .itemClass("Rings")
+        .itemLevel(">=", 44)
+        .rarity("==", "Normal")
+        .icon("Cyan", "Moon")
+        .mixin(styleMixin(filterStyles.jewellery))
+        .tts(manifestSoundFile(MANIFEST_BY_ID.amethyst_ring)),
+      rule()
         .baseType("Leather")
         .itemClass("Belts")
         .rarity("==", "Rare")

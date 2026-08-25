@@ -21,6 +21,8 @@ const fullHighlight: Complete<HighlightedBaseTypeConfig> = {
   rarities: ["Normal"],
   minAreaLevel: 1,
   maxAreaLevel: 20,
+  minItemLevel: 44,
+  maxItemLevel: 60,
   perRarityCustomization: true,
   iconColor: "Cyan",
   iconShape: "Circle",

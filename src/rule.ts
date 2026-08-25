@@ -22,18 +22,30 @@ const hexToRgb = (hex: `#${string}`): [number, number, number] => {
  * so that you can use a rule() object as a container for several rules, where
  * transformations to that rule() object will apply to all rules it contains
  */
+const operatorToken = (value: string): string | null => {
+  const match = value.match(/^(<=|>=|==|!=|<|>|=)/)
+  return match ? match[1] : null
+}
+
 const content = (rules: Rule[]): RuleContent => {
   return {
     map: [],
     rules: rules,
 
     // Set condition in map. If acting as a container will set condition in all
-    // contained rules
+    // contained rules. A condition is replaced only when the same comparison
+    // operator is set again, so ranges like `ItemLevel >= 44` + `ItemLevel <= 70`
+    // can coexist as two conditions in one block.
     set(condition, value) {
       if (this.rules.length > 0) {
         this.rules.map((r) => r.content.set(condition, value))
       } else {
-        this.map = this.map.filter((c) => !c.startsWith(`${condition} `) && c !== condition)
+        const operator = operatorToken(value)
+        this.map = this.map.filter((c) => {
+          if (!c.startsWith(`${condition} `)) return true
+          if (operator === null) return false
+          return operatorToken(c.slice(condition.length + 1)) !== operator
+        })
         this.map.push(`${condition} ${value}`)
       }
     },

@@ -17,7 +17,17 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{ change: [] }>()
 
-type ModuleId = "minAps" | "linkedSockets" | "minSockets" | "minAreaLevel" | "maxAreaLevel" | "weaponCutoff" | "icon" | "sound"
+type ModuleId =
+  | "minAps"
+  | "linkedSockets"
+  | "minSockets"
+  | "minAreaLevel"
+  | "maxAreaLevel"
+  | "minItemLevel"
+  | "maxItemLevel"
+  | "weaponCutoff"
+  | "icon"
+  | "sound"
 
 const FIELD_BY_PATH = Object.fromEntries(HIGHLIGHT_FIELDS.map((field) => [field.path, field]))
 
@@ -27,7 +37,18 @@ const matchModes = computed(() =>
 
 const itemClassOptions = computed(() => (props.weaponsOnly ? props.reference.weaponClasses : props.reference.itemClasses))
 
-const MODULE_IDS: ModuleId[] = ["minAps", "linkedSockets", "minSockets", "minAreaLevel", "maxAreaLevel", "weaponCutoff", "icon", "sound"]
+const MODULE_IDS: ModuleId[] = [
+  "minAps",
+  "linkedSockets",
+  "minSockets",
+  "minAreaLevel",
+  "maxAreaLevel",
+  "minItemLevel",
+  "maxItemLevel",
+  "weaponCutoff",
+  "icon",
+  "sound",
+]
 
 const MODULE_LABELS: Record<ModuleId, string> = {
   minAps: "Minimum Attack Speed",
@@ -35,6 +56,8 @@ const MODULE_LABELS: Record<ModuleId, string> = {
   minSockets: "Minimum Sockets",
   minAreaLevel: "Minimum Area Level",
   maxAreaLevel: "Maximum Area Level",
+  minItemLevel: "Minimum Item Level",
+  maxItemLevel: "Maximum Item Level",
   weaponCutoff: "Weapon Cutoff",
   icon: "Icon",
   sound: "Sound",

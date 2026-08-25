@@ -40,6 +40,8 @@ const buildRule = ({
   minSockets,
   minAreaLevel,
   maxAreaLevel,
+  minItemLevel,
+  maxItemLevel,
   iconColor,
   iconShape,
   soundId,
@@ -53,6 +55,8 @@ const buildRule = ({
   minSockets?: number
   minAreaLevel?: number
   maxAreaLevel?: number
+  minItemLevel?: number
+  maxItemLevel?: number
   iconColor?: Color
   iconShape?: Shape
   soundId?: NumberRange<1, 16>
@@ -74,6 +78,8 @@ const buildRule = ({
   if (selectedRarity) builtRule.rarity("==", selectedRarity)
   if (minAreaLevel !== undefined) builtRule.areaLevel(">=", minAreaLevel)
   if (maxAreaLevel !== undefined) builtRule.areaLevel("<=", maxAreaLevel)
+  if (minItemLevel !== undefined) builtRule.itemLevel(">=", minItemLevel)
+  if (maxItemLevel !== undefined) builtRule.itemLevel("<=", maxItemLevel)
   if (linkedSockets !== undefined) builtRule.linkedSockets(">=", linkedSockets)
   if (minSockets !== undefined) builtRule.sockets(">=", minSockets)
   if (tts) builtRule.tts(typeof tts === "string" ? soundFileTTS(tts) : manifestSoundFile(tts))
@@ -97,6 +103,8 @@ export const buildHighlightedBaseTypeRules = ({
   rarities: configuredRarities,
   minAreaLevel,
   maxAreaLevel,
+  minItemLevel,
+  maxItemLevel,
   perRarityCustomization,
   iconColor,
   iconShape,
@@ -135,6 +143,8 @@ export const buildHighlightedBaseTypeRules = ({
         minSockets,
         minAreaLevel,
         maxAreaLevel: maximum,
+        minItemLevel,
+        maxItemLevel,
         ...stylingFor(selectedRarity),
       })
       return builtRule.rarity("==", selectedRarity)

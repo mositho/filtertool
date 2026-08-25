@@ -119,6 +119,22 @@ export const HIGHLIGHT_FIELDS: SchemaField[] = [
     tooltip: "Only match items at or below this area level.",
   },
   {
+    path: "minItemLevel",
+    label: "Minimum Item Level",
+    control: "number",
+    min: 0,
+    integer: true,
+    tooltip: "Only match items at or above this item level.",
+  },
+  {
+    path: "maxItemLevel",
+    label: "Maximum Item Level",
+    control: "number",
+    min: 0,
+    integer: true,
+    tooltip: "Only match items at or below this item level.",
+  },
+  {
     path: "weaponCutoffOverlap",
     label: "Overlap",
     control: "number",

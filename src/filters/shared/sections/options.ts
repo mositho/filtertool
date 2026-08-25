@@ -71,6 +71,8 @@ export type HighlightedBaseTypeConfig = {
   rarities?: readonly HighlightableRarity[]
   minAreaLevel?: number
   maxAreaLevel?: number
+  minItemLevel?: number
+  maxItemLevel?: number
   /** When true, styling (icon/sound) is configured per rarity; the top-level icon/sound is ignored. */
   perRarityCustomization?: boolean
   /** Whole-highlight icon and sound, applied to every rarity unless `perRarityCustomization` is set. */

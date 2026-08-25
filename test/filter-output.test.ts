@@ -29,6 +29,16 @@ describe("jewellery", () => {
   test("can omit default amulet highlights", () => {
     expect(jewellery({ amulets: [] })).not.toMatch(/Amber Amulet|Jade Amulet|Lapis Amulet/)
   })
+
+  test("shows normal and magic amethyst rings from item level 44 with a sound", () => {
+    const output = jewellery({})
+
+    expect(output).toMatch(/BaseType "Amethyst"/)
+    expect(output).toMatch(/ItemLevel >= 44/)
+    expect(output).toMatch(/Rarity == Normal/)
+    expect(output).toMatch(/Rarity == Magic/)
+    expect(output).toMatch(/poeft-sounds-v2\/amethyst_ring\.mp3/)
+  })
 })
 
 describe("highlighted equipment", () => {
@@ -105,6 +115,24 @@ describe("highlighted equipment", () => {
     })
 
     expect(output).toMatch(/Sockets >= 4/)
+  })
+
+  test("applies minimum and maximum item level", () => {
+    const output = highlightedEquipment({
+      highlights: [{ baseTypes: ["Rusted Hatchet"], rarities: ["Normal"], minItemLevel: 44, maxItemLevel: 70 }],
+    })
+
+    expect(output).toMatch(/ItemLevel >= 44/)
+    expect(output).toMatch(/ItemLevel <= 70/)
+  })
+
+  test("applies minimum and maximum area level as a range", () => {
+    const output = highlightedEquipment({
+      highlights: [{ baseTypes: ["Rusted Hatchet"], rarities: ["Normal"], minAreaLevel: 10, maxAreaLevel: 40 }],
+    })
+
+    expect(output).toMatch(/AreaLevel >= 10/)
+    expect(output).toMatch(/AreaLevel <= 40/)
   })
 
   test("per-rarity customization overrides whole-highlight styling", () => {

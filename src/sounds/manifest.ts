@@ -35,7 +35,7 @@ export const JEWELLERY_SOUNDS = [
   { id: "rare_leather", text: "Rare Leather", name: "Rare Leather" },
   { id: "rare_heavy", text: "Rare Heavy", name: "Rare Heavy" },
   { id: "rare_rustic", text: "Rare Rustic", name: "Rare Rustic" },
-  { id: "amethyst_ring", text: "Amethyst Ring", name: "Amethyst Ring" },
+  { id: "amethyst_ring", text: "Amethyst", name: "Amethyst Ring" },
   { id: "iron_ring", text: "Iron", name: "Iron Ring" },
   { id: "sapphire_ring", text: "Sapphire", name: "Sapphire Ring" },
   { id: "ruby_ring", text: "Ruby", name: "Ruby Ring" },
