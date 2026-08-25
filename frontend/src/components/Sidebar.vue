@@ -24,6 +24,7 @@ const emit = defineEmits<{
   "delete": [name: string]
   "global": []
   "home": []
+  "import": []
   "exportAll": []
 }>()
 
@@ -101,22 +102,45 @@ function confirmRename() {
   <aside class="flex w-64 shrink-0 flex-col border-r border-neutral-800 bg-neutral-950">
     <div class="flex h-14 items-center justify-between px-4 border-b border-neutral-800">
       <button type="button" @click="emit('home')" class="font-semibold hover:text-neutral-300" title="Show welcome screen">Filters</button>
-      <button
-        v-if="!adding"
-        @click="emit('start-add')"
-        class="rounded bg-blue-700 hover:bg-blue-600 w-7 h-7 text-sm leading-none"
-        title="New filter"
-      >
-        +
-      </button>
-      <button
-        v-else
-        @mousedown.prevent="emit('cancel-add')"
-        class="rounded bg-neutral-700 hover:bg-neutral-600 w-7 h-7 text-sm leading-none"
-        title="Cancel"
-      >
-        ✕
-      </button>
+      <div class="flex items-center gap-1">
+        <button
+          v-if="!adding"
+          type="button"
+          @click="emit('import')"
+          class="rounded bg-neutral-800 hover:bg-neutral-700 w-7 h-7 text-sm leading-none"
+          title="Import filter from JSON"
+        >
+          <svg
+            class="mx-auto h-4 w-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+        </button>
+        <button
+          v-if="!adding"
+          @click="emit('start-add')"
+          class="rounded bg-blue-700 hover:bg-blue-600 w-7 h-7 text-sm leading-none"
+          title="New filter"
+        >
+          +
+        </button>
+        <button
+          v-else
+          @mousedown.prevent="emit('cancel-add')"
+          class="rounded bg-neutral-700 hover:bg-neutral-600 w-7 h-7 text-sm leading-none"
+          title="Cancel"
+        >
+          ✕
+        </button>
+      </div>
     </div>
 
     <button

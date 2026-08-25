@@ -2,6 +2,7 @@
 import { ref, computed, watch } from "vue"
 import { api, type AppSettings, type FilterConfig, type FilterInfo, type ReferenceData } from "./api"
 import { EMPTY_FILTER_CONFIG } from "@schema/form-schema"
+import { isValidFilterName } from "@schema/filter-name"
 import { pruneEmpty, stableStringify } from "./path"
 import Sidebar from "./components/Sidebar.vue"
 import ConfigForm from "./components/ConfigForm.vue"
@@ -44,6 +45,11 @@ const quickstartPath = ref("")
 
 const adding = ref(false)
 const renaming = ref<string | null>(null)
+
+const showImport = ref(false)
+const importName = ref("")
+const importJson = ref("")
+const importError = ref("")
 
 function clone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value))
@@ -343,6 +349,62 @@ async function onCreate(name: string) {
   }
 }
 
+async function copyConfig() {
+  if (!selected.value) return
+  try {
+    await navigator.clipboard.writeText(JSON.stringify(pruneEmpty(config.value), null, 2))
+    flash("Config JSON copied to clipboard", "save")
+  } catch {
+    flash("Could not copy to clipboard", "error")
+  }
+}
+
+async function openImport() {
+  importName.value = ""
+  importJson.value = ""
+  importError.value = ""
+  showImport.value = true
+  try {
+    const text = await navigator.clipboard.readText()
+    if (text && text.trim()) importJson.value = text
+  } catch {
+    /* clipboard read may be blocked; leave the textarea empty */
+  }
+}
+
+async function confirmImport() {
+  const name = importName.value.trim()
+  if (!isValidFilterName(name)) {
+    importError.value = "Only letters, numbers, spaces, underscores and hyphens are allowed."
+    return
+  }
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(importJson.value)
+  } catch {
+    importError.value = "That isn't valid JSON."
+    return
+  }
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+    importError.value = "Expected a JSON object with buildProfile / buildSpecificOptions."
+    return
+  }
+  const cfg = parsed as Record<string, unknown>
+  const imported: FilterConfig = {
+    buildProfile: (cfg.buildProfile as FilterConfig["buildProfile"]) ?? {},
+    buildSpecificOptions: (cfg.buildSpecificOptions as FilterConfig["buildSpecificOptions"]) ?? {},
+  }
+  try {
+    await api.createFilter(name)
+    await api.saveConfig(name, imported)
+    showImport.value = false
+    await refreshFilters(name)
+    flash(`Imported filter "${name}"`, "create")
+  } catch (e) {
+    importError.value = (e as Error).message
+  }
+}
+
 async function onDuplicate(name: string) {
   const newName = `${name} copy`
   try {
@@ -473,6 +535,7 @@ window.addEventListener("keydown", (event) => {
           @delete="onDelete"
           @global="onGlobal"
           @home="onHome"
+          @import="openImport"
         />
       </div>
     </div>
@@ -497,6 +560,7 @@ window.addEventListener("keydown", (event) => {
         @delete="onDelete"
         @global="onGlobal"
         @home="onHome"
+        @import="openImport"
       />
     </div>
 
@@ -567,6 +631,25 @@ window.addEventListener("keydown", (event) => {
               title="Discard unsaved changes"
             >
               Discard
+            </button>
+            <button
+              type="button"
+              @click="copyConfig"
+              class="flex h-8 w-8 items-center justify-center rounded border border-neutral-700 text-neutral-300 hover:bg-neutral-700"
+              title="Copy config JSON"
+            >
+              <svg
+                class="h-4 w-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
             </button>
             <span class="h-6 w-px bg-neutral-700"></span>
             <button @click="onSave" class="rounded bg-neutral-800 px-3 py-1.5 text-sm hover:bg-neutral-700" title="Save config (Ctrl+S)">
@@ -690,6 +773,13 @@ window.addEventListener("keydown", (event) => {
               </button>
               <button
                 type="button"
+                @click="openImport"
+                class="rounded border border-blue-700 px-6 py-3 text-base font-medium text-blue-300 hover:bg-blue-900/40"
+              >
+                Import Filter
+              </button>
+              <button
+                type="button"
                 @click="onGlobal"
                 class="rounded bg-neutral-300 px-6 py-3 text-base font-medium text-black hover:bg-neutral-200"
               >
@@ -792,6 +882,45 @@ window.addEventListener("keydown", (event) => {
             class="rounded bg-green-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Save &amp; Continue
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="showImport" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60" @click.self="showImport = false">
+      <div class="w-full max-w-lg rounded border border-neutral-700 bg-neutral-900 p-5">
+        <h2 class="mb-2 text-lg font-semibold">Import filter</h2>
+        <p class="mb-4 text-sm text-neutral-400">
+          Paste a filter's config JSON and give it a name. The clipboard is pre-filled when your browser allows it.
+        </p>
+        <div class="mb-4">
+          <label class="mb-1 block text-xs text-neutral-400">Filter name</label>
+          <input
+            v-model="importName"
+            class="w-full rounded border border-neutral-700 bg-neutral-950 px-2 py-1.5 text-sm"
+            placeholder="My Filter"
+          />
+        </div>
+        <div class="mb-4">
+          <label class="mb-1 block text-xs text-neutral-400">Config JSON</label>
+          <textarea
+            v-model="importJson"
+            rows="8"
+            class="w-full resize-y rounded border border-neutral-700 bg-neutral-950 px-2 py-1.5 font-mono text-xs"
+            placeholder='{ "buildProfile": { … }, "buildSpecificOptions": { … } }'
+          ></textarea>
+          <p v-if="importError" class="mt-1 text-xs text-red-400">{{ importError }}</p>
+        </div>
+        <div class="flex justify-end gap-2">
+          <button @click="showImport = false" class="rounded border border-neutral-700 px-3 py-1.5 text-sm hover:bg-neutral-800">
+            Cancel
+          </button>
+          <button
+            @click="confirmImport"
+            :disabled="!importName.trim() || !importJson.trim()"
+            class="rounded bg-green-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Import
           </button>
         </div>
       </div>
