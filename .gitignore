@@ -21,6 +21,7 @@ dist/
 
 # TTS settings
 .tts-settings.json
+.tts-generation.json
 
 # UI-owned settings and global config
 /settings.json

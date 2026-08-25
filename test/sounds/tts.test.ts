@@ -2,7 +2,9 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest"
 import fs from "fs"
 import os from "os"
 import path from "path"
-import { readTtsSettings, writeTtsSettings, DEFAULT_TTS_SETTINGS, ttsTextForFile } from "../../src/sounds/tts"
+import { readTtsSettings, writeTtsSettings, DEFAULT_TTS_SETTINGS, ttsTextForFile, staleManifestSoundIds } from "../../src/sounds/tts"
+import { readGenerationState, writeGenerationState } from "../../src/sounds/generation-state"
+import { MANIFEST_BY_ID } from "../../src/sounds/manifest"
 import { settingsPath } from "../../src/config/settings"
 
 let settingsDir: string
@@ -47,5 +49,41 @@ describe("ttsTextForFile", () => {
 
   it("derives ad-hoc text from the filename", () => {
     expect(ttsTextForFile("Rare_Wand.mp3")).toBe("Rare Wand")
+  })
+})
+
+describe("generation state", () => {
+  it("round-trips the state file", () => {
+    writeGenerationState({ "amethyst_ring.mp3": { text: "Amethyst", locale: "en-US", speed: 1.6 } })
+    expect(readGenerationState()).toEqual({ "amethyst_ring.mp3": { text: "Amethyst", locale: "en-US", speed: 1.6 } })
+  })
+
+  it("returns an empty object when no state file exists", () => {
+    expect(readGenerationState()).toEqual({})
+  })
+})
+
+describe("staleManifestSoundIds", () => {
+  it("flags all manifest sounds when no state exists", () => {
+    const ids = staleManifestSoundIds({}, { locale: "en-US", speed: 1.6 })
+    expect(ids).toContain("amethyst_ring")
+    expect(ids.length).toBeGreaterThan(1)
+  })
+
+  it("flags a sound whose text changed", () => {
+    const state = { "amethyst_ring.mp3": { text: "Amethyst Ring", locale: "en-US", speed: 1.6 } }
+    expect(staleManifestSoundIds(state, { locale: "en-US", speed: 1.6 })).toContain("amethyst_ring")
+  })
+
+  it("flags a sound when the locale changed", () => {
+    const entry = MANIFEST_BY_ID.amethyst_ring
+    const state = { "amethyst_ring.mp3": { text: entry.text, locale: "en-US", speed: 1.6 } }
+    expect(staleManifestSoundIds(state, { locale: "de-DE", speed: 1.6 })).toContain("amethyst_ring")
+  })
+
+  it("does not flag up-to-date sounds", () => {
+    const entry = MANIFEST_BY_ID.amethyst_ring
+    const state = { "amethyst_ring.mp3": { text: entry.text, locale: "en-US", speed: 1.6 } }
+    expect(staleManifestSoundIds(state, { locale: "en-US", speed: 1.6 })).not.toContain("amethyst_ring")
   })
 })

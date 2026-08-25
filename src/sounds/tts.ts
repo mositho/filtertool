@@ -5,7 +5,9 @@ import ffmpegPath from "ffmpeg-static"
 import axios from "axios"
 import * as tts from "google-tts-api"
 import { ensureSettings, clampTtsSpeed, loadSettings, repoRoot, saveSettings, type TtsSettings } from "../config/settings"
-import { MANIFEST_BY_ID, type SoundManifestEntry } from "./manifest"
+import { MANIFEST_BY_ID, SOUND_MANIFEST, type SoundManifestEntry, type SoundManifestId } from "./manifest"
+import { SOUND_PACK_SOURCE_DIR } from "./paths"
+import { readGenerationState, writeGenerationState, type GenerationState } from "./generation-state"
 
 const ffmpeg = require("fluent-ffmpeg")
 ffmpeg.setFfmpegPath(ffmpegPath)
@@ -95,4 +97,39 @@ export async function waitForPendingGenerations(): Promise<void> {
   while (pendingGenerations.size > 0) {
     await Promise.allSettled(Array.from(pendingGenerations.values()))
   }
+}
+
+/**
+ * Manifest sound ids whose existing `.mp3` is missing or was generated with a
+ * different text, locale or speed than the current manifest/settings require.
+ */
+export function staleManifestSoundIds(state: GenerationState, settings: TtsSettings): SoundManifestId[] {
+  return SOUND_MANIFEST.filter((entry) => {
+    const previous = state[`${entry.id}.mp3`]
+    if (!previous) return true
+    return previous.text !== entry.text || previous.locale !== settings.locale || previous.speed !== settings.speed
+  }).map((entry) => entry.id)
+}
+
+/**
+ * Regenerates any manifest sound whose spoken text or TTS settings have changed
+ * since it was last generated, then records the new signatures. Called on export
+ * so that manifest text edits are re-spoken without a full `generate-sounds` run.
+ */
+export async function regenerateStaleManifestSounds(): Promise<number> {
+  const settings = readTtsSettings()
+  const state = readGenerationState()
+  const stale = staleManifestSoundIds(state, settings)
+  if (stale.length === 0) return 0
+
+  for (const id of stale) {
+    const entry = MANIFEST_BY_ID[id]
+    const target = path.join(SOUND_PACK_SOURCE_DIR, `${id}.mp3`)
+    console.log(`[TTS] Regenerating "${entry.text}" -> ${target}`)
+    await generateTtsFile(entry.text, target, { locale: settings.locale, speed: settings.speed })
+    state[`${id}.mp3`] = { text: entry.text, locale: settings.locale, speed: settings.speed }
+  }
+
+  writeGenerationState(state)
+  return stale.length
 }

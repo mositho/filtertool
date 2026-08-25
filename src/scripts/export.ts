@@ -5,7 +5,7 @@ import readline from "readline"
 import { DEFAULT_WIN_FILTER_PATH, ensureSettings } from "../config/settings"
 import { slugToFilterFileName } from "../config/filter-identity"
 import { getSoundPackFolder, SOUND_PACK_SOURCE_DIR } from "../sounds/paths"
-import { waitForPendingGenerations } from "../sounds/tts"
+import { regenerateStaleManifestSounds, waitForPendingGenerations } from "../sounds/tts"
 import { syncSoundPack } from "./sync-sounds"
 
 export function resolveFilterPath(): string {
@@ -103,6 +103,11 @@ export const exportFilter = async (
     console.log("No generated sound files found. Running generate-sounds to create them...")
     const { execSync } = require("child_process")
     execSync("npx ts-node ./src/scripts/generate-sounds.ts --yes", { stdio: "inherit" })
+  }
+
+  const regenerated = await regenerateStaleManifestSounds()
+  if (regenerated > 0) {
+    console.log(`Regenerated ${regenerated} sound(s) due to changed text or TTS settings.`)
   }
 
   fs.writeFileSync(filterFilePath, getFilter())
