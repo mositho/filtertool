@@ -10,19 +10,9 @@ import type { BuildProfile, EarlyConfig } from "./options"
 import { resolveShieldProgressionMode } from "./options"
 import { resolveSharedWeaponQuery, resolveWeaponBaseTypes } from "./weapon-queries"
 
-const RUSTIC_BELT_MAX_AREA_LEVEL = 12
+const RUSTIC_SASH_MAX_AREA_LEVEL = 12
 
-export const twilightStrand = () =>
-  withHeading(
-    "Twilight Strand",
-    compileRules(
-      rule()
-        .baseType("Rusted Sword", "Crude Bow", "Glass Shank", "Driftwood Wand", "Driftwood Club", "Driftwood Sceptre")
-        .areaLevel("==", 1)
-        .size(45),
-      rule().itemClass("Gems").areaLevel("==", 1).size(45),
-    ),
-  )
+export const twilightStrand = () => withHeading("Twilight Strand", compileRules(rule().areaLevel("==", 1).size(45)))
 
 export const earlySockets = ({
   earlyWeapons,
@@ -72,8 +62,10 @@ export const early = ({
   preferredArmour = filterDefaults.preferredArmour,
   earlyMaxAreaLevel = filterDefaults.early.earlyMaxAreaLevel,
   earlyBootsMaxAreaLevel = filterDefaults.early.earlyBootsMaxAreaLevel,
+  misc,
 }: Partial<BuildProfile> & EarlyConfig) => {
   const shieldMode = resolveShieldProgressionMode(shieldProgression)
+  const showRusticSash = misc?.showRusticSash ?? filterDefaults.misc.showRusticSash
   const hasEarlyWeaponTargets = (earlyWeapons?.itemClasses?.length ?? 0) > 0 || (earlyWeapons?.baseTypes?.length ?? 0) > 0
   const earlyWeaponHighlights =
     earlyWeapons && hasEarlyWeaponTargets
@@ -102,13 +94,14 @@ export const early = ({
               .mixin(defenceMixinMap[defenceType]),
           )
         : []),
-      rule()
-        .baseType("Rustic")
-        .itemClass("Belts")
-        .areaLevel("<=", RUSTIC_BELT_MAX_AREA_LEVEL)
-        .icon("White", "Pentagon")
-        .mixin(styleMixin(filterStyles.jewellery))
-        .tts(manifestSoundFile(MANIFEST_BY_ID.rustic_belt)),
+      showRusticSash &&
+        rule()
+          .baseType("Rustic")
+          .itemClass("Belts")
+          .areaLevel("<=", RUSTIC_SASH_MAX_AREA_LEVEL)
+          .icon("White", "Pentagon")
+          .mixin(styleMixin(filterStyles.jewellery))
+          .tts(manifestSoundFile(MANIFEST_BY_ID.rustic_sash)),
     ),
   )
 }

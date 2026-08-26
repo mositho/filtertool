@@ -26,12 +26,13 @@ const fullHighlight: Complete<HighlightedBaseTypeConfig> = {
   perRarityCustomization: true,
   iconColor: "Cyan",
   iconShape: "Circle",
+  iconSize: 2,
   soundId: 1,
   soundFileName: "custom.mp3",
   tts: "Top Level",
-  normal: { iconColor: "Cyan", iconShape: "UpsideDownHouse", soundId: 1, soundFileName: "custom.mp3", tts: "Normal" },
-  magic: { iconColor: "Blue", iconShape: "UpsideDownHouse", soundId: 2, soundFileName: "custom.mp3", tts: "Magic" },
-  rare: { iconColor: "Yellow", iconShape: "UpsideDownHouse", soundId: 3, soundFileName: "custom.mp3", tts: "Rare" },
+  normal: { iconColor: "Cyan", iconShape: "UpsideDownHouse", iconSize: 2, soundId: 1, soundFileName: "custom.mp3", tts: "Normal" },
+  magic: { iconColor: "Blue", iconShape: "UpsideDownHouse", iconSize: 2, soundId: 2, soundFileName: "custom.mp3", tts: "Magic" },
+  rare: { iconColor: "Yellow", iconShape: "UpsideDownHouse", iconSize: 2, soundId: 3, soundFileName: "custom.mp3", tts: "Rare" },
 }
 
 /**
@@ -68,6 +69,7 @@ const canonicalConfig: Complete<BuildProfile> & Complete<BuildSpecificOptions> =
   highlightedEquipment: {
     highlights: [fullHighlight],
   },
+  misc: { whetstoneRecipe: true, showRusticSash: true },
   early: {
     earlyMaxAreaLevel: 12,
     twoSocketMaxAreaLevel: 7,

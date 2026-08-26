@@ -44,6 +44,10 @@ export const baseFilterDefaults = {
   tinctures: {
     baseTypes: ["Prismatic Tincture"],
   },
+  misc: {
+    whetstoneRecipe: true,
+    showRusticSash: true,
+  },
 } as const
 
 export const filterDefaults = mergeDeep(baseFilterDefaults, loadUserDefaults())

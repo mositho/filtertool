@@ -325,7 +325,7 @@ const STYLE_SECTIONS: { title: string; keys: string[] }[] = [
   { title: "Jewellery", keys: ["jewellery", "magicJewellery", "rareJewellery", "rareArmour", "chromatic"] },
   {
     title: "Highlights",
-    keys: ["highlightedEquipment", "highlightedEquipmentRare", "highlightedEquipmentMagic", "highlightedEquipmentNormal"],
+    keys: ["highlightedEquipmentRare", "highlightedEquipmentMagic", "highlightedEquipmentNormal"],
   },
 ]
 

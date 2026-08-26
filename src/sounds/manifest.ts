@@ -52,7 +52,7 @@ export const JEWELLERY_SOUNDS = [
   { id: "citrine_amulet", text: "Citrine", name: "Citrine Amulet" },
   { id: "agate_amulet", text: "Agate", name: "Agate Amulet" },
   { id: "onyx_amulet", text: "Onyx", name: "Onyx Amulet" },
-  { id: "rustic_belt", text: "Rustic", name: "Rustic Belt" },
+  { id: "rustic_sash", text: "Rustic Sash", name: "Rustic Sash" },
 ] as const satisfies readonly SoundManifestEntry[]
 
 export const FLASK_SOUNDS = [
@@ -113,6 +113,7 @@ export const OTHER_SOUNDS = [
   { id: "five_link", text: "Five Link", name: "Five Link" },
   { id: "six_socket", text: "Six Socket", name: "Six Socket" },
   { id: "chromatic_recipe", text: "Chrome Recipe", name: "Chromatic Recipe" },
+  { id: "whet_recipe", text: "Whet Recipe", name: "Blacksmith's Whetstone Recipe" },
   { id: "rare_boots", text: "Rare Boots", name: "Rare Boots" },
 ] as const satisfies readonly SoundManifestEntry[]
 

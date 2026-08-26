@@ -7,7 +7,7 @@ import { MANIFEST_BY_ID } from "../../../sounds/manifest"
 import type { SoundManifestEntry } from "../../../sounds/manifest"
 import { compileRules, withHeading } from "./composition"
 import { buildHighlightedBaseTypeRules } from "./highlighted-equipment"
-import { ARMOUR_CLASSES, defenceMixinMap, SOCKETABLE_CLASSES } from "./item-classes"
+import { ARMOUR_CLASSES, defenceMixinMap, SOCKETABLE_CLASSES, WEAPON_CLASSES } from "./item-classes"
 import { LEVELING_AMULETS, normalizeLevelingAmuletConfig, resolveShieldProgressionMode } from "./options"
 import type {
   BuildProfile,
@@ -16,6 +16,7 @@ import type {
   JewelleryConfig,
   LinksConfig,
   MagicItemsConfig,
+  MiscConfig,
   NormalItemsConfig,
   RareItemsConfig,
   TincturesConfig,
@@ -558,6 +559,21 @@ export const rareItems = ({
 
 export const magicItems = ({ maxAreaLevel = filterDefaults.magicItems.maxAreaLevel }: MagicItemsConfig = {}) =>
   withHeading("Magic Items", compileRules(rule().rarity("==", "Magic").areaLevel("<=", maxAreaLevel).size(40)))
+
+export const whetstoneRecipe = ({ whetstoneRecipe = filterDefaults.misc.whetstoneRecipe }: MiscConfig = {}) => {
+  if (!whetstoneRecipe) return ""
+  return withHeading(
+    "Whetstone Recipe",
+    compileRules(
+      rule()
+        .quality(">=", 20)
+        .rarity("==", "Normal")
+        .itemClass(...WEAPON_CLASSES)
+        .mixin(styleMixin(filterStyles.whetstoneRecipe))
+        .tts(manifestSoundFile(MANIFEST_BY_ID.whet_recipe)),
+    ),
+  )
+}
 
 export const normalItems = ({ maxAreaLevel = filterDefaults.normalItems.maxAreaLevel }: NormalItemsConfig = {}) => {
   return withHeading(

@@ -147,7 +147,7 @@ export const HIGHLIGHT_FIELDS: SchemaField[] = [
 
 /** Per-rarity styling keys and their leaf fields on a highlight. */
 export const RARITY_HIGHLIGHT_KEYS = ["normal", "magic", "rare"] as const
-export const RARITY_HIGHLIGHT_PATHS = ["iconColor", "iconShape", "soundId", "soundFileName", "tts"] as const
+export const RARITY_HIGHLIGHT_PATHS = ["iconColor", "iconShape", "iconSize", "soundId", "soundFileName", "tts"] as const
 
 /** Whole-highlight leaf fields (top-level icon/sound plus metadata). */
 export const HIGHLIGHT_TOP_LEVEL_PATHS = [
@@ -155,6 +155,7 @@ export const HIGHLIGHT_TOP_LEVEL_PATHS = [
   "perRarityCustomization",
   "iconColor",
   "iconShape",
+  "iconSize",
   "soundId",
   "soundFileName",
   "tts",
@@ -213,6 +214,25 @@ const buildEarlyShield: SchemaField[] = [
   },
 ]
 
+const buildProfileMisc: SchemaField[] = [
+  {
+    path: "misc.whetstoneRecipe",
+    label: "Whetstone Recipe",
+    control: "boolean",
+    defaultValue: true,
+    previewSection: "Whetstone Recipe",
+    tooltip: "Show 20% quality normal weapons for the Blacksmith's Whetstone recipe.",
+  },
+  {
+    path: "misc.showRusticSash",
+    label: "Show Rustic Sash",
+    control: "boolean",
+    defaultValue: true,
+    previewSection: "Early",
+    tooltip: "Show Non-Rare Rustic Sash belts early.",
+  },
+]
+
 const buildEarlyGeneric: SchemaField[] = [
   {
     path: "early.earlyMaxAreaLevel",
@@ -262,6 +282,7 @@ export const BUILD_PROFILE_SCHEMA: FieldGroup[] = [
     subsections: [
       { key: "preferredWeapons", title: "Preferred weapons", previewSection: "Preferred Weapons", fields: buildProfilePreferredWeapons },
       { key: "shieldProgression", title: "Shield progression", previewSection: "Early", fields: buildEarlyShield },
+      { key: "misc", title: "Misc", fields: buildProfileMisc },
     ],
   },
 ]

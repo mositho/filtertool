@@ -11,6 +11,7 @@ import {
   sixSockets,
   tinctures,
   uniques,
+  whetstoneRecipe,
 } from "./sections/equipment"
 import { currency, scrolls } from "./sections/currency"
 import { early, earlySockets, twilightStrand } from "./sections/early"
@@ -42,6 +43,7 @@ export function compileFilter(config: FilterConfig): string {
     uniques(),
     rareItems({ ...buildProfile, ...(buildSpecificOptions.rareItems ?? {}), ...(buildSpecificOptions.early ?? {}) }),
     magicItems(buildSpecificOptions.magicItems),
+    whetstoneRecipe(buildProfile.misc),
     normalItems(buildSpecificOptions.normalItems),
     questItems(),
     divinationCards(),

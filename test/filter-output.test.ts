@@ -1,6 +1,16 @@
 import { describe, expect, test } from "vitest"
 import { buildProfile as emptyProfile, buildSpecificOptions as emptyOptions } from "./fixtures/empty-config"
-import { early, filterDefaults, highlightedEquipment, jewellery, links, sixSockets, tinctures } from "../src/filters/shared"
+import {
+  early,
+  filterDefaults,
+  highlightedEquipment,
+  jewellery,
+  links,
+  sixSockets,
+  tinctures,
+  twilightStrand,
+  whetstoneRecipe,
+} from "../src/filters/shared"
 import { joinSections } from "../src/filters/shared/sections/composition"
 import { resolveShieldProgressionMode } from "../src/filters/shared/sections/options"
 import { resolveMixedItemClassWeaponQuery, resolveWeaponBaseTypes } from "../src/filters/shared/sections/weapon-queries"
@@ -108,6 +118,29 @@ describe("highlighted equipment", () => {
     })
 
     expect(output.match(/PlayAlertSound 5/g)).toHaveLength(2)
+  })
+
+  test("applies a whole-highlight icon size", () => {
+    const output = highlightedEquipment({
+      highlights: [{ baseTypes: ["Rusted Hatchet"], rarities: ["Normal"], iconColor: "Red", iconShape: "Star", iconSize: 0 }],
+    })
+
+    expect(output).toMatch(/MinimapIcon 0 Red Star/)
+  })
+
+  test("applies a per-rarity icon size", () => {
+    const output = highlightedEquipment({
+      highlights: [
+        {
+          baseTypes: ["Rusted Hatchet"],
+          rarities: ["Normal"],
+          perRarityCustomization: true,
+          normal: { iconColor: "Red", iconShape: "Star", iconSize: 1 },
+        },
+      ],
+    })
+
+    expect(output).toMatch(/MinimapIcon 1 Red Star/)
   })
 
   test("requires a minimum number of sockets", () => {
@@ -238,10 +271,16 @@ describe("early", () => {
     expect(output).toMatch('Class "Boots"')
   })
 
-  test("always shows rustic belt", () => {
+  test("shows rustic sash by default", () => {
     const output = early({})
 
     expect(output).toMatch('"Rustic"')
+  })
+
+  test("omits the rustic sash rule when disabled", () => {
+    const output = early({ misc: { showRusticSash: false } })
+
+    expect(output).not.toMatch('"Rustic"')
   })
 
   test("a manual early weapon max area level overrides the early max area level", () => {
@@ -264,10 +303,34 @@ describe("tinctures", () => {
   })
 })
 
+describe("whetstone recipe", () => {
+  test("shows 20% quality normal weapons by default", () => {
+    const output = whetstoneRecipe({})
+
+    expect(output).toMatch(/Quality >= 20/)
+    expect(output).toMatch(/Rarity == Normal/)
+    expect(output).toMatch(/whet_recipe\.mp3/)
+  })
+
+  test("omits the section entirely when disabled", () => {
+    expect(whetstoneRecipe({ whetstoneRecipe: false })).toBe("")
+  })
+})
+
 describe("rule validity", () => {
   test("does not emit a dangling condition for empty values", () => {
     expect(rule().baseType().compile()).not.toMatch(/BaseType/)
     expect(rule().itemClass().compile()).not.toMatch(/Class/)
+  })
+})
+
+describe("twilight strand", () => {
+  test("shows every item at area level 1 as a catch-all", () => {
+    const output = twilightStrand()
+
+    expect(output).toMatch(/AreaLevel == 1/)
+    expect(output).not.toMatch(/BaseType/)
+    expect(output).not.toMatch(/Class/)
   })
 })
 

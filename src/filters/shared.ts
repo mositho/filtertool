@@ -1,4 +1,4 @@
-export type { BuildProfile, BuildSpecificOptions } from "./shared/sections/options"
+export type { BuildProfile, BuildSpecificOptions, MiscConfig } from "./shared/sections/options"
 export { joinSections } from "./shared/sections/composition"
 export { filterDefaults } from "./shared/defaults"
 export { getSoundPackFolder, filterStyles, iconMixin, soundFile, styleMixin } from "./shared/styles"
@@ -17,6 +17,7 @@ export {
   sixSockets,
   tinctures,
   uniques,
+  whetstoneRecipe,
 } from "./shared/sections/equipment"
 export { divinationCards, gems, hideEquipment, misc, questItems, showUnknownItems } from "./shared/sections/global"
 export { compileFilter } from "./shared/compile"

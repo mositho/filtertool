@@ -181,7 +181,7 @@ function setRarities(value: string[]) {
 
 function setPerRarity(value: boolean) {
   if (value) {
-    for (const path of ["iconColor", "iconShape", "tts", "soundFileName", "soundId"]) deletePath(props.highlight, path)
+    for (const path of ["iconColor", "iconShape", "iconSize", "tts", "soundFileName", "soundId"]) deletePath(props.highlight, path)
   } else {
     for (const key of RARITY_HIGHLIGHT_KEYS) deletePath(props.highlight, key)
   }
@@ -203,6 +203,7 @@ function removeModule(id: ModuleId) {
   } else if (id === "icon") {
     deletePath(props.highlight, "iconColor")
     deletePath(props.highlight, "iconShape")
+    deletePath(props.highlight, "iconSize")
   } else if (id === "sound") {
     for (const path of SOUND_FIELD_PATHS) deletePath(props.highlight, path)
   } else {
@@ -223,10 +224,15 @@ function setIconColor(color: string) {
   setField("iconColor", color)
 }
 
+function setIconSize(size: number) {
+  setField("iconSize", size)
+}
+
 function setIconShape(shape: string) {
   if (shape === "") {
     deletePath(props.highlight, "iconShape")
     deletePath(props.highlight, "iconColor")
+    deletePath(props.highlight, "iconSize")
     onChange()
   } else {
     setField("iconShape", shape)
@@ -253,8 +259,16 @@ function rarityIconShape(rarity: string): string {
   return (rarityConfig(rarity).iconShape as string | undefined) ?? ""
 }
 
+function rarityIconSize(rarity: string): number {
+  return (rarityConfig(rarity).iconSize as number | undefined) ?? 2
+}
+
 function setRarityIconColor(rarity: string, color: string) {
   setField(`${rarityKeyOf(rarity)}.iconColor`, color)
+}
+
+function setRarityIconSize(rarity: string, size: number) {
+  setField(`${rarityKeyOf(rarity)}.iconSize`, size)
 }
 
 function setRarityIconShape(rarity: string, shape: string) {
@@ -262,6 +276,7 @@ function setRarityIconShape(rarity: string, shape: string) {
   if (shape === "") {
     deletePath(props.highlight, `${key}.iconShape`)
     deletePath(props.highlight, `${key}.iconColor`)
+    deletePath(props.highlight, `${key}.iconSize`)
     onChange()
   } else {
     setField(`${key}.iconShape`, shape)
@@ -330,8 +345,10 @@ function applyRaritySound(rarity: string, next: Record<string, unknown>) {
             <IconPicker
               :shape="rarityIconShape(rarity)"
               :color="rarityIconColor(rarity)"
+              :size="rarityIconSize(rarity)"
               @update:shape="setRarityIconShape(rarity, $event)"
               @update:color="setRarityIconColor(rarity, $event)"
+              @update:size="setRarityIconSize(rarity, $event)"
             />
           </div>
           <div class="mt-2">
@@ -372,8 +389,10 @@ function applyRaritySound(rarity: string, next: Record<string, unknown>) {
             <IconPicker
               :shape="(fieldValue('iconShape') as string) ?? ''"
               :color="(fieldValue('iconColor') as string) ?? ''"
+              :size="(fieldValue('iconSize') as number) ?? 2"
               @update:shape="setIconShape"
               @update:color="setIconColor"
+              @update:size="setIconSize"
             />
           </template>
           <template v-else-if="id === 'sound'">

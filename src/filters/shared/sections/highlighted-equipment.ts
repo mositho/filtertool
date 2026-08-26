@@ -1,5 +1,5 @@
 import rule from "../../../rule"
-import type { BaseType, Color, ItemClass, NumberRange, Rarity, Rule, Shape } from "../../../types"
+import type { BaseType, Color, IconSize, ItemClass, NumberRange, Rule, Shape } from "../../../types"
 import { WEAPON_BASE_DATA } from "../../../types/weapon-base-data"
 import { filterStyles, soundFile, styleMixin } from "../styles"
 import { manifestSoundFile, soundFileTTS } from "../../../sounds/paths"
@@ -44,11 +44,12 @@ const buildRule = ({
   maxItemLevel,
   iconColor,
   iconShape,
+  iconSize,
   soundId,
   soundFileName,
   tts,
 }: {
-  selectedRarity?: Rarity
+  selectedRarity: HighlightableRarity
   baseTypes?: readonly BaseType[]
   itemClasses?: readonly ItemClass[]
   linkedSockets?: number
@@ -59,6 +60,7 @@ const buildRule = ({
   maxItemLevel?: number
   iconColor?: Color
   iconShape?: Shape
+  iconSize?: IconSize
   soundId?: NumberRange<1, 16>
   soundFileName?: string
   tts?: TtsFile
@@ -68,14 +70,12 @@ const buildRule = ({
     Magic: filterStyles.highlightedEquipmentMagic,
     Normal: filterStyles.highlightedEquipmentNormal,
   }
-  const style =
-    selectedRarity && selectedRarity in styles ? styles[selectedRarity as keyof typeof styles] : filterStyles.highlightedEquipment
-  const base = rule().mixin(styleMixin(style))
+  const base = rule().mixin(styleMixin(styles[selectedRarity]))
   if (iconColor !== undefined || iconShape !== undefined) {
-    base.icon(iconColor ?? "Cyan", iconShape ?? "UpsideDownHouse")
+    base.icon(iconColor ?? "Cyan", iconShape ?? "UpsideDownHouse", iconSize ?? 2)
   }
   const builtRule = applyHighlightTargets(base, { baseTypes, itemClasses })
-  if (selectedRarity) builtRule.rarity("==", selectedRarity)
+  builtRule.rarity("==", selectedRarity)
   if (minAreaLevel !== undefined) builtRule.areaLevel(">=", minAreaLevel)
   if (maxAreaLevel !== undefined) builtRule.areaLevel("<=", maxAreaLevel)
   if (minItemLevel !== undefined) builtRule.itemLevel(">=", minItemLevel)
@@ -108,6 +108,7 @@ export const buildHighlightedBaseTypeRules = ({
   perRarityCustomization,
   iconColor,
   iconShape,
+  iconSize,
   soundId,
   soundFileName,
   tts,
@@ -122,7 +123,7 @@ export const buildHighlightedBaseTypeRules = ({
     ? configuredRarities.filter((entry): entry is HighlightableRarity => HIGHLIGHTABLE_RARITIES.includes(entry))
     : [...HIGHLIGHTABLE_RARITIES]
 
-  const topLevelStyling: RarityHighlightConfig = { iconColor, iconShape, soundId, soundFileName, tts }
+  const topLevelStyling: RarityHighlightConfig = { iconColor, iconShape, iconSize, soundId, soundFileName, tts }
   const rarityConfigs: Record<HighlightableRarity, RarityHighlightConfig> = {
     Normal: normal ?? {},
     Magic: magic ?? {},

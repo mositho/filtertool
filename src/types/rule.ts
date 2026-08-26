@@ -4,6 +4,7 @@ import {
   Condition,
   ExplicitMods,
   ExtendedOperator,
+  IconSize,
   Influence,
   ItemClass,
   Mixin,
@@ -47,7 +48,7 @@ export type Rule = {
   sound: (id: NumberRange<1, 16>, volume?: number, positional?: boolean) => Rule
   tts: (file: string, volume?: number, generate?: boolean) => Rule
   customSound: (path: string, volume?: number) => Rule
-  icon: (color: Color, shape: Shape, size?: 0 | 1 | 2) => Rule
+  icon: (color: Color, shape: Shape, size?: IconSize) => Rule
   style: (styleData?: StyleData) => Rule
   text: (r: number, g: number, b: number, a?: number) => Rule
   border: (r: number, g: number, b: number, a?: number) => Rule

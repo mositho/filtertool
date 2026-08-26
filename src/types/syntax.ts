@@ -16,6 +16,8 @@ export type Shape =
   | "Pentagon"
   | "UpsideDownHouse"
 
+export type IconSize = 0 | 1 | 2
+
 export type Condition =
   | "TransfiguredGem"
   | "AnyEnchantment"

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-const props = defineProps<{ shape: string; color: string }>()
-const emit = defineEmits<{ "update:shape": [value: string]; "update:color": [value: string] }>()
+const props = defineProps<{ shape: string; color: string; size: number }>()
+const emit = defineEmits<{ "update:shape": [value: string]; "update:color": [value: string]; "update:size": [value: number] }>()
 
 const COLORS = [
   { name: "Red", hex: "#ff4d4d" },
@@ -14,6 +14,12 @@ const COLORS = [
   { name: "Orange", hex: "#fb923c" },
   { name: "Pink", hex: "#f472b6" },
   { name: "Purple", hex: "#a855f7" },
+] as const
+
+const SIZES = [
+  { value: 0, label: "Small" },
+  { value: 1, label: "Medium" },
+  { value: 2, label: "Large" },
 ] as const
 
 const SHAPES = [
@@ -72,6 +78,22 @@ const SHAPES = [
         :style="{ backgroundColor: c.hex }"
         :title="c.name"
       ></button>
+    </div>
+    <div v-if="shape !== ''" class="flex flex-wrap items-center gap-1.5">
+      <span class="text-xs text-neutral-400">Size</span>
+      <button
+        v-for="s in SIZES"
+        :key="s.value"
+        type="button"
+        @click="emit('update:size', s.value)"
+        class="rounded border px-2 py-1 text-xs transition-all"
+        :class="
+          size === s.value ? 'border-white bg-neutral-700 text-white' : 'border-neutral-700 text-neutral-300 hover:border-neutral-400'
+        "
+        :title="s.label"
+      >
+        {{ s.label }}
+      </button>
     </div>
   </div>
 </template>
