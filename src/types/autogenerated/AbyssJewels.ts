@@ -1,1 +1,7 @@
-export type AbyssJewels = "Murderous Eye Jewel" | "Searching Eye Jewel" | "Hypnotic Eye Jewel" | "Ghastly Eye Jewel" | (string & {})
+export type AbyssJewels =
+  | "Murderous Eye Jewel"
+  | "Searching Eye Jewel"
+  | "Hypnotic Eye Jewel"
+  | "Ghastly Eye Jewel"
+  | "Assembled Eye Jewel"
+  | (string & {})
