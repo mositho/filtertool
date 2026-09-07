@@ -20,5 +20,4 @@ export type Maps =
   | "Shaper Guardian Map"
   | "Nightmare Map"
   | "Vaal Temple Map"
-  | "Synthesised Map"
   | (string & {})
