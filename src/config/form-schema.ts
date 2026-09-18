@@ -1,15 +1,6 @@
-import type { BuildProfile, BuildSpecificOptions, GemCalloutConfig, HighlightedBaseTypeConfig } from "../filters/shared/sections/options"
+import type { BuildProfile, BuildSpecificOptions, HighlightedBaseTypeConfig } from "../filters/shared/sections/options"
 
-export type SchemaControl =
-  | "number"
-  | "boolean"
-  | "select"
-  | "multiselect"
-  | "link-colors"
-  | "highlight-list"
-  | "highlight"
-  | "gem-callout-list"
-  | "sound"
+export type SchemaControl = "number" | "boolean" | "select" | "multiselect" | "link-colors" | "highlight-list" | "highlight" | "sound"
 
 export type SchemaField = {
   path: string
@@ -175,9 +166,6 @@ export const HIGHLIGHT_TOP_LEVEL_PATHS = [
   "soundFileName",
   "tts",
 ] as const
-
-/** Leaf fields of a single gem callout. */
-export const GEM_CALLOUT_PATHS = ["baseTypes", "iconColor", "iconShape", "iconSize", "soundId", "soundFileName", "tts"] as const
 
 /** Leaf paths of a highlight's size module (width/height operator + value). */
 export const SIZE_CONSTRAINT_PATHS = ["width.operator", "width.value", "height.operator", "height.value"] as const
@@ -521,14 +509,17 @@ export const BUILD_SPECIFIC_SCHEMA: FieldGroup[] = [
   {
     key: "gems",
     title: "Gems",
-    description: "Custom callouts for specific skill and support gems.",
+    description:
+      "Hear a spoken callout for the gems you care about. Every gem you pick gets its own sound that says its name when it drops.",
     previewSection: "Gems",
     fields: [
       {
-        path: "gemCallouts.callouts",
-        label: "Gem Callouts",
-        control: "gem-callout-list",
-        tooltip: "Play a custom sound for specific skill or support gems. Callouts are matched before the generic gem rules.",
+        path: "gemCallouts.gems",
+        label: "Gems",
+        control: "multiselect",
+        options: [],
+        tooltip:
+          'Each gem you add gets its own TTS callout speaking its name (e.g. picking "Fireball" plays a sound saying "Fireball"). Matched before the generic gem rules.',
       },
     ],
   },
@@ -583,10 +574,6 @@ export function schemaLeafPaths(): string[] {
         for (const sizePath of SIZE_CONSTRAINT_PATHS) {
           paths.push(`${field.path}.${sizePath}`)
         }
-      } else if (field.control === "gem-callout-list") {
-        for (const calloutPath of GEM_CALLOUT_PATHS) {
-          paths.push(`${field.path}.${calloutPath}`)
-        }
       } else {
         paths.push(field.path)
       }
@@ -597,11 +584,6 @@ export function schemaLeafPaths(): string[] {
 
 /** A fresh highlight used as the seed for a newly added highlight row. */
 export function emptyHighlight(): HighlightedBaseTypeConfig {
-  return {}
-}
-
-/** A fresh gem callout used as the seed for a newly added gem callout row. */
-export function emptyGemCallout(): GemCalloutConfig {
   return {}
 }
 

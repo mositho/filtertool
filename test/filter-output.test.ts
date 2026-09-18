@@ -220,24 +220,32 @@ describe("highlighted equipment", () => {
 })
 
 describe("gems", () => {
-  test("emits a custom callout before the built-in gem rules", () => {
-    const output = gems({ callouts: [{ baseTypes: ["Fireball"], soundId: 3 }] })
+  test("emits a callout rule per gem before the built-in gem rules", () => {
+    const output = gems({ gems: ["Fireball", "Portal"] })
 
     expect(output).toMatch(/BaseType == "Fireball"/)
-    expect(output).toMatch(/PlayAlertSound 3/)
+    expect(output).toMatch(/BaseType == "Portal"/)
+    expect(output).toMatch(/MinimapIcon 2 Cyan Star/)
     expect(output).toMatch(/BaseType "Empower" "Enlighten" "Enhance"/)
   })
 
-  test("applies a custom sound and icon to a support gem callout", () => {
-    const output = gems({ callouts: [{ baseTypes: ["Empower Support"], iconColor: "Red", iconShape: "Star", tts: "Empower Gem" }] })
+  test("speaks each gem's name via a custom alert sound", () => {
+    const output = gems({ gems: ["Fireball"] })
 
-    expect(output).toMatch(/BaseType == "Empower Support"/)
-    expect(output).toMatch(/MinimapIcon 2 Red Star/)
-    expect(output).toMatch(/CustomAlertSound/)
+    expect(output).toMatch(/BaseType == "Fireball"/)
+    expect(output).toMatch(/CustomAlertSound "poeft-sounds-v2\/Fireball\.mp3"/)
   })
 
-  test("omits empty callouts", () => {
-    expect(gems({ callouts: [{ baseTypes: [] }] })).not.toMatch(/BaseType ==/)
+  test("strips ' Support' from a support gem's callout TTS", () => {
+    const output = gems({ gems: ["Empower Support"] })
+
+    expect(output).toMatch(/BaseType == "Empower Support"/)
+    expect(output).toMatch(/CustomAlertSound "poeft-sounds-v2\/Empower\.mp3"/)
+    expect(output).not.toMatch(/Empower_Support/)
+  })
+
+  test("omits the callout section when no gems are configured", () => {
+    expect(gems({})).not.toMatch(/BaseType ==/)
   })
 })
 

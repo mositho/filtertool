@@ -28,8 +28,8 @@ export const buildSpecificOptions = {
     // highlights: [{ baseTypes: ["Rusted Hatchet"] }],
   },
   gemCallouts: {
-    // Add a custom sound (and optional icon) for specific skill/support gems.
-    // callouts: [{ baseTypes: ["Empower Support"], soundId: 3 }],
+    // Each gem listed here gets its own TTS callout speaking its name.
+    // gems: ["Empower Support", "Enlighten Support"],
   },
   jewellery: {
     // amulets: ["Amber", "Jade", "Lapis"],

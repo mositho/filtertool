@@ -1,32 +1,25 @@
 import rule from "../../../rule"
-import { filterStyles, soundFile, styleMixin } from "../styles"
-import { soundFileTTS, manifestSoundFile } from "../../../sounds/paths"
+import { filterStyles, styleMixin } from "../styles"
+import { soundFileTTS } from "../../../sounds/paths"
 import { DIV_CARD_HIDE_LIST } from "./div-cards"
 import { compileRules, withHeading } from "./composition"
 import { REMAINING_EQUIPMENT_CLASSES } from "./item-classes"
-import type { GemCalloutConfig, GemCalloutsConfig } from "./options"
+import type { GemBaseType, GemCalloutsConfig } from "./options"
 
-export const buildGemCalloutRules = (callouts: readonly GemCalloutConfig[]) =>
-  callouts
-    .filter(({ baseTypes }) => (baseTypes?.length ?? 0) > 0)
-    .map(({ baseTypes, iconColor, iconShape, iconSize, soundId, soundFileName, tts }) => {
-      const builtRule = rule()
-        .baseTypeExact(...(baseTypes ?? []))
-        .mixin(styleMixin(filterStyles.gemCallout))
-      if (iconColor !== undefined || iconShape !== undefined) {
-        builtRule.icon(iconColor ?? "Cyan", iconShape ?? "UpsideDownHouse", iconSize ?? 2)
-      }
-      if (tts) builtRule.tts(typeof tts === "string" ? soundFileTTS(tts) : manifestSoundFile(tts))
-      else if (soundFileName) builtRule.customSound(soundFile(soundFileName))
-      else if (soundId !== undefined) builtRule.sound(soundId)
-      return builtRule
-    })
+export const buildGemCalloutRules = (gems: readonly GemBaseType[]) =>
+  gems.map((gem) =>
+    rule()
+      .baseTypeExact(gem)
+      .icon("Cyan", "Star")
+      .mixin(styleMixin(filterStyles.gemCallout))
+      .tts(soundFileTTS(gem.replace(/ Support$/, ""))),
+  )
 
 export const gems = (callouts: GemCalloutsConfig = {}) =>
   withHeading(
     "Gems",
     compileRules(
-      ...buildGemCalloutRules(callouts.callouts ?? []),
+      ...buildGemCalloutRules(callouts.gems ?? []),
       rule()
         .itemClass("Skill Gems", "Support Gems")
         .baseType("Empower", "Enlighten", "Enhance")
