@@ -7,6 +7,7 @@ import {
   highlightedEquipment,
   jewellery,
   links,
+  magicItems,
   sixSockets,
   tinctures,
   twilightStrand,
@@ -209,6 +210,40 @@ describe("highlighted equipment", () => {
     expect(output).not.toMatch(/PlayAlertSound 5/)
   })
 
+  test("applies a named style to every rarity", () => {
+    const output = highlightedEquipment({
+      highlights: [{ baseTypes: ["Rusted Hatchet"], rarities: ["Normal", "Rare"], style: { preset: "currencyA" } }],
+    })
+
+    expect(output.match(/SetTextColor 0 168 255/g)).toHaveLength(2)
+  })
+
+  test("overrides a preset style with inline colors", () => {
+    const output = highlightedEquipment({
+      highlights: [{ baseTypes: ["Rusted Hatchet"], rarities: ["Normal"], style: { preset: "currencyA", border: "#FF0000" } }],
+    })
+
+    expect(output).toMatch(/SetTextColor 0 168 255/)
+    expect(output).toMatch(/SetBorderColor 255 0 0/)
+  })
+
+  test("applies a fully custom style", () => {
+    const output = highlightedEquipment({
+      highlights: [{ baseTypes: ["Rusted Hatchet"], rarities: ["Normal"], style: { text: "#FFFFFF", background: "#000000" } }],
+    })
+
+    expect(output).toMatch(/SetTextColor 255 255 255/)
+    expect(output).toMatch(/SetBackgroundColor 0 0 0 245/)
+  })
+
+  test("falls back to the per-rarity style when no style is set", () => {
+    const output = highlightedEquipment({
+      highlights: [{ baseTypes: ["Rusted Hatchet"], rarities: ["Normal"] }],
+    })
+
+    expect(output).toMatch(/SetTextColor 217 255 255/)
+  })
+
   test("omits highlights with no targets", () => {
     const output = highlightedEquipment({
       highlights: [{}],
@@ -246,6 +281,17 @@ describe("gems", () => {
 
   test("omits the callout section when no gems are configured", () => {
     expect(gems({})).not.toMatch(/BaseType ==/)
+  })
+})
+
+describe("magic items", () => {
+  test("shows small magic items for longer than big ones", () => {
+    const output = magicItems({ bigMaxAreaLevel: 9, smallMaxAreaLevel: 24 })
+
+    expect(output).toMatch(/Height <= 2/)
+    expect(output).toMatch(/AreaLevel <= 24/)
+    expect(output).toMatch(/Height >= 3/)
+    expect(output).toMatch(/AreaLevel <= 9/)
   })
 })
 

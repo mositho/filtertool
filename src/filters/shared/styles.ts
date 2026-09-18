@@ -5,6 +5,9 @@ export { getSoundPackFolder, soundFile } from "../../sounds"
 export const DEFAULT_STYLE_SETTINGS = {
   size: 45,
   backgroundOpacity: 245 / 255,
+  text: "#FFFFFF",
+  background: "#000000",
+  border: "#FFFFFF",
 } as const
 
 export const MIN_STYLE_SIZE = 20

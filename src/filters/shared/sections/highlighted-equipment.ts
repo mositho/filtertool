@@ -1,5 +1,5 @@
 import rule from "../../../rule"
-import type { BaseType, Color, IconSize, ItemClass, NumberRange, Rule, Shape } from "../../../types"
+import type { BaseType, Color, IconSize, ItemClass, NumberRange, Rule, Shape, StyleData } from "../../../types"
 import { WEAPON_BASE_DATA } from "../../../types/weapon-base-data"
 import { filterStyles, soundFile, styleMixin } from "../styles"
 import { manifestSoundFile, soundFileTTS } from "../../../sounds/paths"
@@ -8,6 +8,7 @@ import {
   HIGHLIGHTABLE_RARITIES,
   type HighlightableRarity,
   type HighlightedBaseTypeConfig,
+  type HighlightStyle,
   type RarityHighlightConfig,
   type SizeConstraint,
   type TtsFile,
@@ -33,6 +34,17 @@ const weaponInfo = new Map<WeaponBaseType, { itemClass: WeaponItemClass; dropLev
   WEAPON_BASE_DATA.map((weapon) => [weapon.baseType, { itemClass: weapon.itemClass, dropLevel: weapon.dropLevel }]),
 )
 
+const mergeStyle = (base: StyleData | undefined, override: StyleData | undefined): StyleData => {
+  const merged: StyleData = { ...(base ?? {}) }
+  if (!override) return merged
+  if (override.text !== undefined) merged.text = override.text
+  if (override.background !== undefined) merged.background = override.background
+  if (override.border !== undefined) merged.border = override.border
+  if (override.size !== undefined) merged.size = override.size
+  if (override.backgroundOpacity !== undefined) merged.backgroundOpacity = override.backgroundOpacity
+  return merged
+}
+
 const buildRule = ({
   selectedRarity,
   baseTypes,
@@ -45,6 +57,7 @@ const buildRule = ({
   maxItemLevel,
   width,
   height,
+  style,
   iconColor,
   iconShape,
   iconSize,
@@ -63,6 +76,7 @@ const buildRule = ({
   maxItemLevel?: number
   width?: SizeConstraint
   height?: SizeConstraint
+  style?: HighlightStyle
   iconColor?: Color
   iconShape?: Shape
   iconSize?: IconSize
@@ -75,7 +89,10 @@ const buildRule = ({
     Magic: filterStyles.highlightedEquipmentMagic,
     Normal: filterStyles.highlightedEquipmentNormal,
   }
-  const base = rule().mixin(styleMixin(styles[selectedRarity]))
+  const stylesMap = filterStyles as Record<string, StyleData | undefined>
+  const presetStyle = style?.preset ? stylesMap[style.preset] : undefined
+  const selectedStyle = style ? mergeStyle(presetStyle, style) : styles[selectedRarity]
+  const base = rule().mixin(styleMixin(selectedStyle))
   if (iconColor !== undefined || iconShape !== undefined) {
     base.icon(iconColor ?? "Cyan", iconShape ?? "UpsideDownHouse", iconSize ?? 2)
   }
@@ -115,6 +132,7 @@ export const buildHighlightedBaseTypeRules = ({
   width,
   height,
   perRarityCustomization,
+  style,
   iconColor,
   iconShape,
   iconSize,
@@ -157,6 +175,7 @@ export const buildHighlightedBaseTypeRules = ({
         maxItemLevel,
         width,
         height,
+        style,
         ...stylingFor(selectedRarity),
       })
       return builtRule.rarity("==", selectedRarity)

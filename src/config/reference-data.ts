@@ -4,6 +4,7 @@ import { SOUND_MANIFEST } from "../sounds/manifest"
 import { SOUND_PACK_SOURCE_DIR } from "../sounds/paths"
 import { WEAPON_CLASSES } from "../types/weapon-base-data"
 import { LEVELING_AMULETS } from "../filters/shared/sections/options"
+import { baseFilterStyles, filterStyles } from "../filters/shared/styles"
 import { MAX_TTS_SPEED, MIN_TTS_SPEED, TTS_LOCALES } from "./settings"
 
 export const RARITIES = ["Normal", "Magic", "Rare", "Unique"] as const
@@ -120,6 +121,8 @@ export function buildReferenceData() {
     shapes: SHAPES,
     operators: OPERATORS,
     shieldProgressionModes: SHIELD_PROGRESSION_MODES,
+    styleNames: Object.keys(baseFilterStyles),
+    styles: filterStyles,
     ttsLocales: TTS_LOCALES,
     ttsSpeed: { min: MIN_TTS_SPEED, max: MAX_TTS_SPEED },
     sounds: SOUND_MANIFEST.map((entry) => ({

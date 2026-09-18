@@ -36,7 +36,8 @@ export const baseFilterDefaults = {
     maxAreaLevel: undefined as number | undefined,
   },
   magicItems: {
-    maxAreaLevel: 9,
+    bigMaxAreaLevel: 9,
+    smallMaxAreaLevel: 24,
   },
   normalItems: {
     maxAreaLevel: 4,

@@ -9,6 +9,7 @@ import Toggle from "./Toggle.vue"
 import MultiSelect from "./MultiSelect.vue"
 import SoundSelector from "./SoundSelector.vue"
 import IconPicker from "./IconPicker.vue"
+import StyleEditor from "./StyleEditor.vue"
 
 const props = defineProps<{
   highlight: Record<string, unknown>
@@ -17,7 +18,7 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{ change: [] }>()
 
-type ModuleId = "minAps" | "linkedSockets" | "minSockets" | "areaLevel" | "itemLevel" | "weaponCutoff" | "size" | "icon" | "sound"
+type ModuleId = "minAps" | "linkedSockets" | "minSockets" | "areaLevel" | "itemLevel" | "weaponCutoff" | "size" | "style" | "icon" | "sound"
 
 const FIELD_BY_PATH = Object.fromEntries(HIGHLIGHT_FIELDS.map((field) => [field.path, field]))
 
@@ -27,7 +28,18 @@ const matchModes = computed(() =>
 
 const itemClassOptions = computed(() => (props.weaponsOnly ? props.reference.weaponClasses : props.reference.itemClasses))
 
-const MODULE_IDS: ModuleId[] = ["minAps", "linkedSockets", "minSockets", "areaLevel", "itemLevel", "weaponCutoff", "size", "icon", "sound"]
+const MODULE_IDS: ModuleId[] = [
+  "minAps",
+  "linkedSockets",
+  "minSockets",
+  "areaLevel",
+  "itemLevel",
+  "weaponCutoff",
+  "size",
+  "style",
+  "icon",
+  "sound",
+]
 
 const MODULE_LABELS: Record<ModuleId, string> = {
   minAps: "Minimum Attack Speed",
@@ -37,6 +49,7 @@ const MODULE_LABELS: Record<ModuleId, string> = {
   itemLevel: "Item Level",
   weaponCutoff: "Weapon Cutoff",
   size: "Size",
+  style: "Style",
   icon: "Icon",
   sound: "Sound",
 }
@@ -59,6 +72,7 @@ function computeActive(): Set<ModuleId> {
       if (id === "areaLevel") return fieldSet("minAreaLevel") || fieldSet("maxAreaLevel")
       if (id === "itemLevel") return fieldSet("minItemLevel") || fieldSet("maxItemLevel")
       if (id === "size") return fieldSet("width") || fieldSet("height")
+      if (id === "style") return fieldSet("style")
       if (id === "icon") return !perRarity.value && (fieldSet("iconColor") || fieldSet("iconShape"))
       if (id === "sound") return !perRarity.value && (fieldSet("tts") || fieldSet("soundFileName") || fieldSet("soundId"))
       return fieldSet(id)
@@ -204,6 +218,8 @@ function removeModule(id: ModuleId) {
   } else if (id === "size") {
     deletePath(props.highlight, "width")
     deletePath(props.highlight, "height")
+  } else if (id === "style") {
+    deletePath(props.highlight, "style")
   } else if (id === "icon") {
     deletePath(props.highlight, "iconColor")
     deletePath(props.highlight, "iconShape")
@@ -494,6 +510,18 @@ function applyRaritySound(rarity: string, next: Record<string, unknown>) {
                 </div>
               </div>
             </div>
+          </template>
+          <template v-else-if="id === 'style'">
+            <FieldLabel
+              label="Style"
+              tooltip="A named style from Global Settings applied to this whole highlight. Editing any field turns it into a custom style. Without a style, the per-rarity highlight styles are used."
+            />
+            <StyleEditor
+              :model-value="(fieldValue('style') as Record<string, unknown>) ?? {}"
+              :style-names="reference.styleNames"
+              :styles="reference.styles"
+              @update:model-value="setField('style', $event)"
+            />
           </template>
           <template v-else-if="id === 'icon'">
             <IconPicker

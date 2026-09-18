@@ -170,6 +170,16 @@ export const HIGHLIGHT_TOP_LEVEL_PATHS = [
 /** Leaf paths of a highlight's size module (width/height operator + value). */
 export const SIZE_CONSTRAINT_PATHS = ["width.operator", "width.value", "height.operator", "height.value"] as const
 
+/** Leaf paths of a highlight's style module (preset reference + inline overrides). */
+export const STYLE_PATHS = [
+  "style.preset",
+  "style.text",
+  "style.background",
+  "style.backgroundOpacity",
+  "style.border",
+  "style.size",
+] as const
+
 const buildProfileMain: SchemaField[] = [
   {
     path: "preferredColors",
@@ -376,14 +386,26 @@ const equipmentRarityItems: SchemaField[] = [
     tooltip: "Area level up to which normal items are shown. Only applies to items that don't match other rules.",
   },
   {
-    path: "magicItems.maxAreaLevel",
-    label: "Magic Items",
+    path: "magicItems.smallMaxAreaLevel",
+    label: "Small Magic Items",
+    control: "number",
+    min: 0,
+    integer: true,
+    defaultValue: 24,
+    previewSection: "Magic Items",
+    tooltip:
+      "Small magic items fit within 2×2 in your inventory (jewellery, belts, gloves, boots, helmets, quivers). Shown up to this area level.",
+  },
+  {
+    path: "magicItems.bigMaxAreaLevel",
+    label: "Big Magic Items",
     control: "number",
     min: 0,
     integer: true,
     defaultValue: 9,
     previewSection: "Magic Items",
-    tooltip: "Area level up to which magic items are shown. Only applies to items that don't match other rules.",
+    tooltip:
+      "Big magic items are larger than 2×2 in your inventory (body armour, two-handed weapons, bows, staves). Shown up to this area level.",
   },
   {
     path: "rareItems.maxAreaLevel",
@@ -573,6 +595,9 @@ export function schemaLeafPaths(): string[] {
         }
         for (const sizePath of SIZE_CONSTRAINT_PATHS) {
           paths.push(`${field.path}.${sizePath}`)
+        }
+        for (const stylePath of STYLE_PATHS) {
+          paths.push(`${field.path}.${stylePath}`)
         }
       } else {
         paths.push(field.path)

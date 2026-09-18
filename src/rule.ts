@@ -180,17 +180,17 @@ const rule = (...rules: Rule[]): Rule => {
 
     style(styleData?: StyleData) {
       if (!styleData) return this
-      if (styleData.text !== undefined && styleData.text !== null) {
-        const [r, g, b] = hexToRgb(styleData.text)
+      if (styleData.text !== null) {
+        const [r, g, b] = hexToRgb(styleData.text ?? DEFAULT_STYLE_SETTINGS.text)
         this.text(r, g, b)
       }
-      if (styleData.background !== undefined && styleData.background !== null) {
-        const [r, g, b] = hexToRgb(styleData.background)
+      if (styleData.background !== null) {
+        const [r, g, b] = hexToRgb(styleData.background ?? DEFAULT_STYLE_SETTINGS.background)
         const opacity = styleData.backgroundOpacity ?? DEFAULT_STYLE_SETTINGS.backgroundOpacity
         this.background(r, g, b, Math.round(opacity * 255))
       }
-      if (styleData.border !== undefined && styleData.border !== null) {
-        const [r, g, b] = hexToRgb(styleData.border)
+      if (styleData.border !== null) {
+        const [r, g, b] = hexToRgb(styleData.border ?? DEFAULT_STYLE_SETTINGS.border)
         this.border(r, g, b)
       }
       this.size(Math.max(MIN_STYLE_SIZE, styleData.size ?? DEFAULT_STYLE_SETTINGS.size))

@@ -14,6 +14,8 @@ export type ReferenceData = {
   shapes: string[]
   operators: string[]
   shieldProgressionModes: string[]
+  styleNames: string[]
+  styles: Record<string, Record<string, unknown>>
   ttsLocales: string[]
   ttsSpeed: { min: number; max: number }
   sounds: { id: string; name: string; hasFile?: boolean }[]

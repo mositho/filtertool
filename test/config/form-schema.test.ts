@@ -32,6 +32,7 @@ const fullHighlight: Complete<HighlightedBaseTypeConfig> = {
   soundId: 1,
   soundFileName: "custom.mp3",
   tts: "Top Level",
+  style: { preset: "currencyA", text: "#111111", background: "#222222", backgroundOpacity: 0.5, border: "#333333", size: 40 },
   normal: { iconColor: "Cyan", iconShape: "UpsideDownHouse", iconSize: 2, soundId: 1, soundFileName: "custom.mp3", tts: "Normal" },
   magic: { iconColor: "Blue", iconShape: "UpsideDownHouse", iconSize: 2, soundId: 2, soundFileName: "custom.mp3", tts: "Magic" },
   rare: { iconColor: "Yellow", iconShape: "UpsideDownHouse", iconSize: 2, soundId: 3, soundFileName: "custom.mp3", tts: "Rare" },
@@ -65,7 +66,7 @@ const canonicalConfig: Complete<BuildProfile> & Complete<BuildSpecificOptions> =
     beltMaxAreaLevel: 24,
   },
   rareItems: { maxAreaLevel: 45 },
-  magicItems: { maxAreaLevel: 9 },
+  magicItems: { bigMaxAreaLevel: 9, smallMaxAreaLevel: 24 },
   normalItems: { maxAreaLevel: 4 },
   tinctures: { baseTypes: ["Prismatic Tincture"] },
   highlightedEquipment: {

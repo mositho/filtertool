@@ -557,8 +557,18 @@ export const rareItems = ({
   )
 }
 
-export const magicItems = ({ maxAreaLevel = filterDefaults.magicItems.maxAreaLevel }: MagicItemsConfig = {}) =>
-  withHeading("Magic Items", compileRules(rule().rarity("==", "Magic").areaLevel("<=", maxAreaLevel).size(40)))
+export const magicItems = ({
+  bigMaxAreaLevel = filterDefaults.magicItems.bigMaxAreaLevel,
+  smallMaxAreaLevel = filterDefaults.magicItems.smallMaxAreaLevel,
+}: MagicItemsConfig = {}) =>
+  withHeading(
+    "Magic Items",
+    compileRules(
+      // Small magic items fit within 2×2; big ones are taller than 2×2.
+      rule().rarity("==", "Magic").height("<=", 2).areaLevel("<=", smallMaxAreaLevel).size(40),
+      rule().rarity("==", "Magic").height(">=", 3).areaLevel("<=", bigMaxAreaLevel).size(40),
+    ),
+  )
 
 export const whetstoneRecipe = ({ whetstoneRecipe = filterDefaults.misc.whetstoneRecipe }: MiscConfig = {}) => {
   if (!whetstoneRecipe) return ""
