@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from "vue"
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from "vue"
 
 const props = defineProps<{ modelValue: string[]; options: string[] }>()
 const emit = defineEmits<{ "update:modelValue": [value: string[]] }>()
@@ -7,6 +7,18 @@ const emit = defineEmits<{ "update:modelValue": [value: string[]] }>()
 const query = ref("")
 const open = ref(false)
 const root = ref<HTMLElement | null>(null)
+const searchInput = ref<HTMLInputElement | null>(null)
+const listRef = ref<HTMLUListElement | null>(null)
+const highlightedIndex = ref(-1)
+
+function toggleOpen() {
+  open.value = !open.value
+  if (open.value) {
+    query.value = ""
+    highlightedIndex.value = -1
+    void nextTick(() => searchInput.value?.focus())
+  }
+}
 
 function onDocumentClick(event: MouseEvent) {
   if (open.value && root.value && !root.value.contains(event.target as Node)) {
@@ -25,9 +37,52 @@ const filtered = computed(() => {
   return q ? opts.filter((o) => o.toLowerCase().includes(q)) : opts
 })
 
+watch(query, () => {
+  highlightedIndex.value = query.value.trim() ? 0 : -1
+})
+
+watch(filtered, (list) => {
+  if (highlightedIndex.value >= list.length) highlightedIndex.value = list.length - 1
+})
+
 function toggle(option: string) {
   const next = selected.value.includes(option) ? selected.value.filter((o) => o !== option) : [...selected.value, option]
   emit("update:modelValue", next)
+}
+
+function scrollHighlightedIntoView() {
+  const items = listRef.value?.querySelectorAll("li")
+  const el = items?.[highlightedIndex.value]
+  el?.scrollIntoView({ block: "nearest" })
+}
+
+function moveHighlight(delta: number) {
+  const count = filtered.value.length
+  if (count === 0) {
+    highlightedIndex.value = -1
+    return
+  }
+  let next = highlightedIndex.value + delta
+  if (next < 0) next = count - 1
+  else if (next >= count) next = 0
+  highlightedIndex.value = next
+  scrollHighlightedIntoView()
+}
+
+function onKeydown(event: KeyboardEvent) {
+  if (event.key === "ArrowDown") {
+    event.preventDefault()
+    moveHighlight(1)
+  } else if (event.key === "ArrowUp") {
+    event.preventDefault()
+    moveHighlight(-1)
+  } else if (event.key === "Enter") {
+    event.preventDefault()
+    const option = filtered.value[highlightedIndex.value]
+    if (option !== undefined) toggle(option)
+  } else if (event.key === "Escape") {
+    open.value = false
+  }
 }
 </script>
 
@@ -35,7 +90,7 @@ function toggle(option: string) {
   <div ref="root" class="relative">
     <button
       type="button"
-      @click="open = !open"
+      @click="toggleOpen"
       class="flex min-h-9 w-full flex-wrap items-center gap-1 rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-left text-sm"
     >
       <span v-for="value in selected" :key="value" class="inline-flex items-center gap-1 rounded bg-neutral-800 px-1.5 py-0.5 text-xs">
@@ -47,13 +102,19 @@ function toggle(option: string) {
 
     <div v-if="open" class="absolute z-20 mt-1 w-full rounded border border-neutral-700 bg-neutral-900 shadow-lg">
       <input
+        ref="searchInput"
         v-model="query"
         placeholder="Search…"
         class="w-full border-b border-neutral-700 bg-transparent px-2 py-1.5 text-sm outline-none"
+        @keydown="onKeydown"
       />
-      <ul class="max-h-48 overflow-y-auto py-1 text-sm">
-        <li v-for="option in filtered" :key="option">
-          <label class="flex cursor-pointer items-center gap-2 px-2 py-1 hover:bg-neutral-800">
+      <ul ref="listRef" class="max-h-48 overflow-y-auto py-1 text-sm">
+        <li v-for="(option, index) in filtered" :key="option">
+          <label
+            class="flex cursor-pointer items-center gap-2 px-2 py-1"
+            :class="index === highlightedIndex ? 'bg-neutral-800' : 'hover:bg-neutral-800'"
+            @mouseenter="highlightedIndex = index"
+          >
             <input type="checkbox" :checked="selected.includes(option)" @change="toggle(option)" />
             <span class="truncate">{{ option }}</span>
           </label>
