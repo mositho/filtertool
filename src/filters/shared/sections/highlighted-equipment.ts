@@ -9,6 +9,7 @@ import {
   type HighlightableRarity,
   type HighlightedBaseTypeConfig,
   type RarityHighlightConfig,
+  type SizeConstraint,
   type TtsFile,
 } from "./options"
 import {
@@ -42,6 +43,8 @@ const buildRule = ({
   maxAreaLevel,
   minItemLevel,
   maxItemLevel,
+  width,
+  height,
   iconColor,
   iconShape,
   iconSize,
@@ -58,6 +61,8 @@ const buildRule = ({
   maxAreaLevel?: number
   minItemLevel?: number
   maxItemLevel?: number
+  width?: SizeConstraint
+  height?: SizeConstraint
   iconColor?: Color
   iconShape?: Shape
   iconSize?: IconSize
@@ -82,6 +87,8 @@ const buildRule = ({
   if (maxItemLevel !== undefined) builtRule.itemLevel("<=", maxItemLevel)
   if (linkedSockets !== undefined) builtRule.linkedSockets(">=", linkedSockets)
   if (minSockets !== undefined) builtRule.sockets(">=", minSockets)
+  if (width) builtRule.width(width.operator, width.value)
+  if (height) builtRule.height(height.operator, height.value)
   if (tts) builtRule.tts(typeof tts === "string" ? soundFileTTS(tts) : manifestSoundFile(tts))
   else if (soundFileName) builtRule.customSound(soundFile(soundFileName))
   else if (soundId !== undefined) builtRule.sound(soundId)
@@ -105,6 +112,8 @@ export const buildHighlightedBaseTypeRules = ({
   maxAreaLevel,
   minItemLevel,
   maxItemLevel,
+  width,
+  height,
   perRarityCustomization,
   iconColor,
   iconShape,
@@ -146,6 +155,8 @@ export const buildHighlightedBaseTypeRules = ({
         maxAreaLevel: maximum,
         minItemLevel,
         maxItemLevel,
+        width,
+        height,
         ...stylingFor(selectedRarity),
       })
       return builtRule.rarity("==", selectedRarity)

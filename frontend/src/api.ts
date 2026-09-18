@@ -3,6 +3,8 @@ export type FilterInfo = { name: string; hasConfigJson: boolean }
 export type ReferenceData = {
   itemClasses: string[]
   baseTypesByClass: Record<string, string[]>
+  skillGems: string[]
+  supportGems: string[]
   rarities: string[]
   linkColors: string[]
   armourTypes: string[]

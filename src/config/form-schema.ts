@@ -1,6 +1,15 @@
-import type { BuildProfile, BuildSpecificOptions, HighlightedBaseTypeConfig } from "../filters/shared/sections/options"
+import type { BuildProfile, BuildSpecificOptions, GemCalloutConfig, HighlightedBaseTypeConfig } from "../filters/shared/sections/options"
 
-export type SchemaControl = "number" | "boolean" | "select" | "multiselect" | "link-colors" | "highlight-list" | "highlight" | "sound"
+export type SchemaControl =
+  | "number"
+  | "boolean"
+  | "select"
+  | "multiselect"
+  | "link-colors"
+  | "highlight-list"
+  | "highlight"
+  | "gem-callout-list"
+  | "sound"
 
 export type SchemaField = {
   path: string
@@ -62,6 +71,12 @@ export const LINK_COLORS = [
   { value: "R", color: "#ff5c5c" },
   { value: "G", color: "#4ade80" },
   { value: "B", color: "#60a5fa" },
+] as const
+
+export const SIZE_OPERATORS = [
+  { value: "==", label: "exactly" },
+  { value: ">=", label: "at least" },
+  { value: "<=", label: "at most" },
 ] as const
 
 export const HIGHLIGHT_FIELDS: SchemaField[] = [
@@ -160,6 +175,12 @@ export const HIGHLIGHT_TOP_LEVEL_PATHS = [
   "soundFileName",
   "tts",
 ] as const
+
+/** Leaf fields of a single gem callout. */
+export const GEM_CALLOUT_PATHS = ["baseTypes", "iconColor", "iconShape", "iconSize", "soundId", "soundFileName", "tts"] as const
+
+/** Leaf paths of a highlight's size module (width/height operator + value). */
+export const SIZE_CONSTRAINT_PATHS = ["width.operator", "width.value", "height.operator", "height.value"] as const
 
 const buildProfileMain: SchemaField[] = [
   {
@@ -498,6 +519,20 @@ export const BUILD_SPECIFIC_SCHEMA: FieldGroup[] = [
     ],
   },
   {
+    key: "gems",
+    title: "Gems",
+    description: "Custom callouts for specific skill and support gems.",
+    previewSection: "Gems",
+    fields: [
+      {
+        path: "gemCallouts.callouts",
+        label: "Gem Callouts",
+        control: "gem-callout-list",
+        tooltip: "Play a custom sound for specific skill or support gems. Callouts are matched before the generic gem rules.",
+      },
+    ],
+  },
+  {
     key: "highlightedEquipment",
     title: "Highlights",
     description: "Build-specific item highlights.",
@@ -545,6 +580,13 @@ export function schemaLeafPaths(): string[] {
             paths.push(`${field.path}.${rarity}.${rarityPath}`)
           }
         }
+        for (const sizePath of SIZE_CONSTRAINT_PATHS) {
+          paths.push(`${field.path}.${sizePath}`)
+        }
+      } else if (field.control === "gem-callout-list") {
+        for (const calloutPath of GEM_CALLOUT_PATHS) {
+          paths.push(`${field.path}.${calloutPath}`)
+        }
       } else {
         paths.push(field.path)
       }
@@ -555,6 +597,11 @@ export function schemaLeafPaths(): string[] {
 
 /** A fresh highlight used as the seed for a newly added highlight row. */
 export function emptyHighlight(): HighlightedBaseTypeConfig {
+  return {}
+}
+
+/** A fresh gem callout used as the seed for a newly added gem callout row. */
+export function emptyGemCallout(): GemCalloutConfig {
   return {}
 }
 

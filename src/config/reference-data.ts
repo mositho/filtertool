@@ -109,6 +109,8 @@ export function buildReferenceData() {
   return {
     itemClasses,
     baseTypesByClass,
+    skillGems: baseTypesByClass["Skill Gems"] ?? [],
+    supportGems: baseTypesByClass["Support Gems"] ?? [],
     rarities: RARITIES,
     linkColors: LINK_COLORS,
     armourTypes: ARMOUR_TYPES,

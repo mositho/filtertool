@@ -27,6 +27,10 @@ export const buildSpecificOptions = {
     // Add build-specific bases or item classes here.
     // highlights: [{ baseTypes: ["Rusted Hatchet"] }],
   },
+  gemCallouts: {
+    // Add a custom sound (and optional icon) for specific skill/support gems.
+    // callouts: [{ baseTypes: ["Empower Support"], soundId: 3 }],
+  },
   jewellery: {
     // amulets: ["Amber", "Jade", "Lapis"],
     // amuletMaxAreaLevel: 24,

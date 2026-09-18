@@ -40,6 +40,7 @@ export const baseFilterStyles = {
   wisdom:                     { text: "#FF7D4E", background: "#000000", border: "#FF7D4E" },
   portal:                     { text: "#6A94FD", background: "#000000", border: "#6A94FD" },
   gem:                        { text: "#00FFFF", background: "#000000", border: "#000000" },
+  gemCallout:                 { text: "#00FFFF", background: "#002a2a", border: "#00FFFF" },
   chromatic:                  { text: "#F789FF", background: "#000000", border: "#F789FF", backgroundOpacity: BACKGROUND_OPACITY.high, size: 40 },
   whetstoneRecipe:            { text: "#9e9e9e", background: "#000000", border: "#999999", backgroundOpacity: 0.96 },
   jewellery:                  { text: "#F5D8FF", background: "#320046", border: "#C000FF" },

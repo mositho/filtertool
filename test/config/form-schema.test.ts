@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest"
-import type { BuildProfile, BuildSpecificOptions, HighlightedBaseTypeConfig } from "../../src/filters/shared/sections/options"
+import type {
+  BuildProfile,
+  BuildSpecificOptions,
+  GemCalloutConfig,
+  HighlightedBaseTypeConfig,
+} from "../../src/filters/shared/sections/options"
 import { schemaLeafPaths } from "../../src/config/form-schema"
 
 type Complete<T> = T extends readonly (infer U)[]
@@ -23,6 +28,8 @@ const fullHighlight: Complete<HighlightedBaseTypeConfig> = {
   maxAreaLevel: 20,
   minItemLevel: 44,
   maxItemLevel: 60,
+  width: { operator: "==", value: 2 },
+  height: { operator: ">=", value: 3 },
   perRarityCustomization: true,
   iconColor: "Cyan",
   iconShape: "Circle",
@@ -33,6 +40,16 @@ const fullHighlight: Complete<HighlightedBaseTypeConfig> = {
   normal: { iconColor: "Cyan", iconShape: "UpsideDownHouse", iconSize: 2, soundId: 1, soundFileName: "custom.mp3", tts: "Normal" },
   magic: { iconColor: "Blue", iconShape: "UpsideDownHouse", iconSize: 2, soundId: 2, soundFileName: "custom.mp3", tts: "Magic" },
   rare: { iconColor: "Yellow", iconShape: "UpsideDownHouse", iconSize: 2, soundId: 3, soundFileName: "custom.mp3", tts: "Rare" },
+}
+
+const fullGemCallout: Complete<GemCalloutConfig> = {
+  baseTypes: ["Fireball"],
+  iconColor: "Cyan",
+  iconShape: "Star",
+  iconSize: 2,
+  soundId: 1,
+  soundFileName: "custom.mp3",
+  tts: "Gem",
 }
 
 /**
@@ -68,6 +85,9 @@ const canonicalConfig: Complete<BuildProfile> & Complete<BuildSpecificOptions> =
   tinctures: { baseTypes: ["Prismatic Tincture"] },
   highlightedEquipment: {
     highlights: [fullHighlight],
+  },
+  gemCallouts: {
+    callouts: [fullGemCallout],
   },
   misc: { whetstoneRecipe: true, showRusticSash: true },
   early: {

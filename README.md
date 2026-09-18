@@ -49,13 +49,14 @@ The filter editor is organized into sections, each matching a section of the com
 - **Links** — which linked-socket items are shown and when they play a sound.
 - **Equipment** — rarity thresholds (max area level), jewellery and tinctures.
 - **Highlights** — extra build-specific item highlights.
+- **Gems** — custom callouts for specific skill and support gems.
 
 Every highlight shares the same editor:
 
 - **Match** — match _anything_, specific _base types_, or _item classes_.
 - **Rarities** — which rarities the highlight applies to (defaults to Normal, Magic and Rare).
 - **Customize per rarity** (off by default) — when enabled, configure the icon and sound separately per selected rarity.
-- **Modules** (add/remove via **+ Add module**) — minimum attack speed, minimum linked sockets, minimum sockets, min/max area level, weapon cutoff, a single icon, and a single sound. The whole-highlight icon/sound modules are replaced by per-rarity styling when "Customize per rarity" is on.
+- **Modules** (add/remove via **+ Add module**) — minimum attack speed, minimum linked sockets, minimum sockets, area level (min/max), item level (min/max), size (width/height with `==`, `>=` and `<=`), weapon cutoff, a single icon, and a single sound. The whole-highlight icon/sound modules are replaced by per-rarity styling when "Customize per rarity" is on.
 - Highlights can be **duplicated** and **renamed** from their header.
 
 ### Preview, save and export

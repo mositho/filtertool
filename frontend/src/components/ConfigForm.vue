@@ -13,6 +13,7 @@ import { getPath, setPath, deletePath } from "../path"
 import FieldInput from "./FieldInput.vue"
 import HighlightEditor from "./HighlightEditor.vue"
 import HighlightCard from "./HighlightCard.vue"
+import GemCalloutEditor from "./GemCalloutEditor.vue"
 
 const props = defineProps<{ modelValue: FilterConfig; reference: ReferenceData; defaults?: Record<string, unknown> }>()
 const emit = defineEmits<{ "update:modelValue": [value: FilterConfig]; "previewSection": [section: string] }>()
@@ -112,6 +113,17 @@ const highlights = computed(() => {
 
 function setHighlights(value: Record<string, unknown>[]) {
   setPath(buildSpecific.value, highlightPath, value)
+  emitChange()
+}
+
+const gemCalloutsPath = "gemCallouts.callouts"
+const gemCallouts = computed(() => {
+  const raw = getPath(buildSpecific.value, gemCalloutsPath)
+  return Array.isArray(raw) ? (raw as Record<string, unknown>[]) : []
+})
+
+function setGemCallouts(value: Record<string, unknown>[]) {
+  setPath(buildSpecific.value, gemCalloutsPath, value)
   emitChange()
 }
 
@@ -260,6 +272,14 @@ function expandAll() {
             :reference="reference"
             @change="emitChange"
             @update:highlights="setHighlights"
+          />
+
+          <GemCalloutEditor
+            v-else-if="entry.group.key === 'gems'"
+            :callouts="gemCallouts"
+            :reference="reference"
+            @change="emitChange"
+            @update:callouts="setGemCallouts"
           />
 
           <template v-else>

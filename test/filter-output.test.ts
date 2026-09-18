@@ -3,6 +3,7 @@ import { buildProfile as emptyProfile, buildSpecificOptions as emptyOptions } fr
 import {
   early,
   filterDefaults,
+  gems,
   highlightedEquipment,
   jewellery,
   links,
@@ -22,6 +23,7 @@ describe("empty filter configuration", () => {
     expect(emptyOptions).toEqual({
       links: {},
       highlightedEquipment: {},
+      gemCallouts: {},
       jewellery: {},
       early: {},
       tinctures: {},
@@ -169,6 +171,22 @@ describe("highlighted equipment", () => {
     expect(output).toMatch(/AreaLevel <= 40/)
   })
 
+  test("applies an exact width and a minimum height", () => {
+    const output = highlightedEquipment({
+      highlights: [
+        {
+          baseTypes: ["Rusted Hatchet"],
+          rarities: ["Normal"],
+          width: { operator: "==", value: 2 },
+          height: { operator: ">=", value: 3 },
+        },
+      ],
+    })
+
+    expect(output).toMatch(/Width == 2/)
+    expect(output).toMatch(/Height >= 3/)
+  })
+
   test("per-rarity customization overrides whole-highlight styling", () => {
     const output = highlightedEquipment({
       highlights: [
@@ -198,6 +216,28 @@ describe("highlighted equipment", () => {
 
     expect(output).toBe("")
     expect(output).not.toMatch(/Rarity/)
+  })
+})
+
+describe("gems", () => {
+  test("emits a custom callout before the built-in gem rules", () => {
+    const output = gems({ callouts: [{ baseTypes: ["Fireball"], soundId: 3 }] })
+
+    expect(output).toMatch(/BaseType == "Fireball"/)
+    expect(output).toMatch(/PlayAlertSound 3/)
+    expect(output).toMatch(/BaseType "Empower" "Enlighten" "Enhance"/)
+  })
+
+  test("applies a custom sound and icon to a support gem callout", () => {
+    const output = gems({ callouts: [{ baseTypes: ["Empower Support"], iconColor: "Red", iconShape: "Star", tts: "Empower Gem" }] })
+
+    expect(output).toMatch(/BaseType == "Empower Support"/)
+    expect(output).toMatch(/MinimapIcon 2 Red Star/)
+    expect(output).toMatch(/CustomAlertSound/)
+  })
+
+  test("omits empty callouts", () => {
+    expect(gems({ callouts: [{ baseTypes: [] }] })).not.toMatch(/BaseType ==/)
   })
 })
 

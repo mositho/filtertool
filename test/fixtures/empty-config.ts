@@ -6,6 +6,7 @@ export const buildProfile = {} satisfies BuildProfile
 export const buildSpecificOptions = {
   links: {},
   highlightedEquipment: {},
+  gemCallouts: {},
   jewellery: {},
   early: {},
   tinctures: {},

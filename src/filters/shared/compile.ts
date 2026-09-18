@@ -29,7 +29,7 @@ export function compileFilter(config: FilterConfig): string {
     twilightStrand(),
     currency(),
     scrolls(),
-    gems(),
+    gems(buildSpecificOptions.gemCallouts),
     links({ ...buildProfile, ...(buildSpecificOptions.links ?? {}) }),
     highlightedEquipment(buildSpecificOptions.highlightedEquipment),
     preferredWeapons(buildProfile),

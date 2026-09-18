@@ -1,7 +1,14 @@
 import fs from "fs"
 import path from "path"
 import { MANIFEST_BY_ID, type SoundManifestId } from "../../sounds/manifest"
-import type { BuildProfile, BuildSpecificOptions, HighlightedBaseTypeConfig, RarityHighlightConfig, TtsFile } from "./sections/options"
+import type {
+  BuildProfile,
+  BuildSpecificOptions,
+  GemCalloutConfig,
+  HighlightedBaseTypeConfig,
+  RarityHighlightConfig,
+  TtsFile,
+} from "./sections/options"
 
 export type FilterConfig = {
   buildProfile: BuildProfile
@@ -16,6 +23,8 @@ export type SerializedHighlight = Omit<HighlightedBaseTypeConfig, "normal" | "ma
   rare?: SerializedRarityHighlight
 }
 export type SerializedHighlightedEquipment = { highlights?: readonly SerializedHighlight[] }
+export type SerializedGemCallout = Omit<GemCalloutConfig, "tts"> & { tts?: string }
+export type SerializedGemCallouts = { callouts?: readonly SerializedGemCallout[] }
 export type SerializedBuildProfile = Omit<BuildProfile, "preferredWeapons" | "earlyWeapons"> & {
   preferredWeapons?: SerializedHighlight
   earlyWeapons?: SerializedHighlight
@@ -28,8 +37,9 @@ export type SerializedBuildProfile = Omit<BuildProfile, "preferredWeapons" | "ea
  */
 export type SerializedFilterConfig = {
   buildProfile: SerializedBuildProfile
-  buildSpecificOptions: Omit<BuildSpecificOptions, "highlightedEquipment"> & {
+  buildSpecificOptions: Omit<BuildSpecificOptions, "highlightedEquipment" | "gemCallouts"> & {
     highlightedEquipment?: SerializedHighlightedEquipment
+    gemCallouts?: SerializedGemCallouts
   }
 }
 
@@ -79,9 +89,20 @@ function deserializeHighlight(highlight: SerializedHighlight): HighlightedBaseTy
   }
 }
 
+function serializeGemCallout(callout: GemCalloutConfig): SerializedGemCallout {
+  const { tts, ...rest } = callout
+  return { ...rest, ...(tts !== undefined ? { tts: serializeTts(tts) } : {}) }
+}
+
+function deserializeGemCallout(callout: SerializedGemCallout): GemCalloutConfig {
+  const { tts, ...rest } = callout
+  return { ...rest, ...(tts !== undefined ? { tts: deserializeTts(tts) } : {}) }
+}
+
 export function serializeFilterConfig(config: FilterConfig): SerializedFilterConfig {
-  const { highlightedEquipment, ...restOptions } = config.buildSpecificOptions
+  const { highlightedEquipment, gemCallouts, ...restOptions } = config.buildSpecificOptions
   const highlights = highlightedEquipment?.highlights
+  const callouts = gemCallouts?.callouts
   const { preferredWeapons, earlyWeapons, ...restProfile } = config.buildProfile
   return {
     buildProfile: {
@@ -99,13 +120,22 @@ export function serializeFilterConfig(config: FilterConfig): SerializedFilterCon
             },
           }
         : {}),
+      ...(callouts
+        ? {
+            gemCallouts: {
+              ...(gemCallouts && "callouts" in gemCallouts ? gemCallouts : {}),
+              callouts: callouts.map(serializeGemCallout),
+            },
+          }
+        : {}),
     },
   }
 }
 
 export function deserializeFilterConfig(config: SerializedFilterConfig): FilterConfig {
-  const { highlightedEquipment, ...restOptions } = config.buildSpecificOptions
+  const { highlightedEquipment, gemCallouts, ...restOptions } = config.buildSpecificOptions
   const highlights = highlightedEquipment?.highlights
+  const callouts = gemCallouts?.callouts
   const { preferredWeapons, earlyWeapons, ...restProfile } = config.buildProfile
   return {
     buildProfile: {
@@ -122,6 +152,18 @@ export function deserializeFilterConfig(config: SerializedFilterConfig): FilterC
               ...(highlights
                 ? {
                     highlights: highlights.map(deserializeHighlight),
+                  }
+                : {}),
+            },
+          }
+        : {}),
+      ...(gemCallouts
+        ? {
+            gemCallouts: {
+              ...gemCallouts,
+              ...(callouts
+                ? {
+                    callouts: callouts.map(deserializeGemCallout),
                   }
                 : {}),
             },

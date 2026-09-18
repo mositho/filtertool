@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch, onMounted, onBeforeUnmount } from "vue"
-import { HIGHLIGHT_FIELDS, HIGHLIGHT_RARITIES, RARITY_HIGHLIGHT_KEYS, SOUND_FIELD_PATHS } from "@schema/form-schema"
+import { HIGHLIGHT_FIELDS, HIGHLIGHT_RARITIES, RARITY_HIGHLIGHT_KEYS, SIZE_OPERATORS, SOUND_FIELD_PATHS } from "@schema/form-schema"
 import type { ReferenceData } from "../api"
 import { getPath, setPath, deletePath } from "../path"
 import FieldLabel from "./FieldLabel.vue"
@@ -17,17 +17,7 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{ change: [] }>()
 
-type ModuleId =
-  | "minAps"
-  | "linkedSockets"
-  | "minSockets"
-  | "minAreaLevel"
-  | "maxAreaLevel"
-  | "minItemLevel"
-  | "maxItemLevel"
-  | "weaponCutoff"
-  | "icon"
-  | "sound"
+type ModuleId = "minAps" | "linkedSockets" | "minSockets" | "areaLevel" | "itemLevel" | "weaponCutoff" | "size" | "icon" | "sound"
 
 const FIELD_BY_PATH = Object.fromEntries(HIGHLIGHT_FIELDS.map((field) => [field.path, field]))
 
@@ -37,31 +27,24 @@ const matchModes = computed(() =>
 
 const itemClassOptions = computed(() => (props.weaponsOnly ? props.reference.weaponClasses : props.reference.itemClasses))
 
-const MODULE_IDS: ModuleId[] = [
-  "minAps",
-  "linkedSockets",
-  "minSockets",
-  "minAreaLevel",
-  "maxAreaLevel",
-  "minItemLevel",
-  "maxItemLevel",
-  "weaponCutoff",
-  "icon",
-  "sound",
-]
+const MODULE_IDS: ModuleId[] = ["minAps", "linkedSockets", "minSockets", "areaLevel", "itemLevel", "weaponCutoff", "size", "icon", "sound"]
 
 const MODULE_LABELS: Record<ModuleId, string> = {
   minAps: "Minimum Attack Speed",
   linkedSockets: "Minimum Linked Sockets",
   minSockets: "Minimum Sockets",
-  minAreaLevel: "Minimum Area Level",
-  maxAreaLevel: "Maximum Area Level",
-  minItemLevel: "Minimum Item Level",
-  maxItemLevel: "Maximum Item Level",
+  areaLevel: "Area Level",
+  itemLevel: "Item Level",
   weaponCutoff: "Weapon Cutoff",
+  size: "Size",
   icon: "Icon",
   sound: "Sound",
 }
+
+const sizeDimensions = [
+  { path: "width", label: "Width", tooltip: "Match items by their inventory width (1 or 2).", min: 1, max: 2, placeholder: "e.g. 2" },
+  { path: "height", label: "Height", tooltip: "Match items by their inventory height (1–4).", min: 1, max: 4, placeholder: "e.g. 3" },
+] as const
 
 function fieldSet(path: string): boolean {
   return getPath(props.highlight, path) !== undefined
@@ -73,6 +56,9 @@ function computeActive(): Set<ModuleId> {
   return new Set(
     MODULE_IDS.filter((id) => {
       if (id === "weaponCutoff") return fieldSet("weaponCutoffOverlap")
+      if (id === "areaLevel") return fieldSet("minAreaLevel") || fieldSet("maxAreaLevel")
+      if (id === "itemLevel") return fieldSet("minItemLevel") || fieldSet("maxItemLevel")
+      if (id === "size") return fieldSet("width") || fieldSet("height")
       if (id === "icon") return !perRarity.value && (fieldSet("iconColor") || fieldSet("iconShape"))
       if (id === "sound") return !perRarity.value && (fieldSet("tts") || fieldSet("soundFileName") || fieldSet("soundId"))
       return fieldSet(id)
@@ -86,10 +72,19 @@ function computeMode(): "any" | "baseTypes" | "itemClasses" {
   return props.weaponsOnly ? "itemClasses" : "any"
 }
 
+const LEGACY_MODULE_IDS: Record<string, ModuleId> = {
+  minAreaLevel: "areaLevel",
+  maxAreaLevel: "areaLevel",
+  minItemLevel: "itemLevel",
+  maxItemLevel: "itemLevel",
+}
+
 function readModules(): Set<ModuleId> {
   const stored = props.highlight.modules
   if (Array.isArray(stored)) {
-    return new Set(stored.filter((id): id is ModuleId => MODULE_IDS.includes(id as ModuleId)))
+    return new Set(
+      stored.map((id) => LEGACY_MODULE_IDS[String(id)] ?? id).filter((id): id is ModuleId => MODULE_IDS.includes(id as ModuleId)),
+    )
   }
   return computeActive()
 }
@@ -200,6 +195,15 @@ function removeModule(id: ModuleId) {
   active.value = new Set([...active.value].filter((entry) => entry !== id))
   if (id === "weaponCutoff") {
     deletePath(props.highlight, "weaponCutoffOverlap")
+  } else if (id === "areaLevel") {
+    deletePath(props.highlight, "minAreaLevel")
+    deletePath(props.highlight, "maxAreaLevel")
+  } else if (id === "itemLevel") {
+    deletePath(props.highlight, "minItemLevel")
+    deletePath(props.highlight, "maxItemLevel")
+  } else if (id === "size") {
+    deletePath(props.highlight, "width")
+    deletePath(props.highlight, "height")
   } else if (id === "icon") {
     deletePath(props.highlight, "iconColor")
     deletePath(props.highlight, "iconShape")
@@ -237,6 +241,38 @@ function setIconShape(shape: string) {
   } else {
     setField("iconShape", shape)
   }
+}
+
+type SizeConstraintValue = { operator: string; value: number | undefined }
+
+function sizeConstraint(path: string): SizeConstraintValue {
+  const raw = fieldValue(path)
+  if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+    const obj = raw as Record<string, unknown>
+    return {
+      operator: typeof obj.operator === "string" ? obj.operator : "==",
+      value: typeof obj.value === "number" ? obj.value : undefined,
+    }
+  }
+  return { operator: "==", value: undefined }
+}
+
+function setSizeOperator(path: string, operator: string) {
+  const existing = sizeConstraint(path)
+  if (existing.value !== undefined) {
+    setPath(props.highlight, path, { operator, value: existing.value })
+    onChange()
+  }
+}
+
+function setSizeValue(path: string, value: number | undefined) {
+  if (value === undefined) {
+    deletePath(props.highlight, path)
+  } else {
+    const existing = sizeConstraint(path)
+    setPath(props.highlight, path, { operator: existing.operator, value })
+  }
+  onChange()
 }
 
 type RarityKey = "normal" | "magic" | "rare"
@@ -384,6 +420,80 @@ function applyRaritySound(rarity: string, next: Record<string, unknown>) {
               integer
               @update:model-value="setField('weaponCutoffOverlap', $event)"
             />
+          </template>
+          <template v-else-if="id === 'areaLevel'">
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <FieldLabel :label="FIELD_BY_PATH.minAreaLevel!.label" :tooltip="FIELD_BY_PATH.minAreaLevel?.tooltip" />
+                <NumberField
+                  :model-value="fieldValue('minAreaLevel') as number"
+                  :min="FIELD_BY_PATH.minAreaLevel?.min"
+                  integer
+                  :placeholder="FIELD_BY_PATH.minAreaLevel?.placeholder"
+                  @update:model-value="setField('minAreaLevel', $event)"
+                />
+              </div>
+              <div>
+                <FieldLabel :label="FIELD_BY_PATH.maxAreaLevel!.label" :tooltip="FIELD_BY_PATH.maxAreaLevel?.tooltip" />
+                <NumberField
+                  :model-value="fieldValue('maxAreaLevel') as number"
+                  :min="FIELD_BY_PATH.maxAreaLevel?.min"
+                  integer
+                  :placeholder="FIELD_BY_PATH.maxAreaLevel?.placeholder"
+                  @update:model-value="setField('maxAreaLevel', $event)"
+                />
+              </div>
+            </div>
+          </template>
+          <template v-else-if="id === 'itemLevel'">
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <FieldLabel :label="FIELD_BY_PATH.minItemLevel!.label" :tooltip="FIELD_BY_PATH.minItemLevel?.tooltip" />
+                <NumberField
+                  :model-value="fieldValue('minItemLevel') as number"
+                  :min="FIELD_BY_PATH.minItemLevel?.min"
+                  integer
+                  :placeholder="FIELD_BY_PATH.minItemLevel?.placeholder"
+                  @update:model-value="setField('minItemLevel', $event)"
+                />
+              </div>
+              <div>
+                <FieldLabel :label="FIELD_BY_PATH.maxItemLevel!.label" :tooltip="FIELD_BY_PATH.maxItemLevel?.tooltip" />
+                <NumberField
+                  :model-value="fieldValue('maxItemLevel') as number"
+                  :min="FIELD_BY_PATH.maxItemLevel?.min"
+                  integer
+                  :placeholder="FIELD_BY_PATH.maxItemLevel?.placeholder"
+                  @update:model-value="setField('maxItemLevel', $event)"
+                />
+              </div>
+            </div>
+          </template>
+          <template v-else-if="id === 'size'">
+            <div class="space-y-2">
+              <div v-for="dim in sizeDimensions" :key="dim.path" class="grid grid-cols-2 items-end gap-2">
+                <div>
+                  <FieldLabel :label="dim.label" :tooltip="dim.tooltip" />
+                  <select
+                    :value="sizeConstraint(dim.path).operator"
+                    @change="setSizeOperator(dim.path, ($event.target as HTMLSelectElement).value)"
+                    class="w-full rounded border border-neutral-700 bg-neutral-900 px-2 py-1.5 text-sm"
+                  >
+                    <option v-for="op in SIZE_OPERATORS" :key="op.value" :value="op.value">{{ op.value }} {{ op.label }}</option>
+                  </select>
+                </div>
+                <div>
+                  <NumberField
+                    :model-value="sizeConstraint(dim.path).value"
+                    :min="dim.min"
+                    :max="dim.max"
+                    integer
+                    :placeholder="dim.placeholder"
+                    @update:model-value="setSizeValue(dim.path, $event)"
+                  />
+                </div>
+              </div>
+            </div>
           </template>
           <template v-else-if="id === 'icon'">
             <IconPicker
