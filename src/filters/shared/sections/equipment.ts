@@ -460,7 +460,7 @@ export const flasks = () =>
         style: "lifeFlask",
         entries: [
           { baseTypes: ["Small Life Flask"], maxAreaLevel: 12, text: MANIFEST_BY_ID.life },
-          { baseTypes: ["Medium Life Flask"], maxAreaLevel: 16, text: MANIFEST_BY_ID.medium_life },
+          { baseTypes: ["Medium Life Flask"], maxAreaLevel: 20, text: MANIFEST_BY_ID.medium_life },
           { baseTypes: ["Large Life Flask"], maxAreaLevel: 24, text: MANIFEST_BY_ID.large_life },
           { baseTypes: ["Greater Life Flask"], maxAreaLevel: 28, text: MANIFEST_BY_ID.greater_life },
           { baseTypes: ["Grand Life Flask"], maxAreaLevel: 32, text: MANIFEST_BY_ID.grand_life },
@@ -476,7 +476,7 @@ export const flasks = () =>
         style: "manaFlask",
         entries: [
           { baseTypes: ["Small Mana Flask"], maxAreaLevel: 12, text: MANIFEST_BY_ID.mana },
-          { baseTypes: ["Medium Mana Flask"], maxAreaLevel: 16, text: MANIFEST_BY_ID.medium_mana },
+          { baseTypes: ["Medium Mana Flask"], maxAreaLevel: 20, text: MANIFEST_BY_ID.medium_mana },
           { baseTypes: ["Large Mana Flask"], maxAreaLevel: 24, text: MANIFEST_BY_ID.large_mana },
           { baseTypes: ["Greater Mana Flask"], maxAreaLevel: 28, text: MANIFEST_BY_ID.greater_mana },
           { baseTypes: ["Grand Mana Flask"], maxAreaLevel: 32, text: MANIFEST_BY_ID.grand_mana },
