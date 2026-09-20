@@ -12,7 +12,7 @@ import { resolveSharedWeaponQuery, resolveWeaponBaseTypes } from "./weapon-queri
 
 const RUSTIC_SASH_MAX_AREA_LEVEL = 12
 
-export const twilightStrand = () => withHeading("Twilight Strand", compileRules(rule().areaLevel("==", 1).size(45)))
+export const twilightStrand = () => withHeading("Twilight Strand", compileRules(rule().rarity("==", "Normal").areaLevel("==", 1).size(45)))
 
 export const earlySockets = ({
   earlyWeapons,

@@ -335,6 +335,19 @@ describe("links", () => {
     expect(withGenerics.length).toBeGreaterThan(withoutGenerics.length)
   })
 
+  test("plays a per-slot sound for generic three- and four-links when enabled", () => {
+    const output = links({
+      preferredColors: [],
+      preferredArmour: [],
+      genericThreeLinksEnabled: true,
+      genericFourLinksEnabled: true,
+    })
+
+    expect(output).toMatch(/CustomAlertSound "poeft-sounds-v2\/3_body\.mp3"/)
+    expect(output).toMatch(/CustomAlertSound "poeft-sounds-v2\/3_gloves\.mp3"/)
+    expect(output).toMatch(/CustomAlertSound "poeft-sounds-v2\/4_boots\.mp3"/)
+  })
+
   test("produces shield rules when shield progression is enabled", () => {
     const withoutShields = early({ shieldProgression: "none" })
     const withShields = early({ shieldProgression: "full" })
@@ -419,10 +432,11 @@ describe("rule validity", () => {
 })
 
 describe("twilight strand", () => {
-  test("shows every item at area level 1 as a catch-all", () => {
+  test("shows normal items at area level 1 so white items aren't hidden", () => {
     const output = twilightStrand()
 
     expect(output).toMatch(/AreaLevel == 1/)
+    expect(output).toMatch(/Rarity == Normal/)
     expect(output).not.toMatch(/BaseType/)
     expect(output).not.toMatch(/Class/)
   })

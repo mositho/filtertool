@@ -26,7 +26,6 @@ import type { FilterConfig } from "./config-loader"
 export function compileFilter(config: FilterConfig): string {
   const { buildProfile, buildSpecificOptions } = config
   return joinSections(
-    twilightStrand(),
     currency(),
     scrolls(),
     gems(buildSpecificOptions.gemCallouts),
@@ -48,6 +47,7 @@ export function compileFilter(config: FilterConfig): string {
     questItems(),
     divinationCards(),
     misc(),
+    twilightStrand(),
     hideEquipment(),
     showUnknownItems(),
   )

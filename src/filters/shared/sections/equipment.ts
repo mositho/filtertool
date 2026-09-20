@@ -105,12 +105,12 @@ export const links = ({
     const goodRules = [...colourRules, ...armourRules]
 
     const normalRules = genericEnabled
-      ? itemClasses.map((itemClass) =>
-          buildBaseRule(itemClass)
-            .mixin(styleMixin(filterStyles[normalStyle]))
-            .size(linkedSockets === 2 ? 45 : 40)
-            .areaLevel("<=", maxAreaLevel),
-        )
+      ? itemClasses.flatMap((itemClass) => {
+          const base = () => buildBaseRule(itemClass).mixin(styleMixin(filterStyles[normalStyle])).size(45)
+          const withSound = applySound(base(), itemClass).areaLevel("<=", ttsCutoffLevel)
+          const silent = base().areaLevel("<=", maxAreaLevel)
+          return ttsCandidates ? [withSound, silent] : [silent]
+        })
       : []
 
     return [...selectedRules, ...goodRules, ...normalRules]

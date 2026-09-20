@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { SOUND_MANIFEST, LINK_SOUNDS } from "../../src/sounds/manifest"
+import { SOUND_MANIFEST } from "../../src/sounds/manifest"
 
 describe("sound manifest", () => {
   it("has no duplicate IDs across all categories", () => {
