@@ -279,8 +279,25 @@ describe("gems", () => {
     expect(output).not.toMatch(/Empower_Support/)
   })
 
-  test("omits the callout section when no gems are configured", () => {
-    expect(gems({})).not.toMatch(/BaseType ==/)
+  test("omits per-gem callout sounds when no gems are configured", () => {
+    expect(gems({})).not.toMatch(/CustomAlertSound/)
+  })
+
+  test("highlights each class's Twilight Strand starter skill gem with the gem callout style", () => {
+    const output = gems({})
+
+    expect(output).toMatch(
+      /BaseType == "Heavy Strike" "Double Strike" "Burning Arrow" "Viper Strike" "Fireball" "Holy Strike" "Spectral Throw"/,
+    )
+    expect(output).toMatch(/SetBorderColor 0 255 255/)
+    expect(output).toMatch(/SetFontSize 45/)
+  })
+
+  test("uses the current Templar starter gem, Holy Strike, not the old Glacial Hammer", () => {
+    const output = gems({})
+
+    expect(output).toMatch(/"Holy Strike"/)
+    expect(output).not.toMatch(/"Glacial Hammer"/)
   })
 })
 

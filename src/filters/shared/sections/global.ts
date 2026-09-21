@@ -15,6 +15,16 @@ export const buildGemCalloutRules = (gems: readonly GemBaseType[]) =>
       .tts(soundFileTTS(gem.replace(/ Support$/, ""))),
   )
 
+export const STARTER_SKILL_GEMS = [
+  "Heavy Strike",
+  "Double Strike",
+  "Burning Arrow",
+  "Viper Strike",
+  "Fireball",
+  "Holy Strike",
+  "Spectral Throw",
+] as const
+
 export const gems = (callouts: GemCalloutsConfig = {}) =>
   withHeading(
     "Gems",
@@ -26,6 +36,9 @@ export const gems = (callouts: GemCalloutsConfig = {}) =>
         .icon("Red", "Star")
         .mixin(styleMixin(filterStyles.gem)),
       rule().itemClass("Skill Gems").baseType("Vaal").icon("Cyan", "Triangle").mixin(styleMixin(filterStyles.gem)),
+      rule()
+        .baseTypeExact(...STARTER_SKILL_GEMS)
+        .mixin(styleMixin(filterStyles.gemCallout)),
       rule().itemClass("Skill Gems", "Support Gems").mixin(styleMixin(filterStyles.gem)).size(35),
     ),
   )
