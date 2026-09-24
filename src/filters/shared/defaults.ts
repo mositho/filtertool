@@ -27,7 +27,7 @@ export const baseFilterDefaults = {
   early: {
     earlyMaxAreaLevel: GLOBAL_EARLY_MAX_AREA_LEVEL,
     twoSocketMaxAreaLevel: 7,
-    threeSocketMaxAreaLevel: GLOBAL_EARLY_MAX_AREA_LEVEL,
+    threeSocketMaxAreaLevel: 16,
     earlyBootsMaxAreaLevel: 24,
   },
   rareItems: {
@@ -41,7 +41,6 @@ export const baseFilterDefaults = {
   },
   normalItems: {
     maxAreaLevel: 4,
-    threeSocketMaxAreaLevel: 12,
   },
   tinctures: {
     baseTypes: ["Prismatic Tincture"],

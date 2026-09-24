@@ -8,7 +8,6 @@ import {
   jewellery,
   links,
   magicItems,
-  normalItems,
   sixSockets,
   tinctures,
   twilightStrand,
@@ -310,16 +309,6 @@ describe("magic items", () => {
     expect(output).toMatch(/AreaLevel <= 24/)
     expect(output).toMatch(/Height >= 3/)
     expect(output).toMatch(/AreaLevel <= 9/)
-  })
-})
-
-describe("normal items", () => {
-  test("shows three-socket normal items longer than other normal items", () => {
-    const output = normalItems({ maxAreaLevel: 4, threeSocketMaxAreaLevel: 12 })
-
-    expect(output).toMatch(/Sockets == 3/)
-    expect(output).toMatch(/AreaLevel <= 12/)
-    expect(output).toMatch(/AreaLevel <= 4/)
   })
 })
 
