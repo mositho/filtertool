@@ -50,5 +50,6 @@ export const buildSpecificOptions = {
   },
   normalItems: {
     // maxAreaLevel: 4,
+    // threeSocketMaxAreaLevel: 12,
   },
 } satisfies BuildSpecificOptions

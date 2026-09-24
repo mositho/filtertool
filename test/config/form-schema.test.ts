@@ -67,7 +67,7 @@ const canonicalConfig: Complete<BuildProfile> & Complete<BuildSpecificOptions> =
   },
   rareItems: { maxAreaLevel: 45 },
   magicItems: { bigMaxAreaLevel: 9, smallMaxAreaLevel: 24 },
-  normalItems: { maxAreaLevel: 4 },
+  normalItems: { maxAreaLevel: 4, threeSocketMaxAreaLevel: 12 },
   tinctures: { baseTypes: ["Prismatic Tincture"] },
   highlightedEquipment: {
     highlights: [fullHighlight],

@@ -585,10 +585,19 @@ export const whetstoneRecipe = ({ whetstoneRecipe = filterDefaults.misc.whetston
   )
 }
 
-export const normalItems = ({ maxAreaLevel = filterDefaults.normalItems.maxAreaLevel }: NormalItemsConfig = {}) => {
+export const normalItems = ({
+  maxAreaLevel = filterDefaults.normalItems.maxAreaLevel,
+  threeSocketMaxAreaLevel = filterDefaults.normalItems.threeSocketMaxAreaLevel,
+}: NormalItemsConfig = {}) => {
   return withHeading(
     "Normal Items",
     compileRules(
+      rule()
+        .rarity("==", "Normal")
+        .itemClass(...SOCKETABLE_CLASSES)
+        .sockets("==", 3)
+        .areaLevel("<=", threeSocketMaxAreaLevel)
+        .size(40),
       rule()
         .rarity("==", "Normal")
         .itemClass(...SOCKETABLE_CLASSES)

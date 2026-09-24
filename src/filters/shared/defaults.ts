@@ -41,6 +41,7 @@ export const baseFilterDefaults = {
   },
   normalItems: {
     maxAreaLevel: 4,
+    threeSocketMaxAreaLevel: 12,
   },
   tinctures: {
     baseTypes: ["Prismatic Tincture"],

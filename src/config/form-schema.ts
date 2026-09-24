@@ -386,6 +386,16 @@ const equipmentRarityItems: SchemaField[] = [
     tooltip: "Area level up to which normal items are shown. Only applies to items that don't match other rules.",
   },
   {
+    path: "normalItems.threeSocketMaxAreaLevel",
+    label: "Normal Items (3 Sockets)",
+    control: "number",
+    min: 0,
+    integer: true,
+    defaultValue: 12,
+    previewSection: "Normal Items",
+    tooltip: "Area level up to which three-socket normal items are shown, extending past the general normal-item cutoff.",
+  },
+  {
     path: "magicItems.smallMaxAreaLevel",
     label: "Small Magic Items",
     control: "number",
