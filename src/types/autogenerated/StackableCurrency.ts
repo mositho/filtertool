@@ -544,4 +544,5 @@ export type StackableCurrency =
   | "Brinehook's Ducat"
   | "Katakohi's Ducat"
   | "Tzamoto's Ducat"
+  | "Ukatoa's Ducat"
   | (string & {})
