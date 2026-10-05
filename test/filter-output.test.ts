@@ -334,13 +334,34 @@ describe("links", () => {
     expect(output).toMatch("Sockets == 6")
   })
 
-  test("omits generic three-links when disabled but keeps selected links", () => {
+  test("adds extra generic three-link rules when enabled", () => {
     const withGenerics = links({ preferredColors: ["R", "G"], genericThreeLinksEnabled: true })
     const withoutGenerics = links({ preferredColors: ["R", "G"], genericThreeLinksEnabled: false })
 
     expect(withGenerics).toMatch("LinkedSockets == 3")
     expect(withoutGenerics).toMatch("LinkedSockets == 3")
     expect(withGenerics.length).toBeGreaterThan(withoutGenerics.length)
+  })
+
+  test("always shows generic three-links up to the early max area level", () => {
+    const output = links({
+      preferredColors: [],
+      preferredArmour: [],
+      genericThreeLinksEnabled: false,
+      earlyMaxAreaLevel: 12,
+    })
+
+    expect(output).toMatch(/AreaLevel <= 12/)
+    expect(output).not.toMatch(/AreaLevel <= 33/)
+  })
+
+  test("extends generic three-links past the early max area level only when enabled", () => {
+    const base = { preferredColors: [], preferredArmour: [], earlyMaxAreaLevel: 12 }
+    const withGenerics = links({ ...base, genericThreeLinksEnabled: true })
+    const withoutGenerics = links({ ...base, genericThreeLinksEnabled: false })
+
+    expect(withGenerics).toMatch(/AreaLevel <= 33/)
+    expect(withoutGenerics).not.toMatch(/AreaLevel <= 33/)
   })
 
   test("omits generic four-links when disabled but keeps selected links", () => {

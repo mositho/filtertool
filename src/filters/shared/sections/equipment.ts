@@ -33,7 +33,8 @@ export const links = ({
   genericThreeLinksEnabled = filterDefaults.links.genericThreeLinksEnabled,
   genericFourLinksEnabled = filterDefaults.links.genericFourLinksEnabled,
   preferredArmour = filterDefaults.preferredArmour,
-}: LinksConfig & Partial<BuildProfile>) => {
+  earlyMaxAreaLevel = filterDefaults.early.earlyMaxAreaLevel,
+}: LinksConfig & Partial<BuildProfile> & EarlyConfig) => {
   const uniqueColors = [...new Set(preferredColors)]
 
   const buildLinkRules = ({
@@ -44,6 +45,7 @@ export const links = ({
     goodStyle,
     selectedStyle,
     genericEnabled = true,
+    genericAlwaysMaxAreaLevel,
   }: {
     linkedSockets: 2 | 3 | 4
     maxAreaLevel: number
@@ -52,6 +54,8 @@ export const links = ({
     goodStyle: keyof typeof filterStyles
     selectedStyle: keyof typeof filterStyles
     genericEnabled?: boolean
+    /** Generic links are always shown up to this level; `genericEnabled` extends them to `maxAreaLevel`. */
+    genericAlwaysMaxAreaLevel?: number
   }) => {
     const itemClasses = linkedSockets >= 3 ? ARMOUR_CLASSES : [undefined]
     const ttsCandidates = linkedSockets >= 3
@@ -104,14 +108,18 @@ export const links = ({
 
     const goodRules = [...colourRules, ...armourRules]
 
-    const normalRules = genericEnabled
-      ? itemClasses.flatMap((itemClass) => {
-          const base = () => buildBaseRule(itemClass).mixin(styleMixin(filterStyles[normalStyle])).size(45)
-          const withSound = applySound(base(), itemClass).areaLevel("<=", ttsCutoffLevel)
-          const silent = base().areaLevel("<=", maxAreaLevel)
-          return ttsCandidates ? [withSound, silent] : [silent]
-        })
-      : []
+    const genericRules = (maxAreaLevel: number) =>
+      itemClasses.flatMap((itemClass) => {
+        const base = () => buildBaseRule(itemClass).mixin(styleMixin(filterStyles[normalStyle])).size(45)
+        const withSound = applySound(base(), itemClass).areaLevel("<=", Math.min(ttsCutoffLevel, maxAreaLevel))
+        const silent = base().areaLevel("<=", maxAreaLevel)
+        return ttsCandidates ? [withSound, silent] : [silent]
+      })
+
+    const normalRules = [
+      ...(genericAlwaysMaxAreaLevel !== undefined ? genericRules(Math.min(maxAreaLevel, genericAlwaysMaxAreaLevel)) : []),
+      ...(genericEnabled ? genericRules(maxAreaLevel) : []),
+    ]
 
     return [...selectedRules, ...goodRules, ...normalRules]
   }
@@ -146,6 +154,7 @@ export const links = ({
         goodStyle: "goodThreeLink",
         selectedStyle: "selectedThreeLink",
         genericEnabled: genericThreeLinksEnabled,
+        genericAlwaysMaxAreaLevel: earlyMaxAreaLevel,
       }),
       ...buildLinkRules({
         linkedSockets: 2,

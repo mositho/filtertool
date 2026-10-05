@@ -29,7 +29,7 @@ export function compileFilter(config: FilterConfig): string {
     currency(),
     scrolls(),
     gems(buildSpecificOptions.gemCallouts),
-    links({ ...buildProfile, ...(buildSpecificOptions.links ?? {}) }),
+    links({ ...buildProfile, ...(buildSpecificOptions.links ?? {}), ...(buildSpecificOptions.early ?? {}) }),
     highlightedEquipment(buildSpecificOptions.highlightedEquipment),
     preferredWeapons(buildProfile),
     sixSockets(),

@@ -260,7 +260,8 @@ const buildEarlyGeneric: SchemaField[] = [
     min: 0,
     integer: true,
     defaultValue: 12,
-    tooltip: "The shared cutoff for early weapon and shield highlighting, and for early rare-item sizing.",
+    tooltip:
+      "The shared cutoff for early weapon and shield highlighting, early rare-item sizing, and how far generic three-links are always shown.",
   },
   {
     path: "early.twoSocketMaxAreaLevel",
@@ -323,7 +324,8 @@ const linksAreaLevels: SchemaField[] = [
     min: 0,
     integer: true,
     defaultValue: 33,
-    tooltip: "Area level up to which three-link items are shown.",
+    tooltip:
+      "Area level up to which three-link items matching your socket colors or armour are shown. Enabling generic three-links extends them to this level too.",
   },
   {
     path: "links.fourLinkMaxAreaLevel",
@@ -344,7 +346,8 @@ const linksSoundCutoffs: SchemaField[] = [
     min: 0,
     integer: true,
     defaultValue: 23,
-    tooltip: "Up to this area level, three-links play a sound; beyond it they're silent.",
+    tooltip:
+      "Up to this area level, three-links play a sound; beyond it they're silent. Generic three-links sound only up to the early max area level unless extended.",
   },
   {
     path: "links.fourLinkTtsCutoffLevel",
@@ -363,7 +366,7 @@ const linksGeneric: SchemaField[] = [
     label: "Three Links",
     control: "boolean",
     defaultValue: false,
-    tooltip: "Show three-linked items even when they don't match your socket colors or armour.",
+    tooltip: "Also show three-linked items past the early max area level, even when they don't match your socket colors or armour.",
   },
   {
     path: "links.genericFourLinksEnabled",
@@ -504,7 +507,7 @@ export const BUILD_SPECIFIC_SCHEMA: FieldGroup[] = [
       {
         key: "generic",
         title: "Generic links",
-        description: "Show linked items even when they don't match your socket colors or armour.",
+        description: "Generic three-links are always shown up to the early max area level; enable them to show them beyond it.",
         fields: linksGeneric,
       },
     ],
