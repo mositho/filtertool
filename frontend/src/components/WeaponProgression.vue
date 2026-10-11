@@ -5,6 +5,7 @@ import type { ReferenceData } from "../api"
 import HighlightCard from "./HighlightCard.vue"
 import NumberField from "./NumberField.vue"
 import { areaLevelRangeError } from "@schema/range-validation"
+import { copyEntity, entityClipboard, pasteEntity } from "../entityClipboard"
 
 type Phase = Record<string, unknown> & { minAreaLevel?: number; maxAreaLevel?: number }
 const props = defineProps<{ phases: Phase[]; reference: ReferenceData }>()
@@ -81,10 +82,33 @@ function duplicatePhase(index: number) {
   openPhase.value = index + 1
   void startRename(index + 1, copyName)
 }
+
+function copyPhase(index: number) {
+  copyEntity("weapon phase", props.phases[index])
+}
+
+function pastePhase() {
+  const value = pasteEntity("weapon phase")
+  if (!value) return
+  const next = [...props.phases, value as Phase]
+  emit("update:phases", next)
+  openPhase.value = next.length - 1
+}
 </script>
 
 <template>
   <div class="space-y-2">
+    <div class="flex gap-2">
+      <button type="button" class="rounded bg-blue-700 px-3 py-1.5 text-sm hover:bg-blue-600" @click="addPhase">+ Add weapon phase</button>
+      <button
+        type="button"
+        class="rounded border border-neutral-700 px-3 py-1.5 text-sm text-neutral-300 hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-40"
+        :disabled="entityClipboard?.kind !== 'weapon phase'"
+        @click="pastePhase"
+      >
+        Paste
+      </button>
+    </div>
     <div v-for="(phase, index) in phases" :key="index" class="rounded border border-neutral-800 bg-neutral-950/60 p-3">
       <div class="flex items-center gap-2">
         <button
@@ -116,6 +140,15 @@ function duplicatePhase(index: number) {
           <span class="ml-2 text-neutral-400">{{ describe(phase) }}</span>
         </button>
         <span class="ml-auto flex shrink-0 items-center gap-1">
+          <button
+            type="button"
+            class="rounded px-2 py-1 text-xs text-neutral-400 hover:bg-neutral-700 hover:text-white"
+            :aria-label="`Copy phase ${index + 1} to paste into this or another filter`"
+            title="Copy this phase to paste into this or another filter"
+            @click="copyPhase(index)"
+          >
+            Copy
+          </button>
           <button
             type="button"
             class="flex h-6 w-6 items-center justify-center rounded text-neutral-400 hover:bg-neutral-700 hover:text-white"
@@ -163,12 +196,5 @@ function duplicatePhase(index: number) {
         <HighlightCard :highlight="phase" :reference="reference" phase-mode @change="emit('change')" />
       </div>
     </div>
-    <button
-      type="button"
-      class="rounded bg-blue-700 px-3 py-1.5 text-sm hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-40"
-      @click="addPhase"
-    >
-      + Add weapon phase
-    </button>
   </div>
 </template>

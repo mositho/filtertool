@@ -3,6 +3,7 @@ import { nextTick, ref } from "vue"
 import type { ReferenceData } from "../api"
 import { emptyHighlight } from "@schema/form-schema"
 import HighlightCard from "./HighlightCard.vue"
+import { copyEntity, entityClipboard, pasteEntity } from "../entityClipboard"
 
 const props = defineProps<{ highlights: Record<string, unknown>[]; reference: ReferenceData }>()
 const emit = defineEmits<{ "update:highlights": [value: Record<string, unknown>[]]; "change": [] }>()
@@ -29,6 +30,18 @@ function duplicate(index: number) {
   emit("update:highlights", next)
   openHighlight.value = index + 1
   void startRename(index + 1, copyName)
+}
+
+function copy(index: number) {
+  copyEntity("highlight", props.highlights[index])
+}
+
+function paste() {
+  const value = pasteEntity("highlight")
+  if (!value) return
+  const next = [...props.highlights, value]
+  emit("update:highlights", next)
+  openHighlight.value = next.length - 1
 }
 
 function title(highlight: Record<string, unknown>, index: number): string {
@@ -68,6 +81,17 @@ function confirmRename(index: number) {
 
 <template>
   <div class="space-y-3">
+    <div class="flex gap-2">
+      <button type="button" @click="add" class="rounded bg-blue-700 px-3 py-1.5 text-sm hover:bg-blue-600">+ Add highlight</button>
+      <button
+        type="button"
+        :disabled="entityClipboard?.kind !== 'highlight'"
+        @click="paste"
+        class="rounded border border-neutral-700 px-3 py-1.5 text-sm text-neutral-300 hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        Paste
+      </button>
+    </div>
     <div v-for="(highlight, index) in highlights" :key="index" class="rounded border border-neutral-800 bg-neutral-900/40 p-3">
       <div class="flex items-center gap-2">
         <button
@@ -99,6 +123,14 @@ function confirmRename(index: number) {
         <span class="ml-auto flex items-center gap-1">
           <button
             type="button"
+            @click="copy(index)"
+            class="rounded px-2 py-1 text-xs text-neutral-400 hover:bg-neutral-700 hover:text-white"
+            title="Copy this highlight to paste into this or another filter"
+          >
+            Copy
+          </button>
+          <button
+            type="button"
             @click="duplicate(index)"
             class="flex h-6 w-6 items-center justify-center rounded text-neutral-400 hover:bg-neutral-700 hover:text-white"
             title="Duplicate highlight"
@@ -119,6 +151,5 @@ function confirmRename(index: number) {
         <HighlightCard :highlight="highlight" :reference="reference" @change="emit('change')" />
       </div>
     </div>
-    <button type="button" @click="add" class="rounded bg-blue-700 px-3 py-1.5 text-sm hover:bg-blue-600">+ Add highlight</button>
   </div>
 </template>
