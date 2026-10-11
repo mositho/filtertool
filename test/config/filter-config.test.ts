@@ -41,6 +41,7 @@ describe("filter config serialization", () => {
       buildProfile: {
         weaponPhases: [
           {
+            name: "Early axes",
             itemClasses: ["One Hand Axes"] as const,
             baseTypes: ["Rusted Hatchet"] as const,
             maxAreaLevel: 28,
@@ -52,6 +53,7 @@ describe("filter config serialization", () => {
       buildSpecificOptions: {},
     }
     const serialized = serializeFilterConfig(config)
+    expect(serialized.buildProfile.weaponPhases?.[0].name).toBe("Early axes")
     expect(serialized.buildProfile.weaponPhases?.[0].rare?.tts).toBe("regal_orb")
     expect(deserializeFilterConfig(serialized)).toEqual(config)
   })

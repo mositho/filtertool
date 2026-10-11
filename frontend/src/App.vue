@@ -2,6 +2,7 @@
 import { ref, computed, watch } from "vue"
 import { api, type AppSettings, type FilterConfig, type FilterInfo, type ReferenceData } from "./api"
 import { EMPTY_FILTER_CONFIG } from "@schema/form-schema"
+import { filterRangeErrors } from "@schema/range-validation"
 import { isValidFilterName } from "@schema/filter-name"
 import { pruneEmpty, stableStringify } from "./path"
 import Sidebar from "./components/Sidebar.vue"
@@ -176,6 +177,8 @@ watch(
 
 async function saveOnly() {
   if (!selected.value) return
+  const [error] = filterRangeErrors(config.value)
+  if (error) throw new Error(error)
   await api.saveConfig(selected.value, config.value)
   savedConfig.value = clone(config.value)
 }
@@ -223,6 +226,8 @@ async function onSaveAndExport() {
   if (!selected.value) return
   exporting.value = true
   try {
+    const [error] = filterRangeErrors(config.value)
+    if (error) throw new Error(error)
     await api.saveConfig(selected.value, config.value)
     savedConfig.value = clone(config.value)
     const result = await api.exportFilter(selected.value, config.value)
@@ -238,6 +243,8 @@ async function onExportAll() {
   exportingAll.value = true
   try {
     if (selected.value && dirty.value) {
+      const [error] = filterRangeErrors(config.value)
+      if (error) throw new Error(error)
       await api.saveConfig(selected.value, config.value)
       savedConfig.value = clone(config.value)
     }
@@ -393,6 +400,11 @@ async function confirmImport() {
   const imported: FilterConfig = {
     buildProfile: (cfg.buildProfile as FilterConfig["buildProfile"]) ?? {},
     buildSpecificOptions: (cfg.buildSpecificOptions as FilterConfig["buildSpecificOptions"]) ?? {},
+  }
+  const [rangeError] = filterRangeErrors(imported)
+  if (rangeError) {
+    importError.value = rangeError
+    return
   }
   try {
     await api.createFilter(name)

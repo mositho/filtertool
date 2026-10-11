@@ -75,6 +75,16 @@ describe("jewellery", () => {
 })
 
 describe("highlighted equipment", () => {
+  test("matches classes and individual bases as alternatives", () => {
+    const output = highlightedEquipment({
+      highlights: [{ itemClasses: ["Rings"], baseTypes: ["Rusted Hatchet"], rarities: ["Normal"] }],
+    })
+    const blocks = output.split(/\nShow\n/).filter((block) => block.includes("Rarity == Normal"))
+    expect(blocks).toHaveLength(2)
+    expect(blocks.some((block) => block.includes('Class "Rings"') && !block.includes("BaseType"))).toBe(true)
+    expect(blocks.some((block) => block.includes('BaseType "Rusted Hatchet"') && !block.includes("Class"))).toBe(true)
+  })
+
   test("applies only the requested rarity", () => {
     const output = highlightedEquipment({
       highlights: [{ baseTypes: ["Rusted Hatchet"], rarities: ["Normal"] }],
@@ -592,7 +602,7 @@ describe("weapon queries", () => {
         buildProfile: { weaponPhases: [{ itemClasses: ["One Hand Axes"], minAreaLevel: 29, maxAreaLevel: 28 }] },
         buildSpecificOptions: {},
       }),
-    ).toThrow(/Min Area Level above its Max Area Level/)
+    ).toThrow(/Min Area Level must not exceed Max Area Level/)
   })
 
   test("does not treat an empty weapon phase as all weapons for early sockets", () => {

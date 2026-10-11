@@ -18,12 +18,15 @@ import { early, earlySockets, twilightStrand } from "./sections/early"
 import { divinationCards, gems, hideEquipment, misc, questItems, showUnknownItems } from "./sections/global"
 import { joinSections } from "./sections/composition"
 import type { FilterConfig } from "./config-loader"
+import { filterRangeErrors } from "../../config/range-validation"
 
 /**
  * The canonical filter section composition. Every filter shares this layout; the
  * only thing that varies between filters is their config, which is passed in.
  */
 export function compileFilter(config: FilterConfig): string {
+  const [error] = filterRangeErrors(config)
+  if (error) throw new Error(error)
   const { buildProfile, buildSpecificOptions } = config
   return joinSections(
     currency(),

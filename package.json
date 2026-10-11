@@ -36,6 +36,7 @@
     "@types/node": "^20.19.43",
     "@types/supertest": "^7.2.1",
     "@vitejs/plugin-vue": "^6.0.8",
+    "jsdom": "^26.1.0",
     "prettier": "^3.6.2",
     "supertest": "^7.2.2",
     "tailwindcss": "^4.3.3",

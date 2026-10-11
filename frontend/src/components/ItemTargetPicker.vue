@@ -2,12 +2,12 @@
 import { computed, ref } from "vue"
 import type { ReferenceData } from "../api"
 
-const props = defineProps<{ classes: string[]; bases: string[]; reference: ReferenceData }>()
+const props = defineProps<{ classes: string[]; bases: string[]; reference: ReferenceData; weaponOnly?: boolean }>()
 const emit = defineEmits<{ "update:classes": [value: string[]]; "update:bases": [value: string[]] }>()
 const search = ref("")
 const selectedClass = ref("")
 
-const classes = computed(() => props.reference.weaponClasses)
+const classes = computed(() => (props.weaponOnly ? props.reference.weaponClasses : props.reference.itemClasses))
 const bases = computed(() => {
   const candidates = selectedClass.value
     ? (props.reference.baseTypesByClass[selectedClass.value] ?? [])
@@ -30,14 +30,14 @@ function toggleBase(base: string) {
 
 <template>
   <div class="space-y-2 rounded border border-neutral-800 p-2">
-    <p class="text-xs text-neutral-500">Select whole weapon classes, individual bases, or both.</p>
+    <p class="text-xs text-neutral-500">Select {{ weaponOnly ? "weapon" : "item" }} classes, individual bases, or both.</p>
     <div v-if="props.classes.length || props.bases.length" class="flex flex-wrap gap-1">
       <button
         v-for="itemClass in props.classes"
         :key="`class-${itemClass}`"
         type="button"
         class="rounded bg-blue-900/70 px-2 py-1 text-xs text-blue-100 hover:bg-blue-800"
-        :aria-label="`Remove weapon class ${itemClass}`"
+        :aria-label="`Remove item class ${itemClass}`"
         @click="toggleClass(itemClass)"
       >
         {{ itemClass }} ×
@@ -47,14 +47,14 @@ function toggleBase(base: string) {
         :key="`base-${base}`"
         type="button"
         class="rounded bg-neutral-800 px-2 py-1 text-xs text-neutral-200 hover:bg-neutral-700"
-        :aria-label="`Remove weapon base ${base}`"
+        :aria-label="`Remove base type ${base}`"
         @click="toggleBase(base)"
       >
         {{ base }} ×
       </button>
     </div>
     <details class="rounded border border-neutral-700 p-2">
-      <summary class="cursor-pointer text-xs text-neutral-300">Choose weapon classes</summary>
+      <summary class="cursor-pointer text-xs text-neutral-300">Choose {{ weaponOnly ? "weapon" : "item" }} classes</summary>
       <div class="mt-2 grid max-h-36 grid-cols-1 gap-1 overflow-y-auto sm:grid-cols-2">
         <label v-for="itemClass in classes" :key="itemClass" class="flex items-center gap-2 text-xs text-neutral-300">
           <input type="checkbox" :checked="props.classes.includes(itemClass)" @change="toggleClass(itemClass)" />
@@ -71,13 +71,13 @@ function toggleBase(base: string) {
             aria-label="Filter bases by class"
             class="rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-xs"
           >
-            <option value="">All weapon classes</option>
+            <option value="">All {{ weaponOnly ? "weapon" : "item" }} classes</option>
             <option v-for="itemClass in classes" :key="itemClass" :value="itemClass">{{ itemClass }}</option>
           </select>
           <input
             v-model="search"
             type="search"
-            aria-label="Search weapon bases"
+            aria-label="Search base types"
             placeholder="Search bases…"
             class="min-w-0 flex-1 rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-xs"
           />

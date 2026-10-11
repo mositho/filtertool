@@ -9,6 +9,7 @@ const props = defineProps<{
   integer?: boolean
   placeholder?: string
   decimals?: number
+  invalid?: boolean
 }>()
 const emit = defineEmits<{ "update:modelValue": [value: number | undefined] }>()
 
@@ -84,12 +85,16 @@ function onWheel(event: WheelEvent) {
 </script>
 
 <template>
-  <div class="flex w-full items-stretch overflow-hidden rounded border border-neutral-700 bg-neutral-900 focus-within:border-neutral-500">
+  <div
+    class="flex w-full items-stretch overflow-hidden rounded border bg-neutral-900"
+    :class="invalid ? 'border-red-600 focus-within:border-red-500' : 'border-neutral-700 focus-within:border-neutral-500'"
+  >
     <input
       type="text"
       inputmode="decimal"
       :value="text"
       :placeholder="placeholder ?? (integer ? 'e.g. 12' : 'e.g. 1.3')"
+      :aria-invalid="invalid || undefined"
       @input="onInput"
       @wheel="onWheel"
       @focus="focused = true"

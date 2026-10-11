@@ -10,7 +10,8 @@ import MultiSelect from "./MultiSelect.vue"
 import SoundSelector from "./SoundSelector.vue"
 import IconPicker from "./IconPicker.vue"
 import StyleEditor from "./StyleEditor.vue"
-import WeaponPicker from "./WeaponPicker.vue"
+import ItemTargetPicker from "./ItemTargetPicker.vue"
+import { areaLevelRangeError, itemLevelRangeError } from "@schema/range-validation"
 
 const props = defineProps<{
   highlight: Record<string, unknown>
@@ -22,10 +23,6 @@ const emit = defineEmits<{ change: [] }>()
 type ModuleId = "minAps" | "linkedSockets" | "minSockets" | "areaLevel" | "itemLevel" | "weaponCutoff" | "size" | "style" | "icon" | "sound"
 
 const FIELD_BY_PATH = Object.fromEntries(HIGHLIGHT_FIELDS.map((field) => [field.path, field]))
-
-const matchModes = ["any", "baseTypes", "itemClasses"] as const
-
-const itemClassOptions = computed(() => props.reference.itemClasses)
 
 const MODULE_IDS: ModuleId[] = [
   "minAps",
@@ -63,6 +60,8 @@ function fieldSet(path: string): boolean {
 }
 
 const perRarity = computed(() => !!props.highlight.perRarityCustomization)
+const areaLevelError = computed(() => areaLevelRangeError(props.highlight))
+const itemLevelError = computed(() => itemLevelRangeError(props.highlight))
 
 function computeActive(): Set<ModuleId> {
   return new Set(
@@ -77,12 +76,6 @@ function computeActive(): Set<ModuleId> {
       return fieldSet(id)
     }),
   )
-}
-
-function computeMode(): "any" | "baseTypes" | "itemClasses" {
-  if (((props.highlight.baseTypes as unknown[] | undefined)?.length ?? 0) > 0) return "baseTypes"
-  if (((props.highlight.itemClasses as unknown[] | undefined)?.length ?? 0) > 0) return "itemClasses"
-  return "any"
 }
 
 const LEGACY_MODULE_IDS: Record<string, ModuleId> = {
@@ -109,13 +102,11 @@ function persistModules() {
 }
 
 const active = ref<Set<ModuleId>>(readModules())
-const mode = ref<"any" | "baseTypes" | "itemClasses">(computeMode())
 
 watch(
   () => props.highlight,
   () => {
     active.value = readModules()
-    mode.value = computeMode()
   },
 )
 
@@ -124,11 +115,13 @@ const hasWeaponClass = computed(() => {
   return classes.some((itemClass) => props.reference.weaponClasses.includes(itemClass))
 })
 
-const weaponCutoffAvailable = computed(() =>
-  props.phaseMode
-    ? hasWeaponClass.value || ((fieldValue("baseTypes") as string[] | undefined)?.length ?? 0) > 0
-    : mode.value === "itemClasses" && hasWeaponClass.value,
-)
+const weaponCutoffAvailable = computed(() => {
+  const bases = (fieldValue("baseTypes") as string[] | undefined) ?? []
+  return (
+    hasWeaponClass.value ||
+    props.reference.weaponClasses.some((itemClass) => bases.some((base) => props.reference.baseTypesByClass[itemClass]?.includes(base)))
+  )
+})
 
 const availableModules = computed(() =>
   MODULE_IDS.filter((id) => {
@@ -169,21 +162,6 @@ function setField(path: string, value: unknown) {
 
 function fieldValue(path: string): unknown {
   return getPath(props.highlight, path)
-}
-
-const allBaseTypes = computed(() => Object.values(props.reference.baseTypesByClass).flat())
-
-const classFilter = ref("")
-
-const baseTypeOptions = computed(() =>
-  classFilter.value ? (props.reference.baseTypesByClass[classFilter.value] ?? []) : allBaseTypes.value,
-)
-
-function setMode(value: "any" | "baseTypes" | "itemClasses") {
-  mode.value = value
-  if (value !== "baseTypes") deletePath(props.highlight, "baseTypes")
-  if (value !== "itemClasses") deletePath(props.highlight, "itemClasses")
-  onChange()
 }
 
 const rarityValue = computed(() => (props.highlight.rarities as string[] | undefined) ?? [...HIGHLIGHT_RARITIES])
@@ -352,51 +330,23 @@ function applyRaritySound(rarity: string, next: Record<string, unknown>) {
 <template>
   <div class="space-y-4">
     <div class="space-y-1">
-      <FieldLabel label="Match" tooltip="Choose what this highlight matches, or match anything." />
-      <template v-if="phaseMode">
-        <WeaponPicker
-          :classes="(fieldValue('itemClasses') as string[]) ?? []"
-          :bases="(fieldValue('baseTypes') as string[]) ?? []"
-          :reference="reference"
-          @update:classes="setField('itemClasses', $event)"
-          @update:bases="setField('baseTypes', $event)"
-        />
-      </template>
-      <template v-else>
-        <div class="flex flex-wrap gap-2">
-          <button
-            v-for="option in matchModes"
-            :key="option"
-            type="button"
-            @click="setMode(option)"
-            class="rounded px-2 py-1 text-xs"
-            :class="mode === option ? 'bg-blue-700 text-white' : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'"
-          >
-            {{ option === "any" ? "Anything" : option === "baseTypes" ? "Base Types" : "Item Classes" }}
-          </button>
-        </div>
-
-        <template v-if="mode === 'itemClasses'">
-          <MultiSelect
-            :model-value="(fieldValue('itemClasses') as string[]) ?? []"
-            :options="itemClassOptions"
-            @update:model-value="setField('itemClasses', $event)"
-          />
-        </template>
-        <template v-else-if="mode === 'baseTypes'">
-          <select v-model="classFilter" class="w-full rounded border border-neutral-700 bg-neutral-900 px-2 py-1.5 text-sm">
-            <option value="">All item classes</option>
-            <option v-for="itemClass in itemClassOptions" :key="itemClass" :value="itemClass">{{ itemClass }}</option>
-          </select>
-          <MultiSelect
-            :model-value="(fieldValue('baseTypes') as string[]) ?? []"
-            :options="baseTypeOptions"
-            @update:model-value="setField('baseTypes', $event)"
-          />
-        </template>
-      </template>
+      <FieldLabel label="Match" tooltip="Select item classes, individual base types, or both." />
+      <ItemTargetPicker
+        :classes="(fieldValue('itemClasses') as string[]) ?? []"
+        :bases="(fieldValue('baseTypes') as string[]) ?? []"
+        :reference="reference"
+        :weapon-only="phaseMode"
+        @update:classes="setField('itemClasses', $event)"
+        @update:bases="setField('baseTypes', $event)"
+      />
     </div>
 
+    <p v-if="!phaseMode && areaLevelError && !active.has('areaLevel')" role="alert" class="text-xs text-red-400">
+      {{ areaLevelError }}
+    </p>
+    <p v-if="!phaseMode && itemLevelError && !active.has('itemLevel')" role="alert" class="text-xs text-red-400">
+      {{ itemLevelError }}
+    </p>
     <details :open="phaseMode ? undefined : true" class="space-y-2">
       <summary v-if="phaseMode" class="cursor-pointer text-sm text-neutral-400">Advanced: rarities, cutoff, styles and sounds</summary>
       <div class="space-y-1">
@@ -465,6 +415,7 @@ function applyRaritySound(rarity: string, next: Record<string, unknown>) {
                   <NumberField
                     :model-value="fieldValue('minAreaLevel') as number"
                     :min="FIELD_BY_PATH.minAreaLevel?.min"
+                    :invalid="!!areaLevelError"
                     integer
                     :placeholder="FIELD_BY_PATH.minAreaLevel?.placeholder"
                     @update:model-value="setField('minAreaLevel', $event)"
@@ -475,12 +426,14 @@ function applyRaritySound(rarity: string, next: Record<string, unknown>) {
                   <NumberField
                     :model-value="fieldValue('maxAreaLevel') as number"
                     :min="FIELD_BY_PATH.maxAreaLevel?.min"
+                    :invalid="!!areaLevelError"
                     integer
                     :placeholder="FIELD_BY_PATH.maxAreaLevel?.placeholder"
                     @update:model-value="setField('maxAreaLevel', $event)"
                   />
                 </div>
               </div>
+              <p v-if="areaLevelError" role="alert" class="text-xs text-red-400">{{ areaLevelError }}</p>
             </template>
             <template v-else-if="id === 'itemLevel'">
               <div class="grid grid-cols-2 gap-2">
@@ -489,6 +442,7 @@ function applyRaritySound(rarity: string, next: Record<string, unknown>) {
                   <NumberField
                     :model-value="fieldValue('minItemLevel') as number"
                     :min="FIELD_BY_PATH.minItemLevel?.min"
+                    :invalid="!!itemLevelError"
                     integer
                     :placeholder="FIELD_BY_PATH.minItemLevel?.placeholder"
                     @update:model-value="setField('minItemLevel', $event)"
@@ -499,12 +453,14 @@ function applyRaritySound(rarity: string, next: Record<string, unknown>) {
                   <NumberField
                     :model-value="fieldValue('maxItemLevel') as number"
                     :min="FIELD_BY_PATH.maxItemLevel?.min"
+                    :invalid="!!itemLevelError"
                     integer
                     :placeholder="FIELD_BY_PATH.maxItemLevel?.placeholder"
                     @update:model-value="setField('maxItemLevel', $event)"
                   />
                 </div>
               </div>
+              <p v-if="itemLevelError" role="alert" class="text-xs text-red-400">{{ itemLevelError }}</p>
             </template>
             <template v-else-if="id === 'size'">
               <div class="space-y-2">

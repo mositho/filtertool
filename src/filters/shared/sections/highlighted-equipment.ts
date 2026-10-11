@@ -180,9 +180,14 @@ export const buildHighlightedBaseTypeRules = ({
       })
       return builtRule.rarity("==", selectedRarity)
     })
+  // PoE combines Class and BaseType in one block with AND; the picker treats them as alternative selections.
+  const makeTargetRules = (selectedBaseTypes?: readonly BaseType[], selectedItemClasses?: readonly ItemClass[]) => [
+    ...(selectedItemClasses?.length ? makeRules(undefined, selectedItemClasses) : []),
+    ...(selectedBaseTypes?.length ? makeRules(selectedBaseTypes) : []),
+  ]
   if (weaponCutoffOverlap === undefined) {
     const resolved = resolveMixedItemClassWeaponQuery({ itemClasses, baseTypes, minAps })
-    return makeRules(resolved.baseTypes, resolved.itemClasses)
+    return makeTargetRules(resolved.baseTypes, resolved.itemClasses)
   }
   const weaponBaseTypes = resolveWeaponBaseTypes({
     itemClasses: weaponClasses,
@@ -199,8 +204,5 @@ export const buildHighlightedBaseTypeRules = ({
     )
   })
   const nonWeaponBases = baseTypes?.filter((baseType) => !isWeaponBaseType(baseType)) ?? []
-  return [
-    ...weapons,
-    ...((nonWeaponClasses?.length ?? 0) > 0 || nonWeaponBases.length > 0 ? makeRules(nonWeaponBases, nonWeaponClasses) : []),
-  ]
+  return [...weapons, ...makeTargetRules(nonWeaponBases, nonWeaponClasses)]
 }

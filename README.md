@@ -45,7 +45,7 @@ On first launch a **quickstart** prompt asks for the **PoE Filter Path** (where 
 The filter editor is organized into sections, each matching a section of the compiled `.filter` output:
 
 - **Build profile** — socket colors, armour bases used to pick "good" links, and shield progression.
-- **Weapon progression** — combine any number of weapon classes and bases per phase, optionally setting **Min Area Level** and **Max Area Level**. Overlapping phases are allowed; the more-specific range takes priority. Each base uses a drop-level + 5 cutoff by default.
+- **Weapon progression** — combine any number of weapon classes and bases per phase, optionally setting **Min Area Level** and **Max Area Level**. Overlapping phases are allowed; the more-specific range takes priority. Each base uses a drop-level + 5 cutoff by default. Phases can be renamed and duplicated.
 - **Early** — area-level cutoffs for sockets and boots, and the Rustic Sash toggle.
 - **Links** — which linked-socket items are shown and when they play a sound.
 - **Equipment** — rarity thresholds (max area level, with separate cutoffs for small ≤2×2 and big >2×2 magic items), jewellery and tinctures.
@@ -54,7 +54,7 @@ The filter editor is organized into sections, each matching a section of the com
 
 Every highlight shares the same editor:
 
-- **Match** — match _anything_, specific _base types_, or _item classes_.
+- **Match** — select _item classes_, individual _base types_, or both. Selected classes and bases are alternatives.
 - **Rarities** — which rarities the highlight applies to (defaults to Normal, Magic and Rare).
 - **Customize per rarity** (off by default) — when enabled, configure the icon and sound separately per selected rarity.
 - **Modules** (add/remove via **+ Add module**) — minimum attack speed, minimum linked sockets, minimum sockets, area level (min/max), item level (min/max), size (width/height with `==`, `>=` and `<=`), weapon cutoff, a style (a Global Settings preset or a custom one with its own colors, size and opacity), a single icon, and a single sound. The whole-highlight icon/sound modules are replaced by per-rarity styling when "Customize per rarity" is on.

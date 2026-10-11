@@ -47,6 +47,30 @@ describe("filters API", () => {
     expect(fs.existsSync(path.join(filtersRoot, "build", "config.json"))).toBe(true)
   })
 
+  it("rejects invalid weapon phase and highlight area ranges without saving them", async () => {
+    await request(app).post("/api/filters").send({ name: "build" }).expect(201)
+    const phase = { buildProfile: { weaponPhases: [{ minAreaLevel: 30, maxAreaLevel: 28 }] }, buildSpecificOptions: {} }
+    const phaseResponse = await request(app).put("/api/filters/build/config").send(phase).expect(400)
+    expect(phaseResponse.body.error).toContain("Weapon phase 1")
+
+    const highlight = {
+      buildProfile: {},
+      buildSpecificOptions: { highlightedEquipment: { highlights: [{ minAreaLevel: 30, maxAreaLevel: 28 }] } },
+    }
+    const highlightResponse = await request(app).put("/api/filters/build/config").send(highlight).expect(400)
+    expect(highlightResponse.body.error).toContain("Highlight 1")
+    const itemLevel = {
+      buildProfile: {},
+      buildSpecificOptions: { highlightedEquipment: { highlights: [{ minItemLevel: 50, maxItemLevel: 40 }] } },
+    }
+    const itemResponse = await request(app).put("/api/filters/build/config").send(itemLevel).expect(400)
+    expect(itemResponse.body.error).toContain("Min Item Level must not exceed Max Item Level")
+    expect(fs.readFileSync(path.join(filtersRoot, "build", "config.json"), "utf8")).not.toContain("minAreaLevel")
+
+    const preview = await request(app).post("/api/filters/build/preview").send({ config: highlight }).expect(400)
+    expect(preview.body.error).toContain("Highlight 1")
+  })
+
   it("compiles a live preview", async () => {
     await request(app).post("/api/filters").send({ name: "build" }).expect(201)
     const res = await request(app)

@@ -3,6 +3,7 @@ import fs from "fs"
 import path from "path"
 import { repoRoot, loadSettings, ensureSettings, saveSettings, type AppSettings } from "../config/settings"
 import { createFilter, deleteFilter, duplicateFilter, listFilters, renameFilter } from "../config/lifecycle"
+import { filterRangeErrors } from "../config/range-validation"
 import {
   deserializeFilterConfig,
   readFilterConfig,
@@ -56,6 +57,8 @@ export function createApp(options: ServerOptions = {}) {
     const name = req.params.name
     if (!fs.existsSync(filterDir(name))) return respond(res, 404, { error: `Filter "${name}" not found.` })
     const config = req.body as SerializedFilterConfig
+    const [error] = filterRangeErrors(config)
+    if (error) return respond(res, 400, { error })
     writeFilterConfig(filterDir(name), config)
     respond(res, 200, readFilterConfig(filterDir(name)))
   })
@@ -136,6 +139,10 @@ export function createApp(options: ServerOptions = {}) {
     }
     try {
       const { config } = req.body as { config?: SerializedFilterConfig }
+      if (config) {
+        const [error] = filterRangeErrors(config)
+        if (error) return respond(res, 400, { error })
+      }
       if (config) writeFilterConfig(filterDir(name), config)
       const fileName = await exportFilter(name, settings.filterPath, true, filtersRoot)
       respond(res, 200, { fileName, filterPath: settings.filterPath, soundFolder: getSoundPackFolder() })

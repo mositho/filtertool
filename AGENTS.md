@@ -4,6 +4,8 @@
 
 This is a Path of Exile **1** item-filter builder, focused on leveling filters. The Vue app edits filter configurations; the TypeScript compiler turns them into PoE `.filter` text; export writes the filter and its custom sound pack to the user's game folder. Start with `README.md` for setup and user-facing workflows. Do not confuse this with PoE 2 filter syntax or assume current item bases/league mechanics from memory.
 
+Read `GLOSSARY.md` for the repo's PoE filter terms and use them consistently in UI labels, tooltips, tests and documentation.
+
 ## Where to look
 
 - `frontend/src/`: Vue editor, live preview, settings and sound controls; `frontend/src/api.ts` calls the server.
@@ -28,6 +30,7 @@ This is a Path of Exile **1** item-filter builder, focused on leveling filters. 
 
 ## How to work safely
 
+- Ask the user before committing or pushing any changes. Do not infer commit/push approval from approval to edit files.
 - UI/config changes may cross `options.ts` → `config-loader.ts` → compiler sections → `form-schema.ts` → Vue components/API → tests. Keep serialized JSON, TS fallback and preview/export behavior aligned. A preview compiles without writing a game filter; export writes to the configured PoE directory.
 - Prefer changing source data and generators over generated files. Personal filter folders, `settings.json`, `sounds/`, and `src/filters/shared/user-defaults.{json,ts}` / `user-styles.{json,ts}` are local/ignored; don't add them to commits. Treat an existing user's filters/settings/game files as data, not test fixtures.
 - Use `npm run check` before completing TypeScript changes (`typecheck`, Vitest and Prettier). For frontend changes also run `npm run frontend:build`. Add or update focused tests in `test/` when changing rule ordering, matching, cutoffs, serialization or API behavior; assert generated `.filter` lines where appropriate.
