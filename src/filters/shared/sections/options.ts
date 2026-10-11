@@ -43,6 +43,12 @@ export type JewelleryConfig = {
   beltMaxAreaLevel?: number
 }
 
+export type FlasksConfig = {
+  utilityFlasks?: readonly string[]
+  lifeMaxAreaLevel?: number
+  manaMaxAreaLevel?: number
+}
+
 export type RareItemsConfig = {
   /** Hard cutoff: rare items at or below this area level are shown. Unset means uncapped. */
   maxAreaLevel?: number
@@ -132,6 +138,7 @@ export type GemCalloutsConfig = {
 export type BuildSpecificOptions = {
   links?: LinksConfig
   jewellery?: JewelleryConfig
+  flasks?: FlasksConfig
   rareItems?: RareItemsConfig
   magicItems?: MagicItemsConfig
   normalItems?: NormalItemsConfig

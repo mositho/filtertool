@@ -36,7 +36,7 @@ export function compileFilter(config: FilterConfig): string {
     jewellery(buildSpecificOptions.jewellery),
     early({ ...buildProfile, ...(buildSpecificOptions.early ?? {}) }),
     earlySockets({ ...buildProfile, ...(buildSpecificOptions.early ?? {}) }),
-    flasks(),
+    flasks(buildSpecificOptions.flasks),
     tinctures(buildSpecificOptions.tinctures),
     chromaticItems(),
     uniques(),

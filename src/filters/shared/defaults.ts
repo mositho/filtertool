@@ -45,6 +45,9 @@ export const baseFilterDefaults = {
   tinctures: {
     baseTypes: ["Prismatic Tincture"],
   },
+  flasks: {
+    utilityFlasks: ["Jade", "Quartz", "Quicksilver", "Silver", "Granite"],
+  },
   misc: {
     whetstoneRecipe: true,
     showRusticSash: true,

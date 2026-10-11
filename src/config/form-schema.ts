@@ -483,6 +483,37 @@ const equipmentTinctures: SchemaField[] = [
   },
 ]
 
+const equipmentFlasks: SchemaField[] = [
+  {
+    path: "flasks.utilityFlasks",
+    label: "Utility Flasks",
+    control: "multiselect",
+    options: [],
+    defaultValue: ["Jade", "Quartz", "Quicksilver", "Silver", "Granite"],
+    tooltip: "Utility flask base types that receive a dedicated callout; other utility flasks keep the generic style.",
+  },
+  {
+    path: "flasks.lifeMaxAreaLevel",
+    label: "Life Flask Cutoff",
+    control: "number",
+    min: 0,
+    integer: true,
+    placeholder: "tier defaults",
+    previewSection: "Flasks",
+    tooltip: "Optional maximum area level for life flasks. This can lower, but not extend, the existing tier cutoffs.",
+  },
+  {
+    path: "flasks.manaMaxAreaLevel",
+    label: "Mana Flask Cutoff",
+    control: "number",
+    min: 0,
+    integer: true,
+    placeholder: "tier defaults",
+    previewSection: "Flasks",
+    tooltip: "Optional maximum area level for mana flasks. This can lower, but not extend, the existing tier cutoffs.",
+  },
+]
+
 export const BUILD_SPECIFIC_SCHEMA: FieldGroup[] = [
   {
     key: "early",
@@ -528,6 +559,7 @@ export const BUILD_SPECIFIC_SCHEMA: FieldGroup[] = [
         ],
       },
       { key: "tinctures", title: "Tinctures", previewSection: "Tinctures", fields: equipmentTinctures },
+      { key: "flasks", title: "Flasks", previewSection: "Flasks", fields: equipmentFlasks },
       { key: "rarityItems", title: "Max Area Level", fields: equipmentRarityItems },
     ],
   },

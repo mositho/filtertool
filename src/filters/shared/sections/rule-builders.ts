@@ -62,11 +62,13 @@ export const buildFlaskSeries = ({
   itemClass,
   iconColor,
   style,
+  magicStyle = style,
   entries,
 }: {
   itemClass: "Life Flasks" | "Mana Flasks"
   iconColor: Color
   style: "lifeFlask" | "manaFlask"
+  magicStyle?: "lifeFlask" | "manaFlask" | "magicLifeFlask" | "magicManaFlask"
   entries: Array<{ baseTypes: string[]; maxAreaLevel?: number; text: SoundManifestEntry }>
 }) =>
   entries.flatMap(({ baseTypes, maxAreaLevel, text }) => [
@@ -86,7 +88,7 @@ export const buildFlaskSeries = ({
       maxAreaLevel,
       iconColor,
       text,
-      style: styleMixin(filterStyles[style]),
+      style: styleMixin(filterStyles[magicStyle]),
     }),
   ])
 

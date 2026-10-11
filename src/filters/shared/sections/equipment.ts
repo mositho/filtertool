@@ -12,6 +12,7 @@ import { LEVELING_AMULETS, normalizeLevelingAmuletConfig, resolveShieldProgressi
 import type {
   BuildProfile,
   EarlyConfig,
+  FlasksConfig,
   HighlightedEquipmentConfig,
   JewelleryConfig,
   LinksConfig,
@@ -459,7 +460,7 @@ export const chromaticItems = () =>
     ),
   )
 
-export const flasks = () =>
+export const flasks = ({ utilityFlasks = filterDefaults.flasks.utilityFlasks, lifeMaxAreaLevel, manaMaxAreaLevel }: FlasksConfig = {}) =>
   withHeading(
     "Flasks",
     compileRules(
@@ -467,43 +468,119 @@ export const flasks = () =>
         itemClass: "Life Flasks",
         iconColor: "Red",
         style: "lifeFlask",
+        magicStyle: "magicLifeFlask",
         entries: [
-          { baseTypes: ["Small Life Flask"], maxAreaLevel: 12, text: MANIFEST_BY_ID.life },
-          { baseTypes: ["Medium Life Flask"], maxAreaLevel: 20, text: MANIFEST_BY_ID.medium_life },
-          { baseTypes: ["Large Life Flask"], maxAreaLevel: 24, text: MANIFEST_BY_ID.large_life },
-          { baseTypes: ["Greater Life Flask"], maxAreaLevel: 28, text: MANIFEST_BY_ID.greater_life },
-          { baseTypes: ["Grand Life Flask"], maxAreaLevel: 32, text: MANIFEST_BY_ID.grand_life },
-          { baseTypes: ["Giant Life Flask"], maxAreaLevel: 35, text: MANIFEST_BY_ID.giant_life },
-          { baseTypes: ["Colossal Life Flask"], maxAreaLevel: 40, text: MANIFEST_BY_ID.colossal_life },
-          { baseTypes: ["Hallowed Life Flask"], maxAreaLevel: 60, text: MANIFEST_BY_ID.life },
-          { baseTypes: ["Divine Life Flask"], text: MANIFEST_BY_ID.life },
+          {
+            baseTypes: ["Small Life Flask"],
+            maxAreaLevel: lifeMaxAreaLevel === undefined ? 12 : Math.min(12, lifeMaxAreaLevel),
+            text: MANIFEST_BY_ID.life,
+          },
+          {
+            baseTypes: ["Medium Life Flask"],
+            maxAreaLevel: lifeMaxAreaLevel === undefined ? 20 : Math.min(20, lifeMaxAreaLevel),
+            text: MANIFEST_BY_ID.medium_life,
+          },
+          {
+            baseTypes: ["Large Life Flask"],
+            maxAreaLevel: lifeMaxAreaLevel === undefined ? 24 : Math.min(24, lifeMaxAreaLevel),
+            text: MANIFEST_BY_ID.large_life,
+          },
+          {
+            baseTypes: ["Greater Life Flask"],
+            maxAreaLevel: lifeMaxAreaLevel === undefined ? 28 : Math.min(28, lifeMaxAreaLevel),
+            text: MANIFEST_BY_ID.greater_life,
+          },
+          {
+            baseTypes: ["Grand Life Flask"],
+            maxAreaLevel: lifeMaxAreaLevel === undefined ? 32 : Math.min(32, lifeMaxAreaLevel),
+            text: MANIFEST_BY_ID.grand_life,
+          },
+          {
+            baseTypes: ["Giant Life Flask"],
+            maxAreaLevel: lifeMaxAreaLevel === undefined ? 35 : Math.min(35, lifeMaxAreaLevel),
+            text: MANIFEST_BY_ID.giant_life,
+          },
+          {
+            baseTypes: ["Colossal Life Flask"],
+            maxAreaLevel: lifeMaxAreaLevel === undefined ? 40 : Math.min(40, lifeMaxAreaLevel),
+            text: MANIFEST_BY_ID.colossal_life,
+          },
+          {
+            baseTypes: ["Hallowed Life Flask"],
+            maxAreaLevel: lifeMaxAreaLevel === undefined ? 60 : Math.min(60, lifeMaxAreaLevel),
+            text: MANIFEST_BY_ID.life,
+          },
+          { baseTypes: ["Divine Life Flask"], maxAreaLevel: lifeMaxAreaLevel, text: MANIFEST_BY_ID.life },
         ],
       }),
       ...buildFlaskSeries({
         itemClass: "Mana Flasks",
         iconColor: "Blue",
         style: "manaFlask",
+        magicStyle: "magicManaFlask",
         entries: [
-          { baseTypes: ["Small Mana Flask"], maxAreaLevel: 12, text: MANIFEST_BY_ID.mana },
-          { baseTypes: ["Medium Mana Flask"], maxAreaLevel: 20, text: MANIFEST_BY_ID.medium_mana },
-          { baseTypes: ["Large Mana Flask"], maxAreaLevel: 24, text: MANIFEST_BY_ID.large_mana },
-          { baseTypes: ["Greater Mana Flask"], maxAreaLevel: 28, text: MANIFEST_BY_ID.greater_mana },
-          { baseTypes: ["Grand Mana Flask"], maxAreaLevel: 32, text: MANIFEST_BY_ID.grand_mana },
-          { baseTypes: ["Giant Mana Flask"], maxAreaLevel: 36, text: MANIFEST_BY_ID.giant_mana },
-          { baseTypes: ["Colossal Mana Flask"], maxAreaLevel: 40, text: MANIFEST_BY_ID.mana },
-          { baseTypes: ["Sacred Mana Flask"], maxAreaLevel: 46, text: MANIFEST_BY_ID.mana },
-          { baseTypes: ["Hallowed Mana Flask"], maxAreaLevel: 52, text: MANIFEST_BY_ID.mana },
-          { baseTypes: ["Sanctified Mana Flask"], maxAreaLevel: 60, text: MANIFEST_BY_ID.mana },
-          { baseTypes: ["Eternal Mana Flask", "Divine Mana Flask"], text: MANIFEST_BY_ID.mana },
+          {
+            baseTypes: ["Small Mana Flask"],
+            maxAreaLevel: manaMaxAreaLevel === undefined ? 12 : Math.min(12, manaMaxAreaLevel),
+            text: MANIFEST_BY_ID.mana,
+          },
+          {
+            baseTypes: ["Medium Mana Flask"],
+            maxAreaLevel: manaMaxAreaLevel === undefined ? 20 : Math.min(20, manaMaxAreaLevel),
+            text: MANIFEST_BY_ID.medium_mana,
+          },
+          {
+            baseTypes: ["Large Mana Flask"],
+            maxAreaLevel: manaMaxAreaLevel === undefined ? 24 : Math.min(24, manaMaxAreaLevel),
+            text: MANIFEST_BY_ID.large_mana,
+          },
+          {
+            baseTypes: ["Greater Mana Flask"],
+            maxAreaLevel: manaMaxAreaLevel === undefined ? 28 : Math.min(28, manaMaxAreaLevel),
+            text: MANIFEST_BY_ID.greater_mana,
+          },
+          {
+            baseTypes: ["Grand Mana Flask"],
+            maxAreaLevel: manaMaxAreaLevel === undefined ? 32 : Math.min(32, manaMaxAreaLevel),
+            text: MANIFEST_BY_ID.grand_mana,
+          },
+          {
+            baseTypes: ["Giant Mana Flask"],
+            maxAreaLevel: manaMaxAreaLevel === undefined ? 36 : Math.min(36, manaMaxAreaLevel),
+            text: MANIFEST_BY_ID.giant_mana,
+          },
+          {
+            baseTypes: ["Colossal Mana Flask"],
+            maxAreaLevel: manaMaxAreaLevel === undefined ? 40 : Math.min(40, manaMaxAreaLevel),
+            text: MANIFEST_BY_ID.mana,
+          },
+          {
+            baseTypes: ["Sacred Mana Flask"],
+            maxAreaLevel: manaMaxAreaLevel === undefined ? 46 : Math.min(46, manaMaxAreaLevel),
+            text: MANIFEST_BY_ID.mana,
+          },
+          {
+            baseTypes: ["Hallowed Mana Flask"],
+            maxAreaLevel: manaMaxAreaLevel === undefined ? 52 : Math.min(52, manaMaxAreaLevel),
+            text: MANIFEST_BY_ID.mana,
+          },
+          {
+            baseTypes: ["Sanctified Mana Flask"],
+            maxAreaLevel: manaMaxAreaLevel === undefined ? 60 : Math.min(60, manaMaxAreaLevel),
+            text: MANIFEST_BY_ID.mana,
+          },
+          { baseTypes: ["Eternal Mana Flask", "Divine Mana Flask"], maxAreaLevel: manaMaxAreaLevel, text: MANIFEST_BY_ID.mana },
         ],
       }),
-      ...buildUtilityFlaskRules([
-        { baseType: "Jade", text: MANIFEST_BY_ID.jade_flask },
-        { baseType: "Quartz", text: MANIFEST_BY_ID.quartz_flask },
-        { baseType: "Quicksilver", text: MANIFEST_BY_ID.quicksilver_flask },
-        { baseType: "Silver", text: MANIFEST_BY_ID.silver_flask },
-        { baseType: "Granite", text: MANIFEST_BY_ID.granite_flask },
-      ]),
+      ...buildUtilityFlaskRules(
+        [
+          { baseType: "Jade", text: MANIFEST_BY_ID.jade_flask },
+          { baseType: "Quartz", text: MANIFEST_BY_ID.quartz_flask },
+          { baseType: "Quicksilver", text: MANIFEST_BY_ID.quicksilver_flask },
+          { baseType: "Silver", text: MANIFEST_BY_ID.silver_flask },
+          { baseType: "Granite", text: MANIFEST_BY_ID.granite_flask },
+        ].filter(({ baseType }) => utilityFlasks.includes(baseType)),
+      ),
       rule()
         .itemClass("Utility Flasks")
         .icon("Grey", "Raindrop")

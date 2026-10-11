@@ -65,6 +65,7 @@ const canonicalConfig: Complete<BuildProfile> & Complete<BuildSpecificOptions> =
     elementalRingMaxAreaLevel: 33,
     beltMaxAreaLevel: 24,
   },
+  flasks: { utilityFlasks: ["Jade"], lifeMaxAreaLevel: 60, manaMaxAreaLevel: 60 },
   rareItems: { maxAreaLevel: 45 },
   magicItems: { bigMaxAreaLevel: 9, smallMaxAreaLevel: 24 },
   normalItems: { maxAreaLevel: 4 },
