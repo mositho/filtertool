@@ -15,6 +15,9 @@ export const buildGemCalloutRules = (gems: readonly GemBaseType[]) =>
       .tts(soundFileTTS(gem.replace(/ Support$/, ""))),
   )
 
+export const buildGemStyleRules = (gems: readonly GemBaseType[]) =>
+  gems.map((gem) => rule().baseTypeExact(gem).mixin(styleMixin(filterStyles.gem)))
+
 export const STARTER_SKILL_GEMS = [
   "Heavy Strike",
   "Double Strike",
@@ -30,6 +33,7 @@ export const gems = (callouts: GemCalloutsConfig = {}) =>
     "Gems",
     compileRules(
       ...buildGemCalloutRules(callouts.gems ?? []),
+      ...buildGemStyleRules(callouts.styleOnly ?? []),
       rule()
         .itemClass("Skill Gems", "Support Gems")
         .baseType("Empower", "Enlighten", "Enhance")

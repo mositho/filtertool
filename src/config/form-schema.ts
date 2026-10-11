@@ -472,7 +472,26 @@ const equipmentFlasks: SchemaField[] = [
     path: "flasks.utilityFlasks",
     label: "Utility Flasks",
     control: "multiselect",
-    options: ["Jade", "Quartz", "Quicksilver", "Silver", "Granite"],
+    options: [
+      "Quicksilver",
+      "Bismuth",
+      "Stibnite",
+      "Amethyst",
+      "Ruby",
+      "Sapphire",
+      "Topaz",
+      "Silver",
+      "Aquamarine",
+      "Granite",
+      "Jade",
+      "Quartz",
+      "Sulphur",
+      "Basalt",
+      "Diamond",
+      "Gold",
+      "Corundum",
+      "Iron",
+    ],
     defaultValue: ["Jade", "Quartz", "Quicksilver", "Silver", "Granite"],
     tooltip: "Utility flask base types that receive a dedicated callout; other utility flasks keep the generic style.",
   },
@@ -530,17 +549,23 @@ export const BUILD_SPECIFIC_SCHEMA: FieldGroup[] = [
   {
     key: "gems",
     title: "Gems",
-    description:
-      "Hear a spoken callout for the gems you care about. Every gem you pick gets its own sound that says its name when it drops.",
+    description: "Choose gems to highlight with a spoken callout, or highlight without sound.",
     previewSection: "Gems",
     fields: [
       {
         path: "gemCallouts.gems",
-        label: "Gems",
+        label: "Gem style + sound",
         control: "multiselect",
         options: [],
         tooltip:
           'Each gem you add gets its own TTS callout speaking its name (e.g. picking "Fireball" plays a sound saying "Fireball"). Matched before the generic gem rules.',
+      },
+      {
+        path: "gemCallouts.styleOnly",
+        label: "Gem style only",
+        control: "multiselect",
+        options: [],
+        tooltip: "Highlight selected gems with the gem style, without a sound. Matched before the generic gem rules.",
       },
     ],
   },
@@ -637,7 +662,7 @@ function isHighlightControl(control: SchemaControl): boolean {
 }
 
 // These are per-filter controls: their sections have no shared-default fallback.
-const PER_FILTER_ONLY_FIELDS = new Set(["gemCallouts.gems"])
+const PER_FILTER_ONLY_FIELDS = new Set(["gemCallouts.gems", "gemCallouts.styleOnly"])
 
 function isSharedDefaultField(field: SchemaField): boolean {
   return !isHighlightControl(field.control) && !PER_FILTER_ONLY_FIELDS.has(field.path)

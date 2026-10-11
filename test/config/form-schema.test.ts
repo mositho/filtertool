@@ -74,6 +74,7 @@ const canonicalConfig: Complete<BuildProfile> & Complete<BuildSpecificOptions> =
   },
   gemCallouts: {
     gems: ["Fireball"],
+    styleOnly: [],
   },
   misc: { whetstoneRecipe: true, showRusticSash: true },
   early: {
@@ -120,7 +121,26 @@ describe("form schema drift", () => {
       const equipment = schema.find((group) => group.key === "equipment")
       const flasks = equipment?.subsections?.find((section) => section.key === "flasks")
       const field = flasks?.fields.find((entry) => entry.path === "flasks.utilityFlasks")
-      expect(field?.options).toEqual(["Jade", "Quartz", "Quicksilver", "Silver", "Granite"])
+      expect(field?.options).toEqual([
+        "Quicksilver",
+        "Bismuth",
+        "Stibnite",
+        "Amethyst",
+        "Ruby",
+        "Sapphire",
+        "Topaz",
+        "Silver",
+        "Aquamarine",
+        "Granite",
+        "Jade",
+        "Quartz",
+        "Sulphur",
+        "Basalt",
+        "Diamond",
+        "Gold",
+        "Corundum",
+        "Iron",
+      ])
     }
   })
 

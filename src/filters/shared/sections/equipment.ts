@@ -497,12 +497,25 @@ export const flasks = ({ utilityFlasks = filterDefaults.flasks.utilityFlasks }: 
       }),
       ...buildUtilityFlaskRules(
         [
-          { baseType: "Jade", text: MANIFEST_BY_ID.jade_flask },
-          { baseType: "Quartz", text: MANIFEST_BY_ID.quartz_flask },
-          { baseType: "Quicksilver", text: MANIFEST_BY_ID.quicksilver_flask },
-          { baseType: "Silver", text: MANIFEST_BY_ID.silver_flask },
-          { baseType: "Granite", text: MANIFEST_BY_ID.granite_flask },
-        ].filter(({ baseType }) => utilityFlasks.includes(baseType)),
+          { baseType: "Quicksilver Flask", text: MANIFEST_BY_ID.quicksilver_flask },
+          { baseType: "Bismuth Flask", text: MANIFEST_BY_ID.bismuth_flask },
+          { baseType: "Stibnite Flask", text: MANIFEST_BY_ID.stibnite_flask },
+          { baseType: "Amethyst Flask", text: MANIFEST_BY_ID.amethyst_flask },
+          { baseType: "Ruby Flask", text: MANIFEST_BY_ID.ruby_flask },
+          { baseType: "Sapphire Flask", text: MANIFEST_BY_ID.sapphire_flask },
+          { baseType: "Topaz Flask", text: MANIFEST_BY_ID.topaz_flask },
+          { baseType: "Silver Flask", text: MANIFEST_BY_ID.silver_flask },
+          { baseType: "Aquamarine Flask", text: MANIFEST_BY_ID.aquamarine_flask },
+          { baseType: "Granite Flask", text: MANIFEST_BY_ID.granite_flask },
+          { baseType: "Jade Flask", text: MANIFEST_BY_ID.jade_flask },
+          { baseType: "Quartz Flask", text: MANIFEST_BY_ID.quartz_flask },
+          { baseType: "Sulphur Flask", text: MANIFEST_BY_ID.sulphur_flask },
+          { baseType: "Basalt Flask", text: MANIFEST_BY_ID.basalt_flask },
+          { baseType: "Diamond Flask", text: MANIFEST_BY_ID.diamond_flask },
+          { baseType: "Gold Flask", text: MANIFEST_BY_ID.gold_flask },
+          { baseType: "Corundum Flask", text: MANIFEST_BY_ID.corundum_flask },
+          { baseType: "Iron Flask", text: MANIFEST_BY_ID.iron_flask },
+        ].filter(({ baseType }) => utilityFlasks.includes(baseType.replace(/ Flask$/, ""))),
       ),
       rule()
         .itemClass("Utility Flasks")
@@ -514,15 +527,13 @@ export const flasks = ({ utilityFlasks = filterDefaults.flasks.utilityFlasks }: 
   )
 
 export const tinctures = ({ baseTypes = filterDefaults.tinctures.baseTypes }: TincturesConfig = {}) => {
-  if (baseTypes.length === 0) return ""
   return withHeading(
     "Tinctures",
     compileRules(
-      rule()
-        .baseType(...baseTypes)
-        .icon("Red", "Raindrop")
-        .mixin(styleMixin(filterStyles.tincture))
-        .sound(6),
+      ...baseTypes.map((baseType) =>
+        rule().baseTypeExact(baseType).icon("Red", "Raindrop").mixin(styleMixin(filterStyles.tincture)).sound(6),
+      ),
+      rule().itemClass("Tinctures").hide(),
     ),
   )
 }

@@ -5,9 +5,14 @@ import type { ReferenceData } from "../api"
 const props = defineProps<{ classes: string[]; bases: string[]; reference: ReferenceData; weaponOnly?: boolean }>()
 const emit = defineEmits<{ "update:classes": [value: string[]]; "update:bases": [value: string[]] }>()
 const search = ref("")
+const classSearch = ref("")
 const selectedClass = ref("")
 
-const classes = computed(() => (props.weaponOnly ? props.reference.weaponClasses : props.reference.itemClasses))
+const classes = computed(() => (props.weaponOnly ? [...props.reference.weaponClasses, "Shields"] : props.reference.itemClasses))
+const filteredClasses = computed(() => {
+  const query = classSearch.value.trim().toLowerCase()
+  return query ? classes.value.filter((itemClass) => itemClass.toLowerCase().includes(query)) : classes.value
+})
 const bases = computed(() => {
   const candidates = selectedClass.value
     ? (props.reference.baseTypesByClass[selectedClass.value] ?? [])
@@ -55,11 +60,21 @@ function toggleBase(base: string) {
     </div>
     <details class="rounded border border-neutral-700 p-2">
       <summary class="cursor-pointer text-xs text-neutral-300">Choose {{ weaponOnly ? "weapon" : "item" }} classes</summary>
-      <div class="mt-2 grid max-h-36 grid-cols-1 gap-1 overflow-y-auto sm:grid-cols-2">
-        <label v-for="itemClass in classes" :key="itemClass" class="flex items-center gap-2 text-xs text-neutral-300">
-          <input type="checkbox" :checked="props.classes.includes(itemClass)" @change="toggleClass(itemClass)" />
-          {{ itemClass }}
-        </label>
+      <div class="mt-2 space-y-2">
+        <input
+          v-model="classSearch"
+          type="search"
+          aria-label="Search item classes"
+          :placeholder="`Search ${weaponOnly ? 'weapon' : 'item'} classes…`"
+          class="w-full rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-xs"
+        />
+        <div class="grid max-h-36 grid-cols-1 gap-1 overflow-y-auto sm:grid-cols-2">
+          <label v-for="itemClass in filteredClasses" :key="itemClass" class="flex items-center gap-2 text-xs text-neutral-300">
+            <input type="checkbox" :checked="props.classes.includes(itemClass)" @change="toggleClass(itemClass)" />
+            {{ itemClass }}
+          </label>
+          <span v-if="!filteredClasses.length" class="text-xs text-neutral-500">No matching classes</span>
+        </div>
       </div>
     </details>
     <details class="rounded border border-neutral-700 p-2">

@@ -769,6 +769,7 @@ window.addEventListener("keydown", (event) => {
             :key="selected"
             v-model="config"
             :reference="reference"
+            :filter-name="selected"
             :defaults="defaults"
             @preview-section="previewSection = $event"
           />

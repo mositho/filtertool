@@ -43,7 +43,7 @@ export const baseFilterDefaults = {
     maxAreaLevel: 4,
   },
   tinctures: {
-    baseTypes: ["Prismatic Tincture"],
+    baseTypes: [],
   },
   flasks: {
     utilityFlasks: ["Jade", "Quartz", "Quicksilver", "Silver", "Granite"],

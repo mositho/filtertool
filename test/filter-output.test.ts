@@ -15,6 +15,7 @@ import {
   twilightStrand,
   whetstoneRecipe,
 } from "../src/filters/shared"
+import { weaponPhases } from "../src/filters/shared/sections/equipment"
 import { joinSections } from "../src/filters/shared/sections/composition"
 import { compileFilter } from "../src/filters/shared/compile"
 import { resolveShieldProgressionMode } from "../src/filters/shared/sections/options"
@@ -51,6 +52,23 @@ describe("flask tiers", () => {
     expect(smallMana).toContain("AreaLevel <= 12")
     expect(divineLife).not.toContain("AreaLevel")
     expect(eternalMana).not.toContain("AreaLevel")
+  })
+
+  test("adds exact utility flask callouts and speaks the flask name without the suffix", () => {
+    const output = flasks({ utilityFlasks: ["Bismuth"] })
+
+    expect(output).toContain('BaseType == "Bismuth Flask"')
+    expect(output).toContain('CustomAlertSound "poeft-sounds-v2/bismuth_flask.mp3"')
+    expect(output).not.toContain('BaseType == "Jade Flask"')
+  })
+})
+
+describe("weapon progression shields", () => {
+  test("allows shields as phase item classes", () => {
+    const output = weaponPhases([{ itemClasses: ["Shields"], maxAreaLevel: 28 }])
+
+    expect(output).toContain('Class "Shields"')
+    expect(output).toContain("AreaLevel <= 28")
   })
 })
 
@@ -459,12 +477,21 @@ describe("early", () => {
 })
 
 describe("tinctures", () => {
-  test("emits a rule for the default base types", () => {
-    expect(tinctures({})).toMatch('BaseType "Prismatic Tincture"')
+  test("uses global defaults for selected tinctures and hides all other tinctures", () => {
+    const output = tinctures({})
+    for (const baseType of filterDefaults.tinctures.baseTypes) {
+      expect(output).toMatch(`BaseType "${baseType}"`)
+    }
+    expect(output).toMatch('Class "Tinctures"')
+    expect(output).toMatch("Hide")
+    if (filterDefaults.tinctures.baseTypes.length === 0) expect(output).not.toContain("Prismatic Tincture")
   })
 
-  test("omits the section entirely when no base types are configured", () => {
-    expect(tinctures({ baseTypes: [] })).toBe("")
+  test("hides tinctures when no base types are configured", () => {
+    const output = tinctures({ baseTypes: [] })
+    expect(output).toMatch('Class "Tinctures"')
+    expect(output).toMatch("Hide")
+    expect(output).not.toContain("BaseType")
   })
 })
 

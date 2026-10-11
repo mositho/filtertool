@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue"
+import { computed, ref, watch } from "vue"
 import { BUILD_PROFILE_SCHEMA, BUILD_SPECIFIC_SCHEMA, type FieldGroup, type FieldSubsection, type SchemaField } from "@schema/form-schema"
 import type { FilterConfig, ReferenceData } from "../api"
 import { getPath, setPath, deletePath } from "../path"
@@ -7,7 +7,7 @@ import FieldInput from "./FieldInput.vue"
 import HighlightEditor from "./HighlightEditor.vue"
 import WeaponProgression from "./WeaponProgression.vue"
 
-const props = defineProps<{ modelValue: FilterConfig; reference: ReferenceData; defaults?: Record<string, unknown> }>()
+const props = defineProps<{ modelValue: FilterConfig; reference: ReferenceData; filterName: string; defaults?: Record<string, unknown> }>()
 const emit = defineEmits<{ "update:modelValue": [value: FilterConfig]; "previewSection": [section: string] }>()
 
 function emitChange() {
@@ -28,6 +28,7 @@ function optionsFor(field: SchemaField): string[] {
     case "tinctures.baseTypes":
       return props.reference.baseTypesByClass["Tinctures"] ?? []
     case "gemCallouts.gems":
+    case "gemCallouts.styleOnly":
       return [...props.reference.skillGems, ...props.reference.supportGems]
     default:
       return []
@@ -174,7 +175,33 @@ const buildSpecificGroups = computed(() => BUILD_SPECIFIC_SCHEMA.map((group) => 
 
 const allGroups = computed(() => [...buildProfileGroups.value, ...buildSpecificGroups.value])
 
-const collapsed = ref<Record<string, boolean>>({ early: true, gems: true, highlightedEquipment: true })
+function defaultCollapsed(): Record<string, boolean> {
+  return { buildProfile: true }
+}
+
+function loadCollapsed(): Record<string, boolean> {
+  try {
+    const saved = localStorage.getItem(`filtertool:collapsed:${props.filterName}`)
+    if (saved) return { ...defaultCollapsed(), ...JSON.parse(saved) }
+  } catch {
+    // Fall back to the default view if stored state is unavailable or invalid.
+  }
+  return defaultCollapsed()
+}
+
+const collapsed = ref<Record<string, boolean>>(loadCollapsed())
+
+watch(
+  collapsed,
+  (value) => {
+    try {
+      localStorage.setItem(`filtertool:collapsed:${props.filterName}`, JSON.stringify(value))
+    } catch {
+      // The editor remains usable when browser storage is unavailable.
+    }
+  },
+  { deep: true },
+)
 
 function isCollapsed(key: string): boolean {
   return !!collapsed.value[key]
@@ -219,6 +246,7 @@ function expandAll() {
         <button
           type="button"
           @click="toggleSection(entry.group.key)"
+          :aria-expanded="!isCollapsed(entry.group.key)"
           class="flex w-full items-center justify-between gap-2 px-4 py-3 text-left hover:bg-neutral-900/40"
         >
           <span class="text-lg font-semibold uppercase tracking-wide text-neutral-200">{{ entry.group.title }}</span>

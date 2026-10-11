@@ -96,7 +96,7 @@ export const buildUtilityFlaskRules = (entries: Array<{ baseType: string; text: 
   entries.map(({ baseType, text }) =>
     rule()
       .itemClass("Utility Flasks")
-      .baseType(baseType)
+      .baseTypeExact(baseType)
       .icon("Green", "Raindrop")
       .mixin(styleMixin(filterStyles.utilityFlask))
       .tts(manifestSoundFile(text)),

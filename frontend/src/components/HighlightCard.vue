@@ -347,8 +347,8 @@ function applyRaritySound(rarity: string, next: Record<string, unknown>) {
     <p v-if="!phaseMode && itemLevelError && !active.has('itemLevel')" role="alert" class="text-xs text-red-400">
       {{ itemLevelError }}
     </p>
-    <details :open="phaseMode ? undefined : true" class="space-y-2">
-      <summary v-if="phaseMode" class="cursor-pointer text-sm text-neutral-400">Advanced: rarities, cutoff, styles and sounds</summary>
+    <details class="space-y-2">
+      <summary class="cursor-pointer text-sm text-neutral-400">Advanced</summary>
       <div class="space-y-1">
         <FieldLabel label="Rarities" :tooltip="FIELD_BY_PATH.rarities?.tooltip" />
         <MultiSelect :model-value="rarityValue" :options="HIGHLIGHT_RARITIES" @update:model-value="setRarities($event)" />

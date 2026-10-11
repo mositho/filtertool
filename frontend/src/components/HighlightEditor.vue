@@ -6,9 +6,11 @@ import HighlightCard from "./HighlightCard.vue"
 
 const props = defineProps<{ highlights: Record<string, unknown>[]; reference: ReferenceData }>()
 const emit = defineEmits<{ "update:highlights": [value: Record<string, unknown>[]]; "change": [] }>()
+const openHighlight = ref<number | null>(null)
 
 function add() {
   emit("update:highlights", [...props.highlights, emptyHighlight()])
+  openHighlight.value = props.highlights.length
 }
 
 function remove(index: number) {
@@ -25,6 +27,7 @@ function duplicate(index: number) {
   const next = [...props.highlights]
   next.splice(index + 1, 0, copy)
   emit("update:highlights", next)
+  openHighlight.value = index + 1
   void startRename(index + 1, copyName)
 }
 
@@ -66,7 +69,7 @@ function confirmRename(index: number) {
 <template>
   <div class="space-y-3">
     <div v-for="(highlight, index) in highlights" :key="index" class="rounded border border-neutral-800 bg-neutral-900/40 p-3">
-      <div class="mb-2 flex items-center gap-2">
+      <div class="flex items-center gap-2">
         <button
           type="button"
           @click="remove(index)"
@@ -84,7 +87,15 @@ function confirmRename(index: number) {
           @blur="confirmRename(index)"
           class="w-full rounded border border-neutral-700 bg-neutral-900 px-2 py-0.5 text-sm font-medium text-neutral-200 focus:border-blue-500 focus:outline-none"
         />
-        <span v-else class="text-sm font-medium text-neutral-300" @dblclick="startRename(index)">{{ title(highlight, index) }}</span>
+        <button
+          v-else
+          type="button"
+          class="min-w-0 flex-1 text-left text-sm text-neutral-200 hover:text-white"
+          :aria-expanded="openHighlight === index"
+          @click="openHighlight = openHighlight === index ? null : index"
+        >
+          <span class="font-semibold">{{ openHighlight === index ? "▾" : "▸" }} {{ title(highlight, index) }}</span>
+        </button>
         <span class="ml-auto flex items-center gap-1">
           <button
             type="button"
@@ -104,7 +115,9 @@ function confirmRename(index: number) {
           </button>
         </span>
       </div>
-      <HighlightCard :highlight="highlight" :reference="reference" @change="emit('change')" />
+      <div v-if="openHighlight === index" class="mt-3">
+        <HighlightCard :highlight="highlight" :reference="reference" @change="emit('change')" />
+      </div>
     </div>
     <button type="button" @click="add" class="rounded bg-blue-700 px-3 py-1.5 text-sm hover:bg-blue-600">+ Add highlight</button>
   </div>
