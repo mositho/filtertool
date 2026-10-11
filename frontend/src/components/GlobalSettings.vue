@@ -35,6 +35,7 @@ async function load() {
   reference.value = refData as ReferenceData
   savedSnapshot.value = snapshot()
   lastSnapshot = savedSnapshot.value
+  lastRecordTime = 0
   undoStack.value = []
   redoStack.value = []
 }
@@ -91,6 +92,8 @@ async function saveAll(): Promise<Feedback> {
   try {
     await Promise.all([api.saveSettings(settings.value), api.saveDefaults(userDefaults.value), api.saveStyles(userStyles.value)])
     savedSnapshot.value = snapshot()
+    lastSnapshot = savedSnapshot.value
+    lastRecordTime = 0
     return { message: "Saved", kind: "notice" }
   } catch (e) {
     return { message: (e as Error).message, kind: "error" }
@@ -152,15 +155,19 @@ function recordChange() {
 watch([settings, userDefaults, userStyles], recordChange, { deep: true })
 
 function restore(snapshotJson: string) {
-  lastSnapshot = snapshotJson
+  // Restores (undo/redo/discard) are history boundaries. Don't coalesce the
+  // next user edit with the edit that happened before the restore.
   const parsed = JSON.parse(snapshotJson) as {
     settings: AppSettings
     userDefaults: Record<string, unknown>
     userStyles: Record<string, Record<string, unknown>>
   }
   settings.value = parsed.settings
-  userDefaults.value = parsed.userDefaults
-  userStyles.value = parsed.userStyles
+  // snapshot() prunes empty containers, so clean snapshots omit these keys.
+  userDefaults.value = parsed.userDefaults ?? {}
+  userStyles.value = parsed.userStyles ?? {}
+  lastSnapshot = snapshot()
+  lastRecordTime = 0
 }
 
 function undo() {

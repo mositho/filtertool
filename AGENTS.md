@@ -31,6 +31,7 @@ Read `GLOSSARY.md` for the repo's PoE filter terms and use them consistently in 
 ## How to work safely
 
 - Ask the user before committing or pushing any changes. Do not infer commit/push approval from approval to edit files.
+- Use Conventional Commits for commit messages (for example, `fix: ...`, `feat: ...`, or `test: ...`).
 - UI/config changes may cross `options.ts` → `config-loader.ts` → compiler sections → `form-schema.ts` → Vue components/API → tests. Keep serialized JSON, TS fallback and preview/export behavior aligned. A preview compiles without writing a game filter; export writes to the configured PoE directory.
 - Prefer changing source data and generators over generated files. Personal filter folders, `settings.json`, `sounds/`, and `src/filters/shared/user-defaults.{json,ts}` / `user-styles.{json,ts}` are local/ignored; don't add them to commits. Treat an existing user's filters/settings/game files as data, not test fixtures.
 - Use `npm run check` before completing TypeScript changes (`typecheck`, Vitest and Prettier). For frontend changes also run `npm run frontend:build`. Add or update focused tests in `test/` when changing rule ordering, matching, cutoffs, serialization or API behavior; assert generated `.filter` lines where appropriate.
