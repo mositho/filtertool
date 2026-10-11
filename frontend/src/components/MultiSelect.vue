@@ -105,7 +105,7 @@ function onKeydown(event: KeyboardEvent) {
         :aria-expanded="open"
         @click="toggleOpen"
       >
-        {{ selected.length ? "+ Add more…" : "Choose…" }}
+        {{ selected.length ? "Edit" : "Choose…" }}
       </button>
     </div>
 

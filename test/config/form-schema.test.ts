@@ -37,7 +37,6 @@ const fullHighlight: Complete<HighlightedBaseTypeConfig> = {
   magic: { iconColor: "Blue", iconShape: "UpsideDownHouse", iconSize: 2, soundId: 2, soundFileName: "custom.mp3", tts: "Magic" },
   rare: { iconColor: "Yellow", iconShape: "UpsideDownHouse", iconSize: 2, soundId: 3, soundFileName: "custom.mp3", tts: "Rare" },
 }
-const { minAreaLevel: _minAreaLevel, maxAreaLevel: _maxAreaLevel, ...phaseHighlight } = fullHighlight
 
 /**
  * A fully-populated config. Typed with `Complete<>` so that adding, removing or
@@ -47,8 +46,7 @@ const { minAreaLevel: _minAreaLevel, maxAreaLevel: _maxAreaLevel, ...phaseHighli
 const canonicalConfig: Complete<BuildProfile> & Complete<BuildSpecificOptions> = {
   preferredColors: ["R", "G"],
   preferredArmour: ["armour"],
-  preferredWeapons: fullHighlight,
-  weaponPhases: [{ ...phaseHighlight, untilAreaLevel: 28 }],
+  weaponPhases: [{ ...fullHighlight, maxAreaLevel: 28 }],
   shieldProgression: "early",
   links: {
     twoLinkMaxAreaLevel: 9,
@@ -66,7 +64,7 @@ const canonicalConfig: Complete<BuildProfile> & Complete<BuildSpecificOptions> =
     elementalRingMaxAreaLevel: 33,
     beltMaxAreaLevel: 24,
   },
-  flasks: { utilityFlasks: ["Jade"], lifeMaxAreaLevel: 60, manaMaxAreaLevel: 60 },
+  flasks: { utilityFlasks: ["Jade"] },
   rareItems: { maxAreaLevel: 45 },
   magicItems: { bigMaxAreaLevel: 9, smallMaxAreaLevel: 24 },
   normalItems: { maxAreaLevel: 4 },
@@ -139,5 +137,12 @@ describe("form schema drift", () => {
     expect(paths).not.toContain("flasks.lifeMaxAreaLevel")
     expect(paths).not.toContain("flasks.manaMaxAreaLevel")
     expect(paths).toContain("rareItems.partOneMaxAreaLevel")
+  })
+
+  it("keeps the Rustic Sash toggle in Early while editing the build profile", () => {
+    const early = BUILD_SPECIFIC_SCHEMA.find((group) => group.key === "early")
+    const rusticSash = early?.subsections?.find((section) => section.key === "rusticSash")
+    expect(rusticSash?.root).toBe("buildProfile")
+    expect(rusticSash?.fields.map((field) => field.path)).toContain("misc.showRusticSash")
   })
 })

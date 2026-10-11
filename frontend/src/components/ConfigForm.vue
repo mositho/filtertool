@@ -1,18 +1,10 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue"
-import {
-  BUILD_PROFILE_SCHEMA,
-  BUILD_SPECIFIC_SCHEMA,
-  emptyWeaponHighlight,
-  type FieldGroup,
-  type FieldSubsection,
-  type SchemaField,
-} from "@schema/form-schema"
+import { computed, ref } from "vue"
+import { BUILD_PROFILE_SCHEMA, BUILD_SPECIFIC_SCHEMA, type FieldGroup, type FieldSubsection, type SchemaField } from "@schema/form-schema"
 import type { FilterConfig, ReferenceData } from "../api"
 import { getPath, setPath, deletePath } from "../path"
 import FieldInput from "./FieldInput.vue"
 import HighlightEditor from "./HighlightEditor.vue"
-import HighlightCard from "./HighlightCard.vue"
 import WeaponProgression from "./WeaponProgression.vue"
 
 const props = defineProps<{ modelValue: FilterConfig; reference: ReferenceData; defaults?: Record<string, unknown> }>()
@@ -120,30 +112,8 @@ function setHighlights(value: Record<string, unknown>[]) {
   emitChange()
 }
 
-function useHighlight(path: string) {
-  const highlight = ref<Record<string, unknown>>({})
-  watch(
-    () => getPath(buildProfile.value, path),
-    (value) => {
-      highlight.value =
-        value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : emptyWeaponHighlight()
-    },
-    { immediate: true },
-  )
-  const onChange = () => {
-    if (Object.keys(highlight.value).length > 0) setPath(buildProfile.value, path, highlight.value)
-    else deletePath(buildProfile.value, path)
-    emitChange()
-  }
-  return { highlight, onChange }
-}
-
-const highlightBindings: Record<string, ReturnType<typeof useHighlight>> = {
-  preferredWeapons: useHighlight("preferredWeapons"),
-}
-
 function isWide(field: SchemaField): boolean {
-  return field.control === "multiselect" || field.control === "link-colors" || field.control === "highlight"
+  return field.control === "multiselect" || field.control === "link-colors"
 }
 
 function subsectionRoot(groupRoot: Record<string, unknown>, subsection: FieldSubsection): Record<string, unknown> {
@@ -183,7 +153,6 @@ function subsectionEntries(group: FieldGroup, groupRoot: Record<string, unknown>
   const entries: SubsectionEntry[] = []
   const walk = (subsections: FieldSubsection[], parentRoot: Record<string, unknown>, depth: number) => {
     subsections.forEach((subsection, index) => {
-      if (group.key === "buildProfile" && subsection.key === "preferredWeapons") return
       const root = subsectionRoot(parentRoot, subsection)
       entries.push({ key: `${depth}-${subsection.key}`, subsection, group, root, depth, hasSiblingAbove: index > 0 })
       walk(subsection.subsections ?? [], root, depth + 1)
@@ -269,23 +238,6 @@ function expandAll() {
 
           <template v-else-if="entry.group.key === 'weaponProgression'">
             <WeaponProgression :phases="weaponPhases" :reference="reference" @update:phases="setWeaponPhases" @change="emitChange" />
-            <details v-if="buildProfile.preferredWeapons" class="mt-4 border-t border-neutral-800 pt-3">
-              <summary class="cursor-pointer text-xs text-neutral-400">
-                Existing weapon highlights (used only before weapon phases are added)
-              </summary>
-              <p v-if="buildProfile.weaponPhases !== undefined" class="mt-2 text-xs text-amber-400">
-                These legacy highlights are inactive while weapon phases exist. Remove phases to use the existing settings again.
-              </p>
-              <div v-if="buildProfile.preferredWeapons" class="mt-3">
-                <h3 class="mb-2 text-sm text-neutral-300">Preferred weapons</h3>
-                <HighlightCard
-                  :highlight="highlightBindings.preferredWeapons.highlight.value"
-                  :reference="reference"
-                  weapons-only
-                  @change="highlightBindings.preferredWeapons.onChange"
-                />
-              </div>
-            </details>
           </template>
 
           <template v-else>
@@ -297,7 +249,6 @@ function expandAll() {
                 :data-preview-section="previewSectionFor(entry.group, undefined, field)"
               >
                 <FieldInput
-                  v-if="field.control !== 'highlight'"
                   :field="field"
                   :value="displayValue(entry.root, field)"
                   :options="optionsFor(field)"
@@ -306,13 +257,6 @@ function expandAll() {
                   :can-reset="fieldIsSet(entry.root, field)"
                   @update:value="setFieldValue(entry.root, field, $event)"
                   @reset="setFieldValue(entry.root, field, undefined)"
-                />
-                <HighlightCard
-                  v-else
-                  :highlight="highlightBindings[field.path].highlight.value"
-                  :reference="reference"
-                  :weapons-only="field.weaponsOnly"
-                  @change="highlightBindings[field.path].onChange"
                 />
               </div>
             </div>
@@ -338,7 +282,6 @@ function expandAll() {
                   :data-preview-section="previewSectionFor(sub.group, sub.subsection, field)"
                 >
                   <FieldInput
-                    v-if="field.control !== 'highlight'"
                     :field="field"
                     :value="displayValue(sub.root, field)"
                     :options="optionsFor(field)"
@@ -347,13 +290,6 @@ function expandAll() {
                     :can-reset="fieldIsSet(sub.root, field)"
                     @update:value="setFieldValue(sub.root, field, $event)"
                     @reset="setFieldValue(sub.root, field, undefined)"
-                  />
-                  <HighlightCard
-                    v-else
-                    :highlight="highlightBindings[field.path].highlight.value"
-                    :reference="reference"
-                    :weapons-only="field.weaponsOnly"
-                    @change="highlightBindings[field.path].onChange"
                   />
                 </div>
               </div>

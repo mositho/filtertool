@@ -15,7 +15,6 @@ import WeaponPicker from "./WeaponPicker.vue"
 const props = defineProps<{
   highlight: Record<string, unknown>
   reference: ReferenceData
-  weaponsOnly?: boolean
   phaseMode?: boolean
 }>()
 const emit = defineEmits<{ change: [] }>()
@@ -24,11 +23,9 @@ type ModuleId = "minAps" | "linkedSockets" | "minSockets" | "areaLevel" | "itemL
 
 const FIELD_BY_PATH = Object.fromEntries(HIGHLIGHT_FIELDS.map((field) => [field.path, field]))
 
-const matchModes = computed(() =>
-  props.weaponsOnly ? (["baseTypes", "itemClasses"] as const) : (["any", "baseTypes", "itemClasses"] as const),
-)
+const matchModes = ["any", "baseTypes", "itemClasses"] as const
 
-const itemClassOptions = computed(() => (props.weaponsOnly ? props.reference.weaponClasses : props.reference.itemClasses))
+const itemClassOptions = computed(() => props.reference.itemClasses)
 
 const MODULE_IDS: ModuleId[] = [
   "minAps",
@@ -85,7 +82,7 @@ function computeActive(): Set<ModuleId> {
 function computeMode(): "any" | "baseTypes" | "itemClasses" {
   if (((props.highlight.baseTypes as unknown[] | undefined)?.length ?? 0) > 0) return "baseTypes"
   if (((props.highlight.itemClasses as unknown[] | undefined)?.length ?? 0) > 0) return "itemClasses"
-  return props.weaponsOnly ? "itemClasses" : "any"
+  return "any"
 }
 
 const LEGACY_MODULE_IDS: Record<string, ModuleId> = {
@@ -174,11 +171,7 @@ function fieldValue(path: string): unknown {
   return getPath(props.highlight, path)
 }
 
-const allBaseTypes = computed(() =>
-  props.weaponsOnly
-    ? props.reference.weaponClasses.flatMap((itemClass) => props.reference.baseTypesByClass[itemClass] ?? [])
-    : Object.values(props.reference.baseTypesByClass).flat(),
-)
+const allBaseTypes = computed(() => Object.values(props.reference.baseTypesByClass).flat())
 
 const classFilter = ref("")
 

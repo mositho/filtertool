@@ -7,64 +7,25 @@ import { compileRules, withHeading } from "./composition"
 import { ARMOUR_CLASSES, defenceMixinMap } from "./item-classes"
 import type { BuildProfile, EarlyConfig } from "./options"
 import { resolveShieldProgressionMode } from "./options"
-import { resolveSharedWeaponQuery, resolveWeaponBaseTypes } from "./weapon-queries"
+import { isWeaponBaseType, isWeaponItemClass, resolveWeaponBaseTypes } from "./weapon-queries"
 import { WEAPON_BASE_DATA } from "../../../types/weapon-base-data"
+import { orderedWeaponPhases } from "./weapon-phases"
 
 const RUSTIC_SASH_MAX_AREA_LEVEL = 12
 
 export const twilightStrand = () => withHeading("Twilight Strand", compileRules(rule().rarity("==", "Normal").areaLevel("==", 1).size(45)))
 
 export const earlySockets = ({
-  preferredWeapons,
-  weaponPhases,
+  weaponPhases = [],
   twoSocketMaxAreaLevel = filterDefaults.early.twoSocketMaxAreaLevel,
   threeSocketMaxAreaLevel = filterDefaults.early.threeSocketMaxAreaLevel,
 }: Partial<BuildProfile> & EarlyConfig = {}) => {
-  if (weaponPhases === undefined) {
-    const query = resolveSharedWeaponQuery({ preferredWeapons })
-    const hasTargets = query.itemClasses.length > 0 || query.baseTypes.length > 0
-    const bases = hasTargets ? resolveWeaponBaseTypes({ itemClasses: query.itemClasses, baseTypes: query.baseTypes }) : []
-    const itemClasses = [...ARMOUR_CLASSES, ...query.itemClasses]
-    return withHeading(
-      "Early Sockets",
-      compileRules(
-        rule()
-          .sockets("==", 2)
-          .itemClass(...itemClasses)
-          .areaLevel("<=", twoSocketMaxAreaLevel)
-          .size(40),
-        bases.length > 0 &&
-          rule()
-            .sockets("==", 2)
-            .baseType(...bases)
-            .areaLevel("<=", twoSocketMaxAreaLevel)
-            .size(40),
-        rule()
-          .sockets("==", 3)
-          .itemClass(...itemClasses)
-          .areaLevel("<=", threeSocketMaxAreaLevel)
-          .size(45),
-        bases.length > 0 &&
-          rule()
-            .sockets("==", 3)
-            .baseType(...bases)
-            .areaLevel("<=", threeSocketMaxAreaLevel)
-            .size(45),
-      ),
-    )
-  }
-
-  const weaponTargets = weaponPhases.map((phase) => ({ ...phase, ...resolveSharedWeaponQuery({ preferredWeapons: phase }) }))
   const dropLevels = new Map<string, number>(WEAPON_BASE_DATA.map((weapon) => [weapon.baseType, weapon.dropLevel]))
-  let fromAreaLevel = 0
-  const weaponRules = weaponTargets.flatMap((target) => {
-    const hasTargets = target.itemClasses.length > 0 || target.baseTypes.length > 0
-    const bases = hasTargets
-      ? resolveWeaponBaseTypes({ itemClasses: target.itemClasses, baseTypes: target.baseTypes, minAps: target.minAps })
-      : []
-    const phaseEnd = target.untilAreaLevel
-    const from = fromAreaLevel
-    if (phaseEnd !== undefined) fromAreaLevel = phaseEnd + 1
+  const weaponRules = orderedWeaponPhases(weaponPhases).flatMap((phase) => {
+    const itemClasses = phase.itemClasses?.filter(isWeaponItemClass) ?? []
+    const baseTypes = phase.baseTypes?.filter(isWeaponBaseType) ?? []
+    const hasTargets = itemClasses.length > 0 || baseTypes.length > 0
+    const bases = hasTargets ? resolveWeaponBaseTypes({ itemClasses, baseTypes, minAps: phase.minAps }) : []
     return (
       [
         { count: 2, cutoff: twoSocketMaxAreaLevel, size: 40 },
@@ -75,12 +36,13 @@ export const earlySockets = ({
         const dropLevel = dropLevels.get(baseType)
         const maximum = Math.min(
           cutoff,
-          phaseEnd ?? cutoff,
-          dropLevel === undefined ? cutoff : dropLevel + (target.weaponCutoffOverlap ?? 5),
+          phase.maxAreaLevel ?? cutoff,
+          dropLevel === undefined ? cutoff : dropLevel + (phase.weaponCutoffOverlap ?? 5),
         )
-        return from <= maximum
-          ? [rule().sockets("==", count).baseType(baseType).areaLevel("<=", maximum).areaLevel(">=", from).size(size)]
-          : []
+        if (phase.minAreaLevel !== undefined && phase.minAreaLevel > maximum) return []
+        const socketRule = rule().sockets("==", count).baseType(baseType).areaLevel("<=", maximum).size(size)
+        if (phase.minAreaLevel !== undefined) socketRule.areaLevel(">=", phase.minAreaLevel)
+        return [socketRule]
       })
     })
   })

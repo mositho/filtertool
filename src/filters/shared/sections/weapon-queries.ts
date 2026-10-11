@@ -2,7 +2,6 @@ import type { BaseType, ItemClass } from "../../../types"
 import type { WeaponBaseType as GeneratedWeaponBaseType } from "../../../types/weapon-base-data"
 import { WEAPON_BASE_DATA } from "../../../types/weapon-base-data"
 import { WEAPON_CLASSES, type WeaponItemClass } from "./item-classes"
-import type { HighlightedBaseTypeConfig } from "./options"
 
 export type WeaponBaseType = GeneratedWeaponBaseType
 export type WeaponBaseQuery = { itemClasses?: readonly WeaponItemClass[]; minAps?: number; maxDropLevel?: number }
@@ -48,11 +47,5 @@ export const resolveMixedItemClassWeaponQuery = ({
         ...findWeaponBaseTypes({ itemClasses: weaponItemClasses?.length ? weaponItemClasses : undefined, minAps }),
       ]),
     ],
-  }
-}
-export const resolveSharedWeaponQuery = ({ preferredWeapons }: { preferredWeapons?: HighlightedBaseTypeConfig }) => {
-  return {
-    itemClasses: preferredWeapons?.itemClasses?.filter(isWeaponItemClass) ?? [],
-    baseTypes: preferredWeapons?.baseTypes?.filter(isWeaponBaseType) ?? [],
   }
 }

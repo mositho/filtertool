@@ -4,6 +4,7 @@ import {
   early,
   earlySockets,
   filterDefaults,
+  flasks,
   gems,
   highlightedEquipment,
   jewellery,
@@ -18,6 +19,7 @@ import { joinSections } from "../src/filters/shared/sections/composition"
 import { compileFilter } from "../src/filters/shared/compile"
 import { resolveShieldProgressionMode } from "../src/filters/shared/sections/options"
 import { resolveMixedItemClassWeaponQuery, resolveWeaponBaseTypes } from "../src/filters/shared/sections/weapon-queries"
+import { orderedWeaponPhases } from "../src/filters/shared/sections/weapon-phases"
 import rule from "../src/rule"
 
 describe("empty filter configuration", () => {
@@ -34,6 +36,21 @@ describe("empty filter configuration", () => {
       magicItems: {},
       normalItems: {},
     })
+  })
+})
+
+describe("flask tiers", () => {
+  test("keeps individual life and mana cutoffs, leaving the final tiers uncapped", () => {
+    const blocks = flasks({ utilityFlasks: [] }).split(/\nShow\n/)
+    const smallLife = blocks.find((block) => block.includes('BaseType "Small Life Flask"'))
+    const smallMana = blocks.find((block) => block.includes('BaseType "Small Mana Flask"'))
+    const divineLife = blocks.find((block) => block.includes('BaseType "Divine Life Flask"'))
+    const eternalMana = blocks.find((block) => block.includes('BaseType "Eternal Mana Flask"'))
+
+    expect(smallLife).toContain("AreaLevel <= 12")
+    expect(smallMana).toContain("AreaLevel <= 12")
+    expect(divineLife).not.toContain("AreaLevel")
+    expect(eternalMana).not.toContain("AreaLevel")
   })
 })
 
@@ -488,28 +505,28 @@ describe("shield progression", () => {
 })
 
 describe("weapon queries", () => {
-  test("a single weapon phase needs no end area level", () => {
+  test("a single weapon phase needs no Max Area Level", () => {
     const output = compileFilter({
       buildProfile: { weaponPhases: [{ baseTypes: ["Rusted Hatchet"] }] },
       buildSpecificOptions: {},
     })
-    const weaponSection = output.split("### Preferred Weapons")[1].split("### Six Sockets")[0]
+    const weaponSection = output.split("### Weapon Progression")[1].split("### Six Sockets")[0]
     expect(weaponSection).toContain('BaseType "Rusted Hatchet"')
     expect(weaponSection).toContain("AreaLevel <= 7")
     expect(weaponSection).not.toContain("AreaLevel >= 29")
   })
 
-  test("caps each weapon phase by both its end area and the base's drop-level overlap", () => {
+  test("caps each weapon phase by its Max Area Level and the base's drop-level overlap", () => {
     const output = compileFilter({
       buildProfile: {
         weaponPhases: [
-          { itemClasses: ["One Hand Axes", "Two Hand Axes"], untilAreaLevel: 28 },
-          { itemClasses: ["Claws"], baseTypes: ["Gilded Axe"] },
+          { itemClasses: ["One Hand Axes", "Two Hand Axes"], maxAreaLevel: 28 },
+          { itemClasses: ["Claws"], baseTypes: ["Gilded Axe"], minAreaLevel: 29 },
         ],
       },
       buildSpecificOptions: {},
     })
-    const section = output.split("### Preferred Weapons")[1].split("### Six Sockets")[0]
+    const section = output.split("### Weapon Progression")[1].split("### Six Sockets")[0]
     expect(section).toContain("AreaLevel <= 28")
     expect(section).toContain("AreaLevel >= 29")
     expect(section).toContain('BaseType "Gilded Axe"')
@@ -523,9 +540,14 @@ describe("weapon queries", () => {
     expect(rustedRules.every((block) => !block.includes("AreaLevel >= 29"))).toBe(true)
   })
 
-  test("phase-specific socket highlights stop when their phase ends", () => {
+  test("phase-specific socket highlights stop at the phase's Max Area Level", () => {
     const output = compileFilter({
-      buildProfile: { weaponPhases: [{ itemClasses: ["One Hand Axes"], untilAreaLevel: 5 }, { itemClasses: ["Claws"] }] },
+      buildProfile: {
+        weaponPhases: [
+          { itemClasses: ["One Hand Axes"], maxAreaLevel: 5 },
+          { itemClasses: ["Claws"], minAreaLevel: 6 },
+        ],
+      },
       buildSpecificOptions: {},
     })
     const socketSection = output.split("### Early Sockets")[1].split("### Flasks")[0]
@@ -535,17 +557,46 @@ describe("weapon queries", () => {
     expect(socketSection).toContain("AreaLevel >= 6")
   })
 
-  test("rejects a weapon phase without an end before another phase", () => {
-    expect(() =>
-      compileFilter({
-        buildProfile: { weaponPhases: [{ itemClasses: ["One Hand Axes"] }, { itemClasses: ["Claws"] }] },
-        buildSpecificOptions: {},
-      }),
-    ).toThrow(/needs an end area level/)
+  test("multiple phases can have no Max Area Level", () => {
+    const output = compileFilter({
+      buildProfile: { weaponPhases: [{ baseTypes: ["Rusted Hatchet"] }, { baseTypes: ["Driftwood Club"] }] },
+      buildSpecificOptions: {},
+    })
+    const section = output.split("### Weapon Progression")[1].split("### Six Sockets")[0]
+    expect(section).toContain('BaseType "Rusted Hatchet"')
+    expect(section).toContain('BaseType "Driftwood Club"')
+    expect(section).not.toContain("AreaLevel >=")
   })
 
-  test("does not treat an empty preferred-weapon selection as all weapons for early sockets", () => {
-    const output = earlySockets({ preferredWeapons: { weaponCutoffOverlap: 5 } })
+  test("an overlapping bounded phase takes priority over an all-run phase", () => {
+    const output = compileFilter({
+      buildProfile: {
+        weaponPhases: [{ baseTypes: ["Gilded Axe"] }, { baseTypes: ["Gilded Axe"], maxAreaLevel: 28 }],
+      },
+      buildSpecificOptions: {},
+    })
+    const section = output.split("### Weapon Progression")[1].split("### Six Sockets")[0]
+    expect(section.indexOf("AreaLevel <= 28")).toBeLessThan(section.indexOf("AreaLevel <= 33"))
+  })
+
+  test("puts a contained area-level range ahead of both its enclosing range and an all-run phase", () => {
+    const allRun = { baseTypes: ["Gilded Axe"] as const }
+    const broad = { baseTypes: ["Gilded Axe"] as const, maxAreaLevel: 28 }
+    const narrow = { baseTypes: ["Gilded Axe"] as const, minAreaLevel: 20, maxAreaLevel: 25 }
+    expect(orderedWeaponPhases([allRun, broad, narrow])).toEqual([narrow, broad, allRun])
+  })
+
+  test("rejects a phase whose Min Area Level exceeds its Max Area Level", () => {
+    expect(() =>
+      compileFilter({
+        buildProfile: { weaponPhases: [{ itemClasses: ["One Hand Axes"], minAreaLevel: 29, maxAreaLevel: 28 }] },
+        buildSpecificOptions: {},
+      }),
+    ).toThrow(/Min Area Level above its Max Area Level/)
+  })
+
+  test("does not treat an empty weapon phase as all weapons for early sockets", () => {
+    const output = earlySockets({ weaponPhases: [{ weaponCutoffOverlap: 5 }] })
     expect(output).not.toContain("BaseType")
   })
 

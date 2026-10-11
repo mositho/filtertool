@@ -45,8 +45,8 @@ On first launch a **quickstart** prompt asks for the **PoE Filter Path** (where 
 The filter editor is organized into sections, each matching a section of the compiled `.filter` output:
 
 - **Build profile** — socket colors, armour bases used to pick "good" links, and shield progression.
-- **Weapon progression** — ordered, non-overlapping area-level phases selecting any mix of weapon classes and individual bases. Per-base drop-level cutoff defaults to drop level + 5; a phase's end is optional unless another phase follows. Older `earlyWeapons` configs are interpreted as a bounded phase on load; their files are not rewritten until saved.
-- **Early** — area-level cutoffs for sockets and boots.
+- **Weapon progression** — combine any number of weapon classes and bases per phase, optionally setting **Min Area Level** and **Max Area Level**. Overlapping phases are allowed; the more-specific range takes priority. Each base uses a drop-level + 5 cutoff by default.
+- **Early** — area-level cutoffs for sockets and boots, and the Rustic Sash toggle.
 - **Links** — which linked-socket items are shown and when they play a sound.
 - **Equipment** — rarity thresholds (max area level, with separate cutoffs for small ≤2×2 and big >2×2 magic items), jewellery and tinctures.
 - **Highlights** — extra build-specific item highlights.
@@ -105,7 +105,7 @@ npm run export-all
 > - Rename the old `.filter` file in your Path of Exile directory, **or**
 > - Rename your filter source folder under `src/filters/` (e.g. `yourfilter-v2`) to produce a differently-named filter file.
 
-> **No automatic config migration:** A hand-written `config.ts` that references removed/renamed fields will fail typechecking — recreate the filter through the Web UI or update the field names. The UI's `config.json` is the single source of truth and is not migrated between schema changes either.
+> **No automatic config migration:** Replace older `preferredWeapons` / `earlyWeapons` fields with `buildProfile.weaponPhases` (using optional `minAreaLevel` / `maxAreaLevel` per phase). Remove `flasks.lifeMaxAreaLevel` / `flasks.manaMaxAreaLevel`; individual flask-tier cutoffs still apply. A hand-written `config.ts` with removed fields will fail typechecking. Existing `config.json` files are not migrated either; update them manually or recreate the filter in the UI.
 
 ## User Overrides
 

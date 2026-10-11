@@ -24,6 +24,7 @@ import type {
   WeaponPhaseConfig,
 } from "./options"
 import { buildFlaskSeries, buildUtilityFlaskRules } from "./rule-builders"
+import { orderedWeaponPhases } from "./weapon-phases"
 
 export const links = ({
   twoLinkMaxAreaLevel = filterDefaults.links.twoLinkMaxAreaLevel,
@@ -185,47 +186,14 @@ export const sixSockets = () =>
 export const uniques = () =>
   withHeading("Uniques", compileRules(rule().rarity("==", "Unique").icon("Brown", "Star").mixin(styleMixin(filterStyles.unique)).sound(3)))
 
-export const preferredWeapons = ({ preferredWeapons }: Partial<BuildProfile>) => {
-  if (!preferredWeapons) return ""
-  const hasTargets =
-    (preferredWeapons.itemClasses?.length ?? 0) > 0 ||
-    (preferredWeapons.baseTypes?.length ?? 0) > 0 ||
-    preferredWeapons.minAps !== undefined
-  if (!hasTargets) return ""
-
-  const compiledRules = compileRules(...buildHighlightedBaseTypeRules(preferredWeapons))
-
-  if (!compiledRules) {
-    return ""
-  }
-
-  return withHeading("Preferred Weapons", compiledRules)
-}
-
-/** Each phase owns a disjoint area-level interval; a base's drop-level cutoff can end it earlier. */
+/** More-specific phases compile first; per-base drop-level cutoffs can end a match earlier. */
 export const weaponPhases = (phases: readonly WeaponPhaseConfig[]) => {
-  let fromAreaLevel = 0
-  const rules: Rule[] = []
-  for (const [index, phase] of phases.entries()) {
-    const { untilAreaLevel, ...highlight } = phase
-    if (untilAreaLevel !== undefined && (!Number.isInteger(untilAreaLevel) || untilAreaLevel < fromAreaLevel)) {
-      throw new Error(`Weapon phase ${index + 1} must end at or after area level ${fromAreaLevel}.`)
-    }
-    if (untilAreaLevel === undefined && index < phases.length - 1) {
-      throw new Error(`Weapon phase ${index + 1} needs an end area level before the next phase.`)
-    }
-    rules.push(
-      ...buildHighlightedBaseTypeRules({
-        ...highlight,
-        weaponCutoffOverlap: highlight.weaponCutoffOverlap ?? 5,
-        minAreaLevel: fromAreaLevel,
-        maxAreaLevel: untilAreaLevel,
-      }),
-    )
-    if (untilAreaLevel !== undefined) fromAreaLevel = untilAreaLevel + 1
-  }
-  const compiled = compileRules(...rules)
-  return compiled ? withHeading("Preferred Weapons", compiled) : ""
+  const compiled = compileRules(
+    ...orderedWeaponPhases(phases).flatMap((phase) =>
+      buildHighlightedBaseTypeRules({ ...phase, weaponCutoffOverlap: phase.weaponCutoffOverlap ?? 5 }),
+    ),
+  )
+  return compiled ? withHeading("Weapon Progression", compiled) : ""
 }
 
 export const highlightedEquipment = ({ highlights = [] }: HighlightedEquipmentConfig = {}) => {
@@ -487,7 +455,7 @@ export const chromaticItems = () =>
     ),
   )
 
-export const flasks = ({ utilityFlasks = filterDefaults.flasks.utilityFlasks, lifeMaxAreaLevel, manaMaxAreaLevel }: FlasksConfig = {}) =>
+export const flasks = ({ utilityFlasks = filterDefaults.flasks.utilityFlasks }: FlasksConfig = {}) =>
   withHeading(
     "Flasks",
     compileRules(
@@ -497,47 +465,15 @@ export const flasks = ({ utilityFlasks = filterDefaults.flasks.utilityFlasks, li
         style: "lifeFlask",
         magicStyle: "magicLifeFlask",
         entries: [
-          {
-            baseTypes: ["Small Life Flask"],
-            maxAreaLevel: lifeMaxAreaLevel === undefined ? 12 : Math.min(12, lifeMaxAreaLevel),
-            text: MANIFEST_BY_ID.life,
-          },
-          {
-            baseTypes: ["Medium Life Flask"],
-            maxAreaLevel: lifeMaxAreaLevel === undefined ? 20 : Math.min(20, lifeMaxAreaLevel),
-            text: MANIFEST_BY_ID.medium_life,
-          },
-          {
-            baseTypes: ["Large Life Flask"],
-            maxAreaLevel: lifeMaxAreaLevel === undefined ? 24 : Math.min(24, lifeMaxAreaLevel),
-            text: MANIFEST_BY_ID.large_life,
-          },
-          {
-            baseTypes: ["Greater Life Flask"],
-            maxAreaLevel: lifeMaxAreaLevel === undefined ? 28 : Math.min(28, lifeMaxAreaLevel),
-            text: MANIFEST_BY_ID.greater_life,
-          },
-          {
-            baseTypes: ["Grand Life Flask"],
-            maxAreaLevel: lifeMaxAreaLevel === undefined ? 32 : Math.min(32, lifeMaxAreaLevel),
-            text: MANIFEST_BY_ID.grand_life,
-          },
-          {
-            baseTypes: ["Giant Life Flask"],
-            maxAreaLevel: lifeMaxAreaLevel === undefined ? 35 : Math.min(35, lifeMaxAreaLevel),
-            text: MANIFEST_BY_ID.giant_life,
-          },
-          {
-            baseTypes: ["Colossal Life Flask"],
-            maxAreaLevel: lifeMaxAreaLevel === undefined ? 40 : Math.min(40, lifeMaxAreaLevel),
-            text: MANIFEST_BY_ID.colossal_life,
-          },
-          {
-            baseTypes: ["Hallowed Life Flask"],
-            maxAreaLevel: lifeMaxAreaLevel === undefined ? 60 : Math.min(60, lifeMaxAreaLevel),
-            text: MANIFEST_BY_ID.life,
-          },
-          { baseTypes: ["Divine Life Flask"], maxAreaLevel: lifeMaxAreaLevel, text: MANIFEST_BY_ID.life },
+          { baseTypes: ["Small Life Flask"], maxAreaLevel: 12, text: MANIFEST_BY_ID.life },
+          { baseTypes: ["Medium Life Flask"], maxAreaLevel: 20, text: MANIFEST_BY_ID.medium_life },
+          { baseTypes: ["Large Life Flask"], maxAreaLevel: 24, text: MANIFEST_BY_ID.large_life },
+          { baseTypes: ["Greater Life Flask"], maxAreaLevel: 28, text: MANIFEST_BY_ID.greater_life },
+          { baseTypes: ["Grand Life Flask"], maxAreaLevel: 32, text: MANIFEST_BY_ID.grand_life },
+          { baseTypes: ["Giant Life Flask"], maxAreaLevel: 35, text: MANIFEST_BY_ID.giant_life },
+          { baseTypes: ["Colossal Life Flask"], maxAreaLevel: 40, text: MANIFEST_BY_ID.colossal_life },
+          { baseTypes: ["Hallowed Life Flask"], maxAreaLevel: 60, text: MANIFEST_BY_ID.life },
+          { baseTypes: ["Divine Life Flask"], text: MANIFEST_BY_ID.life },
         ],
       }),
       ...buildFlaskSeries({
@@ -546,57 +482,17 @@ export const flasks = ({ utilityFlasks = filterDefaults.flasks.utilityFlasks, li
         style: "manaFlask",
         magicStyle: "magicManaFlask",
         entries: [
-          {
-            baseTypes: ["Small Mana Flask"],
-            maxAreaLevel: manaMaxAreaLevel === undefined ? 12 : Math.min(12, manaMaxAreaLevel),
-            text: MANIFEST_BY_ID.mana,
-          },
-          {
-            baseTypes: ["Medium Mana Flask"],
-            maxAreaLevel: manaMaxAreaLevel === undefined ? 20 : Math.min(20, manaMaxAreaLevel),
-            text: MANIFEST_BY_ID.medium_mana,
-          },
-          {
-            baseTypes: ["Large Mana Flask"],
-            maxAreaLevel: manaMaxAreaLevel === undefined ? 24 : Math.min(24, manaMaxAreaLevel),
-            text: MANIFEST_BY_ID.large_mana,
-          },
-          {
-            baseTypes: ["Greater Mana Flask"],
-            maxAreaLevel: manaMaxAreaLevel === undefined ? 28 : Math.min(28, manaMaxAreaLevel),
-            text: MANIFEST_BY_ID.greater_mana,
-          },
-          {
-            baseTypes: ["Grand Mana Flask"],
-            maxAreaLevel: manaMaxAreaLevel === undefined ? 32 : Math.min(32, manaMaxAreaLevel),
-            text: MANIFEST_BY_ID.grand_mana,
-          },
-          {
-            baseTypes: ["Giant Mana Flask"],
-            maxAreaLevel: manaMaxAreaLevel === undefined ? 36 : Math.min(36, manaMaxAreaLevel),
-            text: MANIFEST_BY_ID.giant_mana,
-          },
-          {
-            baseTypes: ["Colossal Mana Flask"],
-            maxAreaLevel: manaMaxAreaLevel === undefined ? 40 : Math.min(40, manaMaxAreaLevel),
-            text: MANIFEST_BY_ID.mana,
-          },
-          {
-            baseTypes: ["Sacred Mana Flask"],
-            maxAreaLevel: manaMaxAreaLevel === undefined ? 46 : Math.min(46, manaMaxAreaLevel),
-            text: MANIFEST_BY_ID.mana,
-          },
-          {
-            baseTypes: ["Hallowed Mana Flask"],
-            maxAreaLevel: manaMaxAreaLevel === undefined ? 52 : Math.min(52, manaMaxAreaLevel),
-            text: MANIFEST_BY_ID.mana,
-          },
-          {
-            baseTypes: ["Sanctified Mana Flask"],
-            maxAreaLevel: manaMaxAreaLevel === undefined ? 60 : Math.min(60, manaMaxAreaLevel),
-            text: MANIFEST_BY_ID.mana,
-          },
-          { baseTypes: ["Eternal Mana Flask", "Divine Mana Flask"], maxAreaLevel: manaMaxAreaLevel, text: MANIFEST_BY_ID.mana },
+          { baseTypes: ["Small Mana Flask"], maxAreaLevel: 12, text: MANIFEST_BY_ID.mana },
+          { baseTypes: ["Medium Mana Flask"], maxAreaLevel: 20, text: MANIFEST_BY_ID.medium_mana },
+          { baseTypes: ["Large Mana Flask"], maxAreaLevel: 24, text: MANIFEST_BY_ID.large_mana },
+          { baseTypes: ["Greater Mana Flask"], maxAreaLevel: 28, text: MANIFEST_BY_ID.greater_mana },
+          { baseTypes: ["Grand Mana Flask"], maxAreaLevel: 32, text: MANIFEST_BY_ID.grand_mana },
+          { baseTypes: ["Giant Mana Flask"], maxAreaLevel: 36, text: MANIFEST_BY_ID.giant_mana },
+          { baseTypes: ["Colossal Mana Flask"], maxAreaLevel: 40, text: MANIFEST_BY_ID.mana },
+          { baseTypes: ["Sacred Mana Flask"], maxAreaLevel: 46, text: MANIFEST_BY_ID.mana },
+          { baseTypes: ["Hallowed Mana Flask"], maxAreaLevel: 52, text: MANIFEST_BY_ID.mana },
+          { baseTypes: ["Sanctified Mana Flask"], maxAreaLevel: 60, text: MANIFEST_BY_ID.mana },
+          { baseTypes: ["Eternal Mana Flask", "Divine Mana Flask"], text: MANIFEST_BY_ID.mana },
         ],
       }),
       ...buildUtilityFlaskRules(

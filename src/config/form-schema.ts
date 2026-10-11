@@ -1,15 +1,6 @@
 import type { BuildProfile, BuildSpecificOptions, HighlightedBaseTypeConfig } from "../filters/shared/sections/options"
 
-export type SchemaControl =
-  | "number"
-  | "boolean"
-  | "select"
-  | "multiselect"
-  | "link-colors"
-  | "highlight-list"
-  | "highlight"
-  | "weapon-phases"
-  | "sound"
+export type SchemaControl = "number" | "boolean" | "select" | "multiselect" | "link-colors" | "highlight-list" | "weapon-phases" | "sound"
 
 export type SchemaField = {
   path: string
@@ -35,8 +26,6 @@ export type SchemaField = {
   placeholderWhen?: { path: string; equals?: unknown; notEquals?: unknown; defaultValue?: unknown; value: string }
   /** Output filter section this field edits, used to scroll the preview. */
   previewSection?: string
-  /** Restrict a highlight editor to weapon classes/base types. */
-  weaponsOnly?: boolean
 }
 
 export type FieldSubsection = {
@@ -207,17 +196,6 @@ const buildProfileMain: SchemaField[] = [
   },
 ]
 
-const buildProfilePreferredWeapons: SchemaField[] = [
-  {
-    path: "preferredWeapons",
-    label: "Preferred Weapons",
-    control: "highlight",
-    previewSection: "Preferred Weapons",
-    weaponsOnly: true,
-    tooltip: "Weapon classes and bases to highlight, with their rarities, cutoffs and sounds.",
-  },
-]
-
 const buildEarlyShield: SchemaField[] = [
   {
     path: "shieldProgression",
@@ -240,26 +218,28 @@ const buildProfileMisc: SchemaField[] = [
     previewSection: "Whetstone Recipe",
     tooltip: "Show 20% quality normal weapons for the Blacksmith's Whetstone recipe.",
   },
+]
+
+const earlyRusticSash: SchemaField[] = [
   {
     path: "misc.showRusticSash",
     label: "Show Rustic Sash",
     control: "boolean",
     defaultValue: true,
     previewSection: "Early",
-    tooltip: "Show Non-Rare Rustic Sash belts early.",
+    tooltip: "Highlight Rustic Sash belts in early areas.",
   },
 ]
 
 const buildEarlyGeneric: SchemaField[] = [
   {
     path: "early.earlyMaxAreaLevel",
-    label: "Weapons & Shields",
+    label: "Early Max Area Level",
     control: "number",
     min: 0,
     integer: true,
     defaultValue: 12,
-    tooltip:
-      "The shared cutoff for early weapon and shield highlighting, early rare-item sizing, and how far generic three-links are always shown.",
+    tooltip: "Area level cutoff for early shield highlighting, early rare-item sizing and generic three-links.",
   },
   {
     path: "early.twoSocketMaxAreaLevel",
@@ -294,11 +274,10 @@ export const BUILD_PROFILE_SCHEMA: FieldGroup[] = [
   {
     key: "buildProfile",
     title: "Build profile",
-    description: "Build-wide preferences shared by links, weapons, early items and shields.",
+    description: "Build-wide preferences shared by links, early items and shields.",
     previewSection: "Links",
     fields: buildProfileMain,
     subsections: [
-      { key: "preferredWeapons", title: "Preferred weapons", previewSection: "Preferred Weapons", fields: buildProfilePreferredWeapons },
       { key: "shieldProgression", title: "Shield progression", previewSection: "Early", fields: buildEarlyShield },
       { key: "misc", title: "Misc", fields: buildProfileMisc },
     ],
@@ -306,8 +285,8 @@ export const BUILD_PROFILE_SCHEMA: FieldGroup[] = [
   {
     key: "weaponProgression",
     title: "Weapon progression",
-    description: "Pick weapon classes and bases for each campaign phase. Advanced styling stays optional.",
-    previewSection: "Preferred Weapons",
+    description: "Choose weapons by Area Level; more-specific ranges take priority.",
+    previewSection: "Weapon Progression",
     fields: [{ path: "weaponPhases", label: "Weapon phases", control: "weapon-phases" }],
   },
 ]
@@ -497,26 +476,6 @@ const equipmentFlasks: SchemaField[] = [
     defaultValue: ["Jade", "Quartz", "Quicksilver", "Silver", "Granite"],
     tooltip: "Utility flask base types that receive a dedicated callout; other utility flasks keep the generic style.",
   },
-  {
-    path: "flasks.lifeMaxAreaLevel",
-    label: "Life Flask Cutoff",
-    control: "number",
-    min: 0,
-    integer: true,
-    placeholder: "tier defaults",
-    previewSection: "Flasks",
-    tooltip: "Optional maximum area level for life flasks. This can lower, but not extend, the existing tier cutoffs.",
-  },
-  {
-    path: "flasks.manaMaxAreaLevel",
-    label: "Mana Flask Cutoff",
-    control: "number",
-    min: 0,
-    integer: true,
-    placeholder: "tier defaults",
-    previewSection: "Flasks",
-    tooltip: "Optional maximum area level for mana flasks. This can lower, but not extend, the existing tier cutoffs.",
-  },
 ]
 
 export const BUILD_SPECIFIC_SCHEMA: FieldGroup[] = [
@@ -526,7 +485,10 @@ export const BUILD_SPECIFIC_SCHEMA: FieldGroup[] = [
     description: "Early-campaign socket and item cutoffs.",
     previewSection: "Early",
     fields: [],
-    subsections: [{ key: "generic", title: "Area level cutoffs", previewSection: "Early", fields: buildEarlyGeneric }],
+    subsections: [
+      { key: "generic", title: "Area level cutoffs", previewSection: "Early", fields: buildEarlyGeneric },
+      { key: "rusticSash", title: "Rustic Sash", root: "buildProfile", previewSection: "Early", fields: earlyRusticSash },
+    ],
   },
   {
     key: "links",
@@ -618,9 +580,8 @@ export function schemaLeafPaths(): string[] {
   for (const group of [...BUILD_PROFILE_SCHEMA, ...BUILD_SPECIFIC_SCHEMA]) {
     const fields = [...group.fields, ...(group.subsections ?? []).flatMap(collectFields)]
     for (const field of fields) {
-      if (field.control === "highlight-list" || field.control === "highlight" || field.control === "weapon-phases") {
+      if (field.control === "highlight-list" || field.control === "weapon-phases") {
         for (const highlightField of HIGHLIGHT_FIELDS) {
-          if (field.control === "weapon-phases" && ["minAreaLevel", "maxAreaLevel"].includes(highlightField.path)) continue
           paths.push(`${field.path}.${highlightField.path}`)
         }
         for (const topLevelPath of HIGHLIGHT_TOP_LEVEL_PATHS) {
@@ -637,7 +598,6 @@ export function schemaLeafPaths(): string[] {
         for (const stylePath of STYLE_PATHS) {
           paths.push(`${field.path}.${stylePath}`)
         }
-        if (field.control === "weapon-phases") paths.push(`${field.path}.untilAreaLevel`)
       } else {
         paths.push(field.path)
       }
@@ -673,11 +633,11 @@ export const EMPTY_FILTER_CONFIG = {
 }
 
 function isHighlightControl(control: SchemaControl): boolean {
-  return control === "highlight" || control === "highlight-list" || control === "weapon-phases"
+  return control === "highlight-list" || control === "weapon-phases"
 }
 
 // These are per-filter controls: their sections have no shared-default fallback.
-const PER_FILTER_ONLY_FIELDS = new Set(["gemCallouts.gems", "flasks.lifeMaxAreaLevel", "flasks.manaMaxAreaLevel"])
+const PER_FILTER_ONLY_FIELDS = new Set(["gemCallouts.gems"])
 
 function isSharedDefaultField(field: SchemaField): boolean {
   return !isHighlightControl(field.control) && !PER_FILTER_ONLY_FIELDS.has(field.path)

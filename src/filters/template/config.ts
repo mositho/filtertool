@@ -4,9 +4,8 @@ import { type BuildProfile, type BuildSpecificOptions } from "../shared"
 export const buildProfile = {
   // preferredColors: ["R", "G", "B"],
   // preferredArmour: ["armour", "evasion", "armour-evasion"],
-  // preferredWeapons: { itemClasses: ["Two Hand Axes", "Two Hand Maces"], minAps: 1.3 },
   // weaponPhases: [
-  //   { itemClasses: ["Two Hand Axes"], baseTypes: ["Driftwood Maul"], untilAreaLevel: 28 },
+  //   { itemClasses: ["Two Hand Axes"], baseTypes: ["Driftwood Maul"], maxAreaLevel: 28 },
   //   { itemClasses: ["One Hand Swords"] }, // starts at area level 29
   // ],
   // shieldProgression: "early",
@@ -40,8 +39,6 @@ export const buildSpecificOptions = {
   early: {},
   flasks: {
     // utilityFlasks: ["Jade", "Quartz"],
-    // lifeMaxAreaLevel: 40,
-    // manaMaxAreaLevel: 40,
   },
   tinctures: {
     // baseTypes: ["Prismatic Tincture"],

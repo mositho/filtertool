@@ -18,17 +18,14 @@ export type MiscConfig = {
 
 export type BuildProfile = {
   preferredArmour?: readonly DefenceBaseType[]
-  preferredWeapons?: HighlightedBaseTypeConfig
   weaponPhases?: readonly WeaponPhaseConfig[]
   shieldProgression?: ShieldProgressionConfig
   preferredColors?: readonly LinkColor[]
   misc?: MiscConfig
 }
 
-/** Ordered, non-overlapping area-level stages. A stage after an open-ended stage is invalid. */
-export type WeaponPhaseConfig = Omit<HighlightedBaseTypeConfig, "minAreaLevel" | "maxAreaLevel"> & {
-  untilAreaLevel?: number
-}
+/** Weapon selection and styling within an optional Area Level range. */
+export type WeaponPhaseConfig = HighlightedBaseTypeConfig
 
 export type LinksConfig = {
   twoLinkMaxAreaLevel?: number
@@ -50,8 +47,6 @@ export type JewelleryConfig = {
 
 export type FlasksConfig = {
   utilityFlasks?: readonly string[]
-  lifeMaxAreaLevel?: number
-  manaMaxAreaLevel?: number
 }
 
 export type RareItemsConfig = {
