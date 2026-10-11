@@ -88,9 +88,9 @@ function onKeydown(event: KeyboardEvent) {
 <template>
   <div ref="root" class="relative">
     <div
-      class="flex min-h-9 w-full cursor-pointer flex-wrap items-center gap-1 rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-sm focus-within:border-blue-500"
+      class="flex min-h-9 w-full cursor-pointer flex-wrap items-center gap-1 rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-sm transition-colors hover:border-blue-500 focus-visible:border-blue-500 focus-visible:outline-none"
       role="group"
-      aria-label="Edit selected options"
+      aria-label="Select options"
       tabindex="0"
       @click="toggleOpen"
       @keydown.enter.self.prevent="toggleOpen"
@@ -107,14 +107,7 @@ function onKeydown(event: KeyboardEvent) {
         {{ value }} <span aria-hidden="true">×</span>
       </button>
       <span v-if="selected.length === 0" class="text-xs text-neutral-500">None selected</span>
-      <button
-        type="button"
-        class="ml-auto shrink-0 rounded bg-blue-700 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-white hover:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
-        :aria-expanded="open"
-        @click.stop="toggleOpen"
-      >
-        Edit
-      </button>
+      <span class="ml-auto text-xs text-neutral-400" aria-hidden="true">{{ open ? "▴" : "▾" }}</span>
     </div>
 
     <div v-if="open" class="absolute z-20 mt-1 w-full rounded border border-neutral-700 bg-neutral-900 shadow-lg">
