@@ -33,8 +33,7 @@ const selected = computed(() => props.modelValue ?? [])
 
 const filtered = computed(() => {
   const q = query.value.trim().toLowerCase()
-  const opts = props.options.filter((o) => !selected.value.includes(o))
-  return q ? opts.filter((o) => o.toLowerCase().includes(q)) : opts
+  return q ? props.options.filter((option) => option.toLowerCase().includes(q)) : props.options
 })
 
 watch(query, () => {
@@ -99,13 +98,14 @@ function onKeydown(event: KeyboardEvent) {
       >
         {{ value }} <span aria-hidden="true">×</span>
       </button>
+      <span v-if="selected.length === 0" class="text-xs text-neutral-500">None selected</span>
       <button
         type="button"
-        class="min-h-6 flex-1 text-left text-xs text-neutral-400 hover:text-white"
+        class="ml-auto shrink-0 rounded bg-blue-700 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-white hover:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
         :aria-expanded="open"
         @click="toggleOpen"
       >
-        {{ selected.length ? "Edit" : "Choose…" }}
+        Edit
       </button>
     </div>
 
