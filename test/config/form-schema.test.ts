@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
 import type { BuildProfile, BuildSpecificOptions, HighlightedBaseTypeConfig } from "../../src/filters/shared/sections/options"
-import { schemaLeafPaths } from "../../src/config/form-schema"
+import { BUILD_SPECIFIC_SCHEMA, DEFAULTS_SCHEMA, schemaLeafPaths } from "../../src/config/form-schema"
 
 type Complete<T> = T extends readonly (infer U)[]
   ? readonly Complete<U>[]
@@ -114,5 +114,14 @@ describe("form schema drift", () => {
 
     expect(missingFromSchema).toEqual([])
     expect(unknownInSchema).toEqual([])
+  })
+
+  it("offers the supported utility flask callouts in both filter and global defaults forms", () => {
+    for (const schema of [BUILD_SPECIFIC_SCHEMA, DEFAULTS_SCHEMA]) {
+      const equipment = schema.find((group) => group.key === "equipment")
+      const flasks = equipment?.subsections?.find((section) => section.key === "flasks")
+      const field = flasks?.fields.find((entry) => entry.path === "flasks.utilityFlasks")
+      expect(field?.options).toEqual(["Jade", "Quartz", "Quicksilver", "Silver", "Granite"])
+    }
   })
 })

@@ -321,7 +321,10 @@ const STYLE_SECTIONS: { title: string; keys: string[] }[] = [
     ],
   },
   { title: "Shields", keys: ["earlyShieldLink", "earlyShieldBase"] },
-  { title: "Flasks & Tinctures", keys: ["lifeFlask", "manaFlask", "utilityFlask", "tincture"] },
+  {
+    title: "Flasks & Tinctures",
+    keys: ["lifeFlask", "magicLifeFlask", "manaFlask", "magicManaFlask", "utilityFlask", "tincture"],
+  },
   { title: "Jewellery", keys: ["jewellery", "magicJewellery", "rareJewellery", "rareArmour", "chromatic"] },
   {
     title: "Highlights",

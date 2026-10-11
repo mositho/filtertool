@@ -488,7 +488,7 @@ const equipmentFlasks: SchemaField[] = [
     path: "flasks.utilityFlasks",
     label: "Utility Flasks",
     control: "multiselect",
-    options: [],
+    options: ["Jade", "Quartz", "Quicksilver", "Silver", "Granite"],
     defaultValue: ["Jade", "Quartz", "Quicksilver", "Silver", "Granite"],
     tooltip: "Utility flask base types that receive a dedicated callout; other utility flasks keep the generic style.",
   },
