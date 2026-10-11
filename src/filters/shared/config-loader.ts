@@ -1,6 +1,7 @@
 import fs from "fs"
 import path from "path"
 import { MANIFEST_BY_ID, type SoundManifestId } from "../../sounds/manifest"
+import { filterDefaults } from "./defaults"
 import type { BuildProfile, BuildSpecificOptions, HighlightedBaseTypeConfig, RarityHighlightConfig, TtsFile } from "./sections/options"
 
 export type FilterConfig = {
@@ -16,9 +17,11 @@ export type SerializedHighlight = Omit<HighlightedBaseTypeConfig, "normal" | "ma
   rare?: SerializedRarityHighlight
 }
 export type SerializedHighlightedEquipment = { highlights?: readonly SerializedHighlight[] }
-export type SerializedBuildProfile = Omit<BuildProfile, "preferredWeapons" | "earlyWeapons"> & {
+export type SerializedBuildProfile = Omit<BuildProfile, "preferredWeapons" | "weaponPhases"> & {
   preferredWeapons?: SerializedHighlight
+  /** Read-only compatibility with old config.json files. */
   earlyWeapons?: SerializedHighlight
+  weaponPhases?: (SerializedHighlight & { untilAreaLevel?: number })[]
 }
 
 /**
@@ -82,12 +85,12 @@ function deserializeHighlight(highlight: SerializedHighlight): HighlightedBaseTy
 export function serializeFilterConfig(config: FilterConfig): SerializedFilterConfig {
   const { highlightedEquipment, ...restOptions } = config.buildSpecificOptions
   const highlights = highlightedEquipment?.highlights
-  const { preferredWeapons, earlyWeapons, ...restProfile } = config.buildProfile
+  const { preferredWeapons, weaponPhases, ...restProfile } = config.buildProfile
   return {
     buildProfile: {
       ...restProfile,
       ...(preferredWeapons !== undefined ? { preferredWeapons: serializeHighlight(preferredWeapons) } : {}),
-      ...(earlyWeapons !== undefined ? { earlyWeapons: serializeHighlight(earlyWeapons) } : {}),
+      ...(weaponPhases !== undefined ? { weaponPhases: weaponPhases.map(serializeHighlight) } : {}),
     },
     buildSpecificOptions: {
       ...restOptions,
@@ -106,12 +109,23 @@ export function serializeFilterConfig(config: FilterConfig): SerializedFilterCon
 export function deserializeFilterConfig(config: SerializedFilterConfig): FilterConfig {
   const { highlightedEquipment, ...restOptions } = config.buildSpecificOptions
   const highlights = highlightedEquipment?.highlights
-  const { preferredWeapons, earlyWeapons, ...restProfile } = config.buildProfile
+  const { preferredWeapons, earlyWeapons, weaponPhases, ...restProfile } = config.buildProfile
+  const mappedEarly = earlyWeapons && weaponPhases === undefined ? deserializeHighlight(earlyWeapons) : undefined
+  const earlyEnd =
+    mappedEarly?.maxAreaLevel ?? config.buildSpecificOptions.early?.earlyMaxAreaLevel ?? filterDefaults.early.earlyMaxAreaLevel
+  const { minAreaLevel: _minAreaLevel, maxAreaLevel: _maxAreaLevel, ...earlyPhase } = mappedEarly ?? {}
+  const mappedPhases = mappedEarly
+    ? [{ ...earlyPhase, untilAreaLevel: earlyEnd }, ...(preferredWeapons ? [{ ...deserializeHighlight(preferredWeapons) }] : [])]
+    : undefined
   return {
     buildProfile: {
       ...restProfile,
       ...(preferredWeapons !== undefined ? { preferredWeapons: deserializeHighlight(preferredWeapons) } : {}),
-      ...(earlyWeapons !== undefined ? { earlyWeapons: deserializeHighlight(earlyWeapons) } : {}),
+      ...(weaponPhases !== undefined
+        ? { weaponPhases: weaponPhases.map(deserializeHighlight) }
+        : mappedPhases
+          ? { weaponPhases: mappedPhases }
+          : {}),
     },
     buildSpecificOptions: {
       ...restOptions,
@@ -160,7 +174,7 @@ export function loadFilterConfig(filterDir: string, tsFallback?: FilterConfig): 
 /** Reads the stored (serialized) config, snapshotting a TS fallback when no JSON exists. */
 export function readFilterConfig(filterDir: string, tsFallback?: FilterConfig): SerializedFilterConfig {
   const json = readConfigJson(filterDir)
-  if (json) return json
+  if (json) return serializeFilterConfig(deserializeFilterConfig(json))
   const loaded = tsFallback ?? loadFilterConfig(filterDir)
   return serializeFilterConfig(loaded)
 }

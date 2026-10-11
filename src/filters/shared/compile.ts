@@ -11,6 +11,7 @@ import {
   sixSockets,
   tinctures,
   uniques,
+  weaponPhases,
   whetstoneRecipe,
 } from "./sections/equipment"
 import { currency, scrolls } from "./sections/currency"
@@ -31,7 +32,7 @@ export function compileFilter(config: FilterConfig): string {
     gems(buildSpecificOptions.gemCallouts),
     links({ ...buildProfile, ...(buildSpecificOptions.links ?? {}), ...(buildSpecificOptions.early ?? {}) }),
     highlightedEquipment(buildSpecificOptions.highlightedEquipment),
-    preferredWeapons(buildProfile),
+    buildProfile.weaponPhases !== undefined ? weaponPhases(buildProfile.weaponPhases) : preferredWeapons(buildProfile),
     sixSockets(),
     jewellery(buildSpecificOptions.jewellery),
     early({ ...buildProfile, ...(buildSpecificOptions.early ?? {}) }),

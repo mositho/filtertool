@@ -10,11 +10,13 @@ import MultiSelect from "./MultiSelect.vue"
 import SoundSelector from "./SoundSelector.vue"
 import IconPicker from "./IconPicker.vue"
 import StyleEditor from "./StyleEditor.vue"
+import WeaponPicker from "./WeaponPicker.vue"
 
 const props = defineProps<{
   highlight: Record<string, unknown>
   reference: ReferenceData
   weaponsOnly?: boolean
+  phaseMode?: boolean
 }>()
 const emit = defineEmits<{ change: [] }>()
 
@@ -125,11 +127,16 @@ const hasWeaponClass = computed(() => {
   return classes.some((itemClass) => props.reference.weaponClasses.includes(itemClass))
 })
 
-const weaponCutoffAvailable = computed(() => mode.value === "itemClasses" && hasWeaponClass.value)
+const weaponCutoffAvailable = computed(() =>
+  props.phaseMode
+    ? hasWeaponClass.value || ((fieldValue("baseTypes") as string[] | undefined)?.length ?? 0) > 0
+    : mode.value === "itemClasses" && hasWeaponClass.value,
+)
 
 const availableModules = computed(() =>
   MODULE_IDS.filter((id) => {
     if (active.value.has(id)) return false
+    if (props.phaseMode && id === "areaLevel") return false
     if (id === "weaponCutoff" && !weaponCutoffAvailable.value) return false
     if ((id === "icon" || id === "sound") && perRarity.value) return false
     return true
@@ -167,7 +174,11 @@ function fieldValue(path: string): unknown {
   return getPath(props.highlight, path)
 }
 
-const allBaseTypes = computed(() => Object.values(props.reference.baseTypesByClass).flat())
+const allBaseTypes = computed(() =>
+  props.weaponsOnly
+    ? props.reference.weaponClasses.flatMap((itemClass) => props.reference.baseTypesByClass[itemClass] ?? [])
+    : Object.values(props.reference.baseTypesByClass).flat(),
+)
 
 const classFilter = ref("")
 
@@ -349,228 +360,246 @@ function applyRaritySound(rarity: string, next: Record<string, unknown>) {
   <div class="space-y-4">
     <div class="space-y-1">
       <FieldLabel label="Match" tooltip="Choose what this highlight matches, or match anything." />
-      <div class="flex flex-wrap gap-2">
-        <button
-          v-for="option in matchModes"
-          :key="option"
-          type="button"
-          @click="setMode(option)"
-          class="rounded px-2 py-1 text-xs"
-          :class="mode === option ? 'bg-blue-700 text-white' : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'"
-        >
-          {{ option === "any" ? "Anything" : option === "baseTypes" ? "Base Types" : "Item Classes" }}
-        </button>
-      </div>
-
-      <template v-if="mode === 'itemClasses'">
-        <MultiSelect
-          :model-value="(fieldValue('itemClasses') as string[]) ?? []"
-          :options="itemClassOptions"
-          @update:model-value="setField('itemClasses', $event)"
+      <template v-if="phaseMode">
+        <WeaponPicker
+          :classes="(fieldValue('itemClasses') as string[]) ?? []"
+          :bases="(fieldValue('baseTypes') as string[]) ?? []"
+          :reference="reference"
+          @update:classes="setField('itemClasses', $event)"
+          @update:bases="setField('baseTypes', $event)"
         />
       </template>
-      <template v-else-if="mode === 'baseTypes'">
-        <select v-model="classFilter" class="w-full rounded border border-neutral-700 bg-neutral-900 px-2 py-1.5 text-sm">
-          <option value="">All item classes</option>
-          <option v-for="itemClass in itemClassOptions" :key="itemClass" :value="itemClass">{{ itemClass }}</option>
-        </select>
-        <MultiSelect
-          :model-value="(fieldValue('baseTypes') as string[]) ?? []"
-          :options="baseTypeOptions"
-          @update:model-value="setField('baseTypes', $event)"
-        />
-      </template>
-    </div>
-
-    <div class="space-y-1">
-      <FieldLabel label="Rarities" :tooltip="FIELD_BY_PATH.rarities?.tooltip" />
-      <MultiSelect :model-value="rarityValue" :options="HIGHLIGHT_RARITIES" @update:model-value="setRarities($event)" />
-      <div class="flex items-center gap-2 pt-1">
-        <Toggle :model-value="perRarity" @update:model-value="setPerRarity($event)" />
-        <span class="text-xs text-neutral-400">Customize per rarity</span>
-      </div>
-      <div v-if="perRarity" class="space-y-2">
-        <p class="text-xs text-neutral-500">Configure icon and sound per selected rarity. Replaces any whole-highlight icon or sound.</p>
-        <div v-for="rarity in rarityValue" :key="rarity" class="rounded border border-neutral-800 bg-neutral-950/60 p-2">
-          <span class="text-sm font-medium text-neutral-300">{{ rarity }}</span>
-          <div class="mt-2">
-            <IconPicker
-              :shape="rarityIconShape(rarity)"
-              :color="rarityIconColor(rarity)"
-              :size="rarityIconSize(rarity)"
-              @update:shape="setRarityIconShape(rarity, $event)"
-              @update:color="setRarityIconColor(rarity, $event)"
-              @update:size="setRarityIconSize(rarity, $event)"
-            />
-          </div>
-          <div class="mt-2">
-            <SoundSelector
-              :model-value="rarityConfig(rarity)"
-              :sounds="reference.sounds"
-              @update:model-value="applyRaritySound(rarity, $event)"
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="space-y-2">
-      <div v-for="id in [...active]" :key="id" class="rounded border border-neutral-800 bg-neutral-950/60 p-2">
-        <div class="flex items-center gap-2">
+      <template v-else>
+        <div class="flex flex-wrap gap-2">
           <button
+            v-for="option in matchModes"
+            :key="option"
             type="button"
-            @click="removeModule(id)"
-            class="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-neutral-800 text-sm leading-none text-neutral-300 hover:bg-red-700 hover:text-white"
-            :title="`Remove ${MODULE_LABELS[id]}`"
+            @click="setMode(option)"
+            class="rounded px-2 py-1 text-xs"
+            :class="mode === option ? 'bg-blue-700 text-white' : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'"
           >
-            −
+            {{ option === "any" ? "Anything" : option === "baseTypes" ? "Base Types" : "Item Classes" }}
           </button>
-          <span class="text-sm font-medium text-neutral-300">{{ MODULE_LABELS[id] }}</span>
         </div>
 
-        <div class="mt-1 space-y-1">
-          <template v-if="id === 'weaponCutoff'">
-            <FieldLabel :label="FIELD_BY_PATH.weaponCutoffOverlap!.label" :tooltip="FIELD_BY_PATH.weaponCutoffOverlap?.tooltip" />
-            <NumberField
-              :model-value="fieldValue('weaponCutoffOverlap') as number"
-              integer
-              @update:model-value="setField('weaponCutoffOverlap', $event)"
-            />
-          </template>
-          <template v-else-if="id === 'areaLevel'">
-            <div class="grid grid-cols-2 gap-2">
-              <div>
-                <FieldLabel :label="FIELD_BY_PATH.minAreaLevel!.label" :tooltip="FIELD_BY_PATH.minAreaLevel?.tooltip" />
-                <NumberField
-                  :model-value="fieldValue('minAreaLevel') as number"
-                  :min="FIELD_BY_PATH.minAreaLevel?.min"
-                  integer
-                  :placeholder="FIELD_BY_PATH.minAreaLevel?.placeholder"
-                  @update:model-value="setField('minAreaLevel', $event)"
-                />
-              </div>
-              <div>
-                <FieldLabel :label="FIELD_BY_PATH.maxAreaLevel!.label" :tooltip="FIELD_BY_PATH.maxAreaLevel?.tooltip" />
-                <NumberField
-                  :model-value="fieldValue('maxAreaLevel') as number"
-                  :min="FIELD_BY_PATH.maxAreaLevel?.min"
-                  integer
-                  :placeholder="FIELD_BY_PATH.maxAreaLevel?.placeholder"
-                  @update:model-value="setField('maxAreaLevel', $event)"
-                />
-              </div>
+        <template v-if="mode === 'itemClasses'">
+          <MultiSelect
+            :model-value="(fieldValue('itemClasses') as string[]) ?? []"
+            :options="itemClassOptions"
+            @update:model-value="setField('itemClasses', $event)"
+          />
+        </template>
+        <template v-else-if="mode === 'baseTypes'">
+          <select v-model="classFilter" class="w-full rounded border border-neutral-700 bg-neutral-900 px-2 py-1.5 text-sm">
+            <option value="">All item classes</option>
+            <option v-for="itemClass in itemClassOptions" :key="itemClass" :value="itemClass">{{ itemClass }}</option>
+          </select>
+          <MultiSelect
+            :model-value="(fieldValue('baseTypes') as string[]) ?? []"
+            :options="baseTypeOptions"
+            @update:model-value="setField('baseTypes', $event)"
+          />
+        </template>
+      </template>
+    </div>
+
+    <details :open="phaseMode ? undefined : true" class="space-y-2">
+      <summary v-if="phaseMode" class="cursor-pointer text-sm text-neutral-400">Advanced: rarities, cutoff, styles and sounds</summary>
+      <div class="space-y-1">
+        <FieldLabel label="Rarities" :tooltip="FIELD_BY_PATH.rarities?.tooltip" />
+        <MultiSelect :model-value="rarityValue" :options="HIGHLIGHT_RARITIES" @update:model-value="setRarities($event)" />
+        <div class="flex items-center gap-2 pt-1">
+          <Toggle :model-value="perRarity" @update:model-value="setPerRarity($event)" />
+          <span class="text-xs text-neutral-400">Customize per rarity</span>
+        </div>
+        <div v-if="perRarity" class="space-y-2">
+          <p class="text-xs text-neutral-500">Configure icon and sound per selected rarity. Replaces any whole-highlight icon or sound.</p>
+          <div v-for="rarity in rarityValue" :key="rarity" class="rounded border border-neutral-800 bg-neutral-950/60 p-2">
+            <span class="text-sm font-medium text-neutral-300">{{ rarity }}</span>
+            <div class="mt-2">
+              <IconPicker
+                :shape="rarityIconShape(rarity)"
+                :color="rarityIconColor(rarity)"
+                :size="rarityIconSize(rarity)"
+                @update:shape="setRarityIconShape(rarity, $event)"
+                @update:color="setRarityIconColor(rarity, $event)"
+                @update:size="setRarityIconSize(rarity, $event)"
+              />
             </div>
-          </template>
-          <template v-else-if="id === 'itemLevel'">
-            <div class="grid grid-cols-2 gap-2">
-              <div>
-                <FieldLabel :label="FIELD_BY_PATH.minItemLevel!.label" :tooltip="FIELD_BY_PATH.minItemLevel?.tooltip" />
-                <NumberField
-                  :model-value="fieldValue('minItemLevel') as number"
-                  :min="FIELD_BY_PATH.minItemLevel?.min"
-                  integer
-                  :placeholder="FIELD_BY_PATH.minItemLevel?.placeholder"
-                  @update:model-value="setField('minItemLevel', $event)"
-                />
-              </div>
-              <div>
-                <FieldLabel :label="FIELD_BY_PATH.maxItemLevel!.label" :tooltip="FIELD_BY_PATH.maxItemLevel?.tooltip" />
-                <NumberField
-                  :model-value="fieldValue('maxItemLevel') as number"
-                  :min="FIELD_BY_PATH.maxItemLevel?.min"
-                  integer
-                  :placeholder="FIELD_BY_PATH.maxItemLevel?.placeholder"
-                  @update:model-value="setField('maxItemLevel', $event)"
-                />
-              </div>
+            <div class="mt-2">
+              <SoundSelector
+                :model-value="rarityConfig(rarity)"
+                :sounds="reference.sounds"
+                @update:model-value="applyRaritySound(rarity, $event)"
+              />
             </div>
-          </template>
-          <template v-else-if="id === 'size'">
-            <div class="space-y-2">
-              <div v-for="dim in sizeDimensions" :key="dim.path" class="grid grid-cols-2 items-end gap-2">
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <div
+          v-for="id in [...active].filter((entry) => !phaseMode || entry !== 'areaLevel')"
+          :key="id"
+          class="rounded border border-neutral-800 bg-neutral-950/60 p-2"
+        >
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              @click="removeModule(id)"
+              class="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-neutral-800 text-sm leading-none text-neutral-300 hover:bg-red-700 hover:text-white"
+              :title="`Remove ${MODULE_LABELS[id]}`"
+            >
+              −
+            </button>
+            <span class="text-sm font-medium text-neutral-300">{{ MODULE_LABELS[id] }}</span>
+          </div>
+
+          <div class="mt-1 space-y-1">
+            <template v-if="id === 'weaponCutoff'">
+              <FieldLabel :label="FIELD_BY_PATH.weaponCutoffOverlap!.label" :tooltip="FIELD_BY_PATH.weaponCutoffOverlap?.tooltip" />
+              <NumberField
+                :model-value="fieldValue('weaponCutoffOverlap') as number"
+                integer
+                @update:model-value="setField('weaponCutoffOverlap', $event)"
+              />
+            </template>
+            <template v-else-if="id === 'areaLevel'">
+              <div class="grid grid-cols-2 gap-2">
                 <div>
-                  <FieldLabel :label="dim.label" :tooltip="dim.tooltip" />
-                  <select
-                    :value="sizeConstraint(dim.path).operator"
-                    @change="setSizeOperator(dim.path, ($event.target as HTMLSelectElement).value)"
-                    class="w-full rounded border border-neutral-700 bg-neutral-900 px-2 py-1.5 text-sm"
-                  >
-                    <option v-for="op in SIZE_OPERATORS" :key="op.value" :value="op.value">{{ op.value }} {{ op.label }}</option>
-                  </select>
+                  <FieldLabel :label="FIELD_BY_PATH.minAreaLevel!.label" :tooltip="FIELD_BY_PATH.minAreaLevel?.tooltip" />
+                  <NumberField
+                    :model-value="fieldValue('minAreaLevel') as number"
+                    :min="FIELD_BY_PATH.minAreaLevel?.min"
+                    integer
+                    :placeholder="FIELD_BY_PATH.minAreaLevel?.placeholder"
+                    @update:model-value="setField('minAreaLevel', $event)"
+                  />
                 </div>
                 <div>
+                  <FieldLabel :label="FIELD_BY_PATH.maxAreaLevel!.label" :tooltip="FIELD_BY_PATH.maxAreaLevel?.tooltip" />
                   <NumberField
-                    :model-value="sizeConstraint(dim.path).value"
-                    :min="dim.min"
-                    :max="dim.max"
+                    :model-value="fieldValue('maxAreaLevel') as number"
+                    :min="FIELD_BY_PATH.maxAreaLevel?.min"
                     integer
-                    :placeholder="dim.placeholder"
-                    @update:model-value="setSizeValue(dim.path, $event)"
+                    :placeholder="FIELD_BY_PATH.maxAreaLevel?.placeholder"
+                    @update:model-value="setField('maxAreaLevel', $event)"
                   />
                 </div>
               </div>
-            </div>
-          </template>
-          <template v-else-if="id === 'style'">
-            <FieldLabel
-              label="Style"
-              tooltip="A named style from Global Settings applied to this whole highlight. Editing any field turns it into a custom style. Without a style, the per-rarity highlight styles are used."
-            />
-            <StyleEditor
-              :model-value="(fieldValue('style') as Record<string, unknown>) ?? {}"
-              :style-names="reference.styleNames"
-              :styles="reference.styles"
-              @update:model-value="setField('style', $event)"
-            />
-          </template>
-          <template v-else-if="id === 'icon'">
-            <IconPicker
-              :shape="(fieldValue('iconShape') as string) ?? ''"
-              :color="(fieldValue('iconColor') as string) ?? ''"
-              :size="(fieldValue('iconSize') as number) ?? 2"
-              @update:shape="setIconShape"
-              @update:color="setIconColor"
-              @update:size="setIconSize"
-            />
-          </template>
-          <template v-else-if="id === 'sound'">
-            <SoundSelector :model-value="highlight" :sounds="reference.sounds" @update:model-value="applyTopSound($event)" />
-          </template>
-          <template v-else>
-            <NumberField
-              :model-value="fieldValue(id) as number"
-              :integer="FIELD_BY_PATH[id]?.integer"
-              :step="FIELD_BY_PATH[id]?.step"
-              :placeholder="FIELD_BY_PATH[id]?.placeholder"
-              @update:model-value="setField(id, $event)"
-            />
-          </template>
+            </template>
+            <template v-else-if="id === 'itemLevel'">
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <FieldLabel :label="FIELD_BY_PATH.minItemLevel!.label" :tooltip="FIELD_BY_PATH.minItemLevel?.tooltip" />
+                  <NumberField
+                    :model-value="fieldValue('minItemLevel') as number"
+                    :min="FIELD_BY_PATH.minItemLevel?.min"
+                    integer
+                    :placeholder="FIELD_BY_PATH.minItemLevel?.placeholder"
+                    @update:model-value="setField('minItemLevel', $event)"
+                  />
+                </div>
+                <div>
+                  <FieldLabel :label="FIELD_BY_PATH.maxItemLevel!.label" :tooltip="FIELD_BY_PATH.maxItemLevel?.tooltip" />
+                  <NumberField
+                    :model-value="fieldValue('maxItemLevel') as number"
+                    :min="FIELD_BY_PATH.maxItemLevel?.min"
+                    integer
+                    :placeholder="FIELD_BY_PATH.maxItemLevel?.placeholder"
+                    @update:model-value="setField('maxItemLevel', $event)"
+                  />
+                </div>
+              </div>
+            </template>
+            <template v-else-if="id === 'size'">
+              <div class="space-y-2">
+                <div v-for="dim in sizeDimensions" :key="dim.path" class="grid grid-cols-2 items-end gap-2">
+                  <div>
+                    <FieldLabel :label="dim.label" :tooltip="dim.tooltip" />
+                    <select
+                      :value="sizeConstraint(dim.path).operator"
+                      @change="setSizeOperator(dim.path, ($event.target as HTMLSelectElement).value)"
+                      class="w-full rounded border border-neutral-700 bg-neutral-900 px-2 py-1.5 text-sm"
+                    >
+                      <option v-for="op in SIZE_OPERATORS" :key="op.value" :value="op.value">{{ op.value }} {{ op.label }}</option>
+                    </select>
+                  </div>
+                  <div>
+                    <NumberField
+                      :model-value="sizeConstraint(dim.path).value"
+                      :min="dim.min"
+                      :max="dim.max"
+                      integer
+                      :placeholder="dim.placeholder"
+                      @update:model-value="setSizeValue(dim.path, $event)"
+                    />
+                  </div>
+                </div>
+              </div>
+            </template>
+            <template v-else-if="id === 'style'">
+              <FieldLabel
+                label="Style"
+                tooltip="A named style from Global Settings applied to this whole highlight. Editing any field turns it into a custom style. Without a style, the per-rarity highlight styles are used."
+              />
+              <StyleEditor
+                :model-value="(fieldValue('style') as Record<string, unknown>) ?? {}"
+                :style-names="reference.styleNames"
+                :styles="reference.styles"
+                @update:model-value="setField('style', $event)"
+              />
+            </template>
+            <template v-else-if="id === 'icon'">
+              <IconPicker
+                :shape="(fieldValue('iconShape') as string) ?? ''"
+                :color="(fieldValue('iconColor') as string) ?? ''"
+                :size="(fieldValue('iconSize') as number) ?? 2"
+                @update:shape="setIconShape"
+                @update:color="setIconColor"
+                @update:size="setIconSize"
+              />
+            </template>
+            <template v-else-if="id === 'sound'">
+              <SoundSelector :model-value="highlight" :sounds="reference.sounds" @update:model-value="applyTopSound($event)" />
+            </template>
+            <template v-else>
+              <NumberField
+                :model-value="fieldValue(id) as number"
+                :integer="FIELD_BY_PATH[id]?.integer"
+                :step="FIELD_BY_PATH[id]?.step"
+                :placeholder="FIELD_BY_PATH[id]?.placeholder"
+                @update:model-value="setField(id, $event)"
+              />
+            </template>
+          </div>
         </div>
-      </div>
 
-      <div v-if="availableModules.length > 0" ref="moduleMenu" class="relative inline-block pt-1">
-        <button
-          type="button"
-          @click="modulesOpen = !modulesOpen"
-          class="rounded bg-blue-700 px-3 py-1.5 text-sm text-white hover:bg-blue-600"
-        >
-          + Add module
-        </button>
-        <div
-          v-if="modulesOpen"
-          class="absolute left-0 top-full z-30 mt-1 w-64 rounded border border-neutral-700 bg-neutral-900 py-1 shadow-lg"
-        >
+        <div v-if="availableModules.length > 0" ref="moduleMenu" class="relative inline-block pt-1">
           <button
-            v-for="id in availableModules"
-            :key="id"
             type="button"
-            @click="chooseModule(id)"
-            class="block w-full px-3 py-1.5 text-left text-sm text-neutral-300 hover:bg-neutral-800"
+            @click="modulesOpen = !modulesOpen"
+            class="rounded bg-blue-700 px-3 py-1.5 text-sm text-white hover:bg-blue-600"
           >
-            {{ MODULE_LABELS[id] }}
+            + Add module
           </button>
+          <div
+            v-if="modulesOpen"
+            class="absolute left-0 top-full z-30 mt-1 w-64 rounded border border-neutral-700 bg-neutral-900 py-1 shadow-lg"
+          >
+            <button
+              v-for="id in availableModules"
+              :key="id"
+              type="button"
+              @click="chooseModule(id)"
+              class="block w-full px-3 py-1.5 text-left text-sm text-neutral-300 hover:bg-neutral-800"
+            >
+              {{ MODULE_LABELS[id] }}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </details>
   </div>
 </template>

@@ -88,22 +88,33 @@ function onKeydown(event: KeyboardEvent) {
 
 <template>
   <div ref="root" class="relative">
-    <button
-      type="button"
-      @click="toggleOpen"
-      class="flex min-h-9 w-full flex-wrap items-center gap-1 rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-left text-sm"
-    >
-      <span v-for="value in selected" :key="value" class="inline-flex items-center gap-1 rounded bg-neutral-800 px-1.5 py-0.5 text-xs">
-        {{ value }}
-        <span class="cursor-pointer text-neutral-400 hover:text-white" @click.stop="toggle(value)">×</span>
-      </span>
-      <span v-if="selected.length === 0" class="text-neutral-500">None selected</span>
-    </button>
+    <div class="flex min-h-9 w-full flex-wrap items-center gap-1 rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-sm">
+      <button
+        v-for="value in selected"
+        :key="value"
+        type="button"
+        class="rounded bg-neutral-800 px-1.5 py-0.5 text-xs text-neutral-200 hover:bg-neutral-700"
+        :aria-label="`Remove ${value}`"
+        @click="toggle(value)"
+      >
+        {{ value }} <span aria-hidden="true">×</span>
+      </button>
+      <button
+        type="button"
+        class="min-h-6 flex-1 text-left text-xs text-neutral-400 hover:text-white"
+        :aria-expanded="open"
+        @click="toggleOpen"
+      >
+        {{ selected.length ? "+ Add more…" : "Choose…" }}
+      </button>
+    </div>
 
     <div v-if="open" class="absolute z-20 mt-1 w-full rounded border border-neutral-700 bg-neutral-900 shadow-lg">
       <input
         ref="searchInput"
         v-model="query"
+        type="search"
+        aria-label="Search options"
         placeholder="Search…"
         class="w-full border-b border-neutral-700 bg-transparent px-2 py-1.5 text-sm outline-none"
         @keydown="onKeydown"

@@ -15,6 +15,7 @@ import {
   whetstoneRecipe,
 } from "../src/filters/shared"
 import { joinSections } from "../src/filters/shared/sections/composition"
+import { compileFilter } from "../src/filters/shared/compile"
 import { resolveShieldProgressionMode } from "../src/filters/shared/sections/options"
 import { resolveMixedItemClassWeaponQuery, resolveWeaponBaseTypes } from "../src/filters/shared/sections/weapon-queries"
 import rule from "../src/rule"
@@ -428,15 +429,6 @@ describe("early", () => {
 
     expect(output).not.toMatch('"Rustic"')
   })
-
-  test("a manual early weapon max area level overrides the early max area level", () => {
-    const withoutManual = early({ earlyWeapons: { itemClasses: ["One Hand Axes"] }, earlyMaxAreaLevel: 12 })
-    const withManual = early({ earlyWeapons: { itemClasses: ["One Hand Axes"], maxAreaLevel: 30 }, earlyMaxAreaLevel: 12 })
-
-    expect(withoutManual).toMatch(/AreaLevel <= 12/)
-    expect(withoutManual).not.toMatch(/AreaLevel <= 30/)
-    expect(withManual).toMatch(/AreaLevel <= 30/)
-  })
 })
 
 describe("tinctures", () => {
@@ -496,6 +488,62 @@ describe("shield progression", () => {
 })
 
 describe("weapon queries", () => {
+  test("a single weapon phase needs no end area level", () => {
+    const output = compileFilter({
+      buildProfile: { weaponPhases: [{ baseTypes: ["Rusted Hatchet"] }] },
+      buildSpecificOptions: {},
+    })
+    const weaponSection = output.split("### Preferred Weapons")[1].split("### Six Sockets")[0]
+    expect(weaponSection).toContain('BaseType "Rusted Hatchet"')
+    expect(weaponSection).toContain("AreaLevel <= 7")
+    expect(weaponSection).not.toContain("AreaLevel >= 29")
+  })
+
+  test("caps each weapon phase by both its end area and the base's drop-level overlap", () => {
+    const output = compileFilter({
+      buildProfile: {
+        weaponPhases: [
+          { itemClasses: ["One Hand Axes", "Two Hand Axes"], untilAreaLevel: 28 },
+          { itemClasses: ["Claws"], baseTypes: ["Gilded Axe"] },
+        ],
+      },
+      buildSpecificOptions: {},
+    })
+    const section = output.split("### Preferred Weapons")[1].split("### Six Sockets")[0]
+    expect(section).toContain("AreaLevel <= 28")
+    expect(section).toContain("AreaLevel >= 29")
+    expect(section).toContain('BaseType "Gilded Axe"')
+    expect(section).toContain("AreaLevel <= 7")
+    const gildedRules = section.split(/\nShow\n/).filter((block) => block.includes('BaseType "Gilded Axe"'))
+    expect(gildedRules.length).toBeGreaterThan(0)
+    expect(gildedRules.filter((block) => block.includes("AreaLevel >= 0")).every((block) => block.includes("AreaLevel <= 28"))).toBe(true)
+    expect(gildedRules.some((block) => block.includes("AreaLevel >= 29"))).toBe(true)
+    const rustedRules = section.split(/\nShow\n/).filter((block) => block.includes('BaseType "Rusted Hatchet"'))
+    expect(rustedRules.length).toBeGreaterThan(0)
+    expect(rustedRules.every((block) => !block.includes("AreaLevel >= 29"))).toBe(true)
+  })
+
+  test("phase-specific socket highlights stop when their phase ends", () => {
+    const output = compileFilter({
+      buildProfile: { weaponPhases: [{ itemClasses: ["One Hand Axes"], untilAreaLevel: 5 }, { itemClasses: ["Claws"] }] },
+      buildSpecificOptions: {},
+    })
+    const socketSection = output.split("### Early Sockets")[1].split("### Flasks")[0]
+    const oldWeaponRules = socketSection.split(/\nShow\n/).filter((block) => block.includes('BaseType "Rusted Hatchet"'))
+    expect(oldWeaponRules.length).toBeGreaterThan(0)
+    expect(oldWeaponRules.every((block) => block.includes("AreaLevel <= 5"))).toBe(true)
+    expect(socketSection).toContain("AreaLevel >= 6")
+  })
+
+  test("rejects a weapon phase without an end before another phase", () => {
+    expect(() =>
+      compileFilter({
+        buildProfile: { weaponPhases: [{ itemClasses: ["One Hand Axes"] }, { itemClasses: ["Claws"] }] },
+        buildSpecificOptions: {},
+      }),
+    ).toThrow(/needs an end area level/)
+  })
+
   test("does not treat an empty preferred-weapon selection as all weapons for early sockets", () => {
     const output = earlySockets({ preferredWeapons: { weaponCutoffOverlap: 5 } })
     expect(output).not.toContain("BaseType")

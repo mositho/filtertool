@@ -338,7 +338,9 @@ const styleSections = computed(() => {
   return [...STYLE_SECTIONS, { title: "Other", keys: other }]
 })
 
-const collapsed = ref<Record<string, boolean>>({})
+const collapsed = ref<Record<string, boolean>>(
+  Object.fromEntries([...STYLE_SECTIONS.map((section) => section.title), "Other"].map((key) => [key, true])),
+)
 
 const STYLE_GRID_TEMPLATE = "minmax(7rem, 1fr) 2.75rem 2.75rem 2.75rem 3.5rem 4rem 5rem minmax(10rem, 2fr)"
 
@@ -346,7 +348,7 @@ function toggleSection(title: string) {
   collapsed.value[title] = !collapsed.value[title]
 }
 
-const defaultsCollapsed = ref<Record<string, boolean>>({})
+const defaultsCollapsed = ref<Record<string, boolean>>(Object.fromEntries(DEFAULTS_SCHEMA.map((group) => [group.key, true])))
 
 function isDefaultsCollapsed(key: string): boolean {
   return !!defaultsCollapsed.value[key]

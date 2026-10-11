@@ -21,6 +21,7 @@ import type {
   NormalItemsConfig,
   RareItemsConfig,
   TincturesConfig,
+  WeaponPhaseConfig,
 } from "./options"
 import { buildFlaskSeries, buildUtilityFlaskRules } from "./rule-builders"
 
@@ -199,6 +200,32 @@ export const preferredWeapons = ({ preferredWeapons }: Partial<BuildProfile>) =>
   }
 
   return withHeading("Preferred Weapons", compiledRules)
+}
+
+/** Each phase owns a disjoint area-level interval; a base's drop-level cutoff can end it earlier. */
+export const weaponPhases = (phases: readonly WeaponPhaseConfig[]) => {
+  let fromAreaLevel = 0
+  const rules: Rule[] = []
+  for (const [index, phase] of phases.entries()) {
+    const { untilAreaLevel, ...highlight } = phase
+    if (untilAreaLevel !== undefined && (!Number.isInteger(untilAreaLevel) || untilAreaLevel < fromAreaLevel)) {
+      throw new Error(`Weapon phase ${index + 1} must end at or after area level ${fromAreaLevel}.`)
+    }
+    if (untilAreaLevel === undefined && index < phases.length - 1) {
+      throw new Error(`Weapon phase ${index + 1} needs an end area level before the next phase.`)
+    }
+    rules.push(
+      ...buildHighlightedBaseTypeRules({
+        ...highlight,
+        weaponCutoffOverlap: highlight.weaponCutoffOverlap ?? 5,
+        minAreaLevel: fromAreaLevel,
+        maxAreaLevel: untilAreaLevel,
+      }),
+    )
+    if (untilAreaLevel !== undefined) fromAreaLevel = untilAreaLevel + 1
+  }
+  const compiled = compileRules(...rules)
+  return compiled ? withHeading("Preferred Weapons", compiled) : ""
 }
 
 export const highlightedEquipment = ({ highlights = [] }: HighlightedEquipmentConfig = {}) => {

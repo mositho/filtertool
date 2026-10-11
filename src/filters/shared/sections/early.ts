@@ -4,63 +4,106 @@ import { filterStyles, styleMixin } from "../styles"
 import { manifestSoundFile } from "../../../sounds/paths"
 import { MANIFEST_BY_ID } from "../../../sounds/manifest"
 import { compileRules, withHeading } from "./composition"
-import { buildHighlightedBaseTypeRules } from "./highlighted-equipment"
 import { ARMOUR_CLASSES, defenceMixinMap } from "./item-classes"
 import type { BuildProfile, EarlyConfig } from "./options"
 import { resolveShieldProgressionMode } from "./options"
 import { resolveSharedWeaponQuery, resolveWeaponBaseTypes } from "./weapon-queries"
+import { WEAPON_BASE_DATA } from "../../../types/weapon-base-data"
 
 const RUSTIC_SASH_MAX_AREA_LEVEL = 12
 
 export const twilightStrand = () => withHeading("Twilight Strand", compileRules(rule().rarity("==", "Normal").areaLevel("==", 1).size(45)))
 
 export const earlySockets = ({
-  earlyWeapons,
   preferredWeapons,
+  weaponPhases,
   twoSocketMaxAreaLevel = filterDefaults.early.twoSocketMaxAreaLevel,
   threeSocketMaxAreaLevel = filterDefaults.early.threeSocketMaxAreaLevel,
 }: Partial<BuildProfile> & EarlyConfig = {}) => {
-  const resolvedEarlyWeapons = resolveSharedWeaponQuery({ earlyWeapons, preferredWeapons })
-  const hasWeaponTargets = resolvedEarlyWeapons.itemClasses.length > 0 || resolvedEarlyWeapons.baseTypes.length > 0
-  const resolvedWeaponBaseTypes = hasWeaponTargets
-    ? resolveWeaponBaseTypes({
-        itemClasses: resolvedEarlyWeapons.itemClasses,
-        baseTypes: resolvedEarlyWeapons.baseTypes,
+  if (weaponPhases === undefined) {
+    const query = resolveSharedWeaponQuery({ preferredWeapons })
+    const hasTargets = query.itemClasses.length > 0 || query.baseTypes.length > 0
+    const bases = hasTargets ? resolveWeaponBaseTypes({ itemClasses: query.itemClasses, baseTypes: query.baseTypes }) : []
+    const itemClasses = [...ARMOUR_CLASSES, ...query.itemClasses]
+    return withHeading(
+      "Early Sockets",
+      compileRules(
+        rule()
+          .sockets("==", 2)
+          .itemClass(...itemClasses)
+          .areaLevel("<=", twoSocketMaxAreaLevel)
+          .size(40),
+        bases.length > 0 &&
+          rule()
+            .sockets("==", 2)
+            .baseType(...bases)
+            .areaLevel("<=", twoSocketMaxAreaLevel)
+            .size(40),
+        rule()
+          .sockets("==", 3)
+          .itemClass(...itemClasses)
+          .areaLevel("<=", threeSocketMaxAreaLevel)
+          .size(45),
+        bases.length > 0 &&
+          rule()
+            .sockets("==", 3)
+            .baseType(...bases)
+            .areaLevel("<=", threeSocketMaxAreaLevel)
+            .size(45),
+      ),
+    )
+  }
+
+  const weaponTargets = weaponPhases.map((phase) => ({ ...phase, ...resolveSharedWeaponQuery({ preferredWeapons: phase }) }))
+  const dropLevels = new Map<string, number>(WEAPON_BASE_DATA.map((weapon) => [weapon.baseType, weapon.dropLevel]))
+  let fromAreaLevel = 0
+  const weaponRules = weaponTargets.flatMap((target) => {
+    const hasTargets = target.itemClasses.length > 0 || target.baseTypes.length > 0
+    const bases = hasTargets
+      ? resolveWeaponBaseTypes({ itemClasses: target.itemClasses, baseTypes: target.baseTypes, minAps: target.minAps })
+      : []
+    const phaseEnd = target.untilAreaLevel
+    const from = fromAreaLevel
+    if (phaseEnd !== undefined) fromAreaLevel = phaseEnd + 1
+    return (
+      [
+        { count: 2, cutoff: twoSocketMaxAreaLevel, size: 40 },
+        { count: 3, cutoff: threeSocketMaxAreaLevel, size: 45 },
+      ] as const
+    ).flatMap(({ count, cutoff, size }) => {
+      return bases.flatMap((baseType) => {
+        const dropLevel = dropLevels.get(baseType)
+        const maximum = Math.min(
+          cutoff,
+          phaseEnd ?? cutoff,
+          dropLevel === undefined ? cutoff : dropLevel + (target.weaponCutoffOverlap ?? 5),
+        )
+        return from <= maximum
+          ? [rule().sockets("==", count).baseType(baseType).areaLevel("<=", maximum).areaLevel(">=", from).size(size)]
+          : []
       })
-    : []
-  const itemClasses = [...ARMOUR_CLASSES, ...resolvedEarlyWeapons.itemClasses]
+    })
+  })
 
   return withHeading(
     "Early Sockets",
     compileRules(
       rule()
         .sockets("==", 2)
-        .itemClass(...itemClasses)
+        .itemClass(...ARMOUR_CLASSES)
         .areaLevel("<=", twoSocketMaxAreaLevel)
         .size(40),
-      resolvedWeaponBaseTypes.length > 0 &&
-        rule()
-          .sockets("==", 2)
-          .baseType(...resolvedWeaponBaseTypes)
-          .areaLevel("<=", twoSocketMaxAreaLevel)
-          .size(40),
       rule()
         .sockets("==", 3)
-        .itemClass(...itemClasses)
+        .itemClass(...ARMOUR_CLASSES)
         .areaLevel("<=", threeSocketMaxAreaLevel)
         .size(45),
-      resolvedWeaponBaseTypes.length > 0 &&
-        rule()
-          .sockets("==", 3)
-          .baseType(...resolvedWeaponBaseTypes)
-          .areaLevel("<=", threeSocketMaxAreaLevel)
-          .size(45),
+      ...weaponRules,
     ),
   )
 }
 
 export const early = ({
-  earlyWeapons,
   shieldProgression,
   preferredArmour = filterDefaults.preferredArmour,
   earlyMaxAreaLevel = filterDefaults.early.earlyMaxAreaLevel,
@@ -69,16 +112,9 @@ export const early = ({
 }: Partial<BuildProfile> & EarlyConfig) => {
   const shieldMode = resolveShieldProgressionMode(shieldProgression)
   const showRusticSash = misc?.showRusticSash ?? filterDefaults.misc.showRusticSash
-  const hasEarlyWeaponTargets = (earlyWeapons?.itemClasses?.length ?? 0) > 0 || (earlyWeapons?.baseTypes?.length ?? 0) > 0
-  const earlyWeaponHighlights =
-    earlyWeapons && hasEarlyWeaponTargets
-      ? buildHighlightedBaseTypeRules({ ...earlyWeapons, maxAreaLevel: earlyWeapons.maxAreaLevel ?? earlyMaxAreaLevel })
-      : []
-
   return withHeading(
     "Early",
     compileRules(
-      ...earlyWeaponHighlights,
       rule()
         .itemClass("Boots")
         .areaLevel("<=", earlyBootsMaxAreaLevel)

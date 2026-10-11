@@ -37,6 +37,7 @@ const fullHighlight: Complete<HighlightedBaseTypeConfig> = {
   magic: { iconColor: "Blue", iconShape: "UpsideDownHouse", iconSize: 2, soundId: 2, soundFileName: "custom.mp3", tts: "Magic" },
   rare: { iconColor: "Yellow", iconShape: "UpsideDownHouse", iconSize: 2, soundId: 3, soundFileName: "custom.mp3", tts: "Rare" },
 }
+const { minAreaLevel: _minAreaLevel, maxAreaLevel: _maxAreaLevel, ...phaseHighlight } = fullHighlight
 
 /**
  * A fully-populated config. Typed with `Complete<>` so that adding, removing or
@@ -47,7 +48,7 @@ const canonicalConfig: Complete<BuildProfile> & Complete<BuildSpecificOptions> =
   preferredColors: ["R", "G"],
   preferredArmour: ["armour"],
   preferredWeapons: fullHighlight,
-  earlyWeapons: fullHighlight,
+  weaponPhases: [{ ...phaseHighlight, untilAreaLevel: 28 }],
   shieldProgression: "early",
   links: {
     twoLinkMaxAreaLevel: 9,
@@ -123,5 +124,20 @@ describe("form schema drift", () => {
       const field = flasks?.fields.find((entry) => entry.path === "flasks.utilityFlasks")
       expect(field?.options).toEqual(["Jade", "Quartz", "Quicksilver", "Silver", "Granite"])
     }
+  })
+
+  it("does not offer per-filter controls as ineffective global defaults", () => {
+    const paths = DEFAULTS_SCHEMA.flatMap((group) => [
+      ...group.fields.map((field) => field.path),
+      ...(group.subsections ?? []).flatMap((section) => [
+        ...section.fields.map((field) => field.path),
+        ...(section.subsections ?? []).flatMap((nested) => nested.fields.map((field) => field.path)),
+      ]),
+    ])
+    expect(paths).not.toContain("weaponPhases")
+    expect(paths).not.toContain("gemCallouts.gems")
+    expect(paths).not.toContain("flasks.lifeMaxAreaLevel")
+    expect(paths).not.toContain("flasks.manaMaxAreaLevel")
+    expect(paths).toContain("rareItems.partOneMaxAreaLevel")
   })
 })

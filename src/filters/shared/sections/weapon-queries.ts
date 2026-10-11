@@ -50,21 +50,9 @@ export const resolveMixedItemClassWeaponQuery = ({
     ],
   }
 }
-export const resolveSharedWeaponQuery = ({
-  earlyWeapons,
-  preferredWeapons,
-}: {
-  earlyWeapons?: HighlightedBaseTypeConfig
-  preferredWeapons?: HighlightedBaseTypeConfig
-}) => {
-  const hasExplicitTargets = (earlyWeapons?.itemClasses?.length ?? 0) > 0 || (earlyWeapons?.baseTypes?.length ?? 0) > 0
-  return hasExplicitTargets
-    ? {
-        itemClasses: earlyWeapons?.itemClasses?.filter(isWeaponItemClass) ?? [],
-        baseTypes: earlyWeapons?.baseTypes?.filter(isWeaponBaseType) ?? [],
-      }
-    : {
-        itemClasses: preferredWeapons?.itemClasses?.filter(isWeaponItemClass) ?? [],
-        baseTypes: preferredWeapons?.baseTypes?.filter(isWeaponBaseType) ?? [],
-      }
+export const resolveSharedWeaponQuery = ({ preferredWeapons }: { preferredWeapons?: HighlightedBaseTypeConfig }) => {
+  return {
+    itemClasses: preferredWeapons?.itemClasses?.filter(isWeaponItemClass) ?? [],
+    baseTypes: preferredWeapons?.baseTypes?.filter(isWeaponBaseType) ?? [],
+  }
 }

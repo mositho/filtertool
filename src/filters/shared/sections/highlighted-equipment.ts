@@ -191,6 +191,7 @@ export const buildHighlightedBaseTypeRules = ({
   })
   const weapons = weaponBaseTypes.flatMap((baseType) => {
     const automatic = cutoff(baseType, weaponCutoffOverlap)
+    if (automatic !== undefined && minAreaLevel !== undefined && automatic < minAreaLevel) return []
     return makeRules(
       [baseType],
       undefined,

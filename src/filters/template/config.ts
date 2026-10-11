@@ -5,11 +5,10 @@ export const buildProfile = {
   // preferredColors: ["R", "G", "B"],
   // preferredArmour: ["armour", "evasion", "armour-evasion"],
   // preferredWeapons: { itemClasses: ["Two Hand Axes", "Two Hand Maces"], minAps: 1.3 },
-  // earlyWeapons: {
-  //   itemClasses: ["Two Hand Axes", "Two Hand Maces"],
-  //   baseTypes: ["Stone Axe", "Driftwood Maul"],
-  //   minAps: 1.3,
-  // },
+  // weaponPhases: [
+  //   { itemClasses: ["Two Hand Axes"], baseTypes: ["Driftwood Maul"], untilAreaLevel: 28 },
+  //   { itemClasses: ["One Hand Swords"] }, // starts at area level 29
+  // ],
   // shieldProgression: "early",
 } satisfies BuildProfile
 
@@ -17,11 +16,11 @@ export const buildSpecificOptions = {
   links: {
     // twoLinkMaxAreaLevel: 9,
     // threeLinkMaxAreaLevel: 33,
-    // fourLinkMaxAreaLevel: 53,
+    // fourLinkMaxAreaLevel: 61,
     // genericThreeLinksEnabled: false,
     // genericFourLinksEnabled: false,
-    // twoLinkSoundId: 2,
-    // threeLinkSoundId: 3,
+    // threeLinkTtsCutoffLevel: 23,
+    // fourLinkTtsCutoffLevel: 50,
   },
   highlightedEquipment: {
     // Add build-specific bases or item classes here.
@@ -39,6 +38,11 @@ export const buildSpecificOptions = {
     // beltMaxAreaLevel: 24,
   },
   early: {},
+  flasks: {
+    // utilityFlasks: ["Jade", "Quartz"],
+    // lifeMaxAreaLevel: 40,
+    // manaMaxAreaLevel: 40,
+  },
   tinctures: {
     // baseTypes: ["Prismatic Tincture"],
   },
@@ -46,7 +50,8 @@ export const buildSpecificOptions = {
     // maxAreaLevel: 70, // hard cutoff; rare items are uncapped when this is unset
   },
   magicItems: {
-    // maxAreaLevel: 9,
+    // bigMaxAreaLevel: 9,
+    // smallMaxAreaLevel: 24,
   },
   normalItems: {
     // maxAreaLevel: 4,

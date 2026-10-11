@@ -1,6 +1,15 @@
 import type { BuildProfile, BuildSpecificOptions, HighlightedBaseTypeConfig } from "../filters/shared/sections/options"
 
-export type SchemaControl = "number" | "boolean" | "select" | "multiselect" | "link-colors" | "highlight-list" | "highlight" | "sound"
+export type SchemaControl =
+  | "number"
+  | "boolean"
+  | "select"
+  | "multiselect"
+  | "link-colors"
+  | "highlight-list"
+  | "highlight"
+  | "weapon-phases"
+  | "sound"
 
 export type SchemaField = {
   path: string
@@ -209,17 +218,6 @@ const buildProfilePreferredWeapons: SchemaField[] = [
   },
 ]
 
-const buildEarlyWeapons: SchemaField[] = [
-  {
-    path: "earlyWeapons",
-    label: "Early Weapons",
-    control: "highlight",
-    previewSection: "Early",
-    weaponsOnly: true,
-    tooltip: "Weapons to highlight during the early campaign, capped by the generic early max area level.",
-  },
-]
-
 const buildEarlyShield: SchemaField[] = [
   {
     path: "shieldProgression",
@@ -304,6 +302,13 @@ export const BUILD_PROFILE_SCHEMA: FieldGroup[] = [
       { key: "shieldProgression", title: "Shield progression", previewSection: "Early", fields: buildEarlyShield },
       { key: "misc", title: "Misc", fields: buildProfileMisc },
     ],
+  },
+  {
+    key: "weaponProgression",
+    title: "Weapon progression",
+    description: "Pick weapon classes and bases for each campaign phase. Advanced styling stays optional.",
+    previewSection: "Preferred Weapons",
+    fields: [{ path: "weaponPhases", label: "Weapon phases", control: "weapon-phases" }],
   },
 ]
 
@@ -518,13 +523,10 @@ export const BUILD_SPECIFIC_SCHEMA: FieldGroup[] = [
   {
     key: "early",
     title: "Early",
-    description: "Early-campaign weapon and item highlights.",
+    description: "Early-campaign socket and item cutoffs.",
     previewSection: "Early",
     fields: [],
-    subsections: [
-      { key: "weapons", title: "Weapons", root: "buildProfile", previewSection: "Early", fields: buildEarlyWeapons },
-      { key: "generic", title: "Area level cutoffs", previewSection: "Early", fields: buildEarlyGeneric },
-    ],
+    subsections: [{ key: "generic", title: "Area level cutoffs", previewSection: "Early", fields: buildEarlyGeneric }],
   },
   {
     key: "links",
@@ -616,8 +618,9 @@ export function schemaLeafPaths(): string[] {
   for (const group of [...BUILD_PROFILE_SCHEMA, ...BUILD_SPECIFIC_SCHEMA]) {
     const fields = [...group.fields, ...(group.subsections ?? []).flatMap(collectFields)]
     for (const field of fields) {
-      if (field.control === "highlight-list" || field.control === "highlight") {
+      if (field.control === "highlight-list" || field.control === "highlight" || field.control === "weapon-phases") {
         for (const highlightField of HIGHLIGHT_FIELDS) {
+          if (field.control === "weapon-phases" && ["minAreaLevel", "maxAreaLevel"].includes(highlightField.path)) continue
           paths.push(`${field.path}.${highlightField.path}`)
         }
         for (const topLevelPath of HIGHLIGHT_TOP_LEVEL_PATHS) {
@@ -634,6 +637,7 @@ export function schemaLeafPaths(): string[] {
         for (const stylePath of STYLE_PATHS) {
           paths.push(`${field.path}.${stylePath}`)
         }
+        if (field.control === "weapon-phases") paths.push(`${field.path}.untilAreaLevel`)
       } else {
         paths.push(field.path)
       }
@@ -669,7 +673,14 @@ export const EMPTY_FILTER_CONFIG = {
 }
 
 function isHighlightControl(control: SchemaControl): boolean {
-  return control === "highlight" || control === "highlight-list"
+  return control === "highlight" || control === "highlight-list" || control === "weapon-phases"
+}
+
+// These are per-filter controls: their sections have no shared-default fallback.
+const PER_FILTER_ONLY_FIELDS = new Set(["gemCallouts.gems", "flasks.lifeMaxAreaLevel", "flasks.manaMaxAreaLevel"])
+
+function isSharedDefaultField(field: SchemaField): boolean {
+  return !isHighlightControl(field.control) && !PER_FILTER_ONLY_FIELDS.has(field.path)
 }
 
 function stripHighlights(groups: FieldGroup[]): FieldGroup[] {
@@ -678,7 +689,7 @@ function stripHighlights(groups: FieldGroup[]): FieldGroup[] {
     const stripped = subsections
       .map((subsection) => ({
         ...subsection,
-        fields: subsection.fields.filter((field) => !isHighlightControl(field.control)),
+        fields: subsection.fields.filter(isSharedDefaultField),
         subsections: stripSubsections(subsection.subsections),
       }))
       .filter((subsection) => subsection.fields.length > 0 || (subsection.subsections?.length ?? 0) > 0)
@@ -688,7 +699,7 @@ function stripHighlights(groups: FieldGroup[]): FieldGroup[] {
   return groups
     .map((group) => ({
       ...group,
-      fields: group.fields.filter((field) => !isHighlightControl(field.control)),
+      fields: group.fields.filter(isSharedDefaultField),
       subsections: stripSubsections(group.subsections),
     }))
     .filter((group) => group.fields.length > 0 || (group.subsections?.length ?? 0) > 0)
@@ -699,4 +710,28 @@ function stripHighlights(groups: FieldGroup[]): FieldGroup[] {
  * fields, minus highlights); values come from `baseFilterDefaults` (served as
  * `baseDefaults`).
  */
-export const DEFAULTS_SCHEMA: FieldGroup[] = stripHighlights([...BUILD_PROFILE_SCHEMA, ...BUILD_SPECIFIC_SCHEMA])
+export const DEFAULTS_SCHEMA: FieldGroup[] = stripHighlights([...BUILD_PROFILE_SCHEMA, ...BUILD_SPECIFIC_SCHEMA]).map((group) =>
+  group.key === "equipment"
+    ? {
+        ...group,
+        subsections: group.subsections?.map((section) =>
+          section.key === "rarityItems"
+            ? {
+                ...section,
+                fields: [
+                  ...section.fields,
+                  {
+                    path: "rareItems.partOneMaxAreaLevel",
+                    label: "Early rare-item cutoff",
+                    control: "number" as const,
+                    min: 0,
+                    integer: true,
+                    tooltip: "Area level separating early rare-equipment rules from later ones; shared across filters.",
+                  },
+                ],
+              }
+            : section,
+        ),
+      }
+    : group,
+)

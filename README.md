@@ -44,8 +44,9 @@ On first launch a **quickstart** prompt asks for the **PoE Filter Path** (where 
 
 The filter editor is organized into sections, each matching a section of the compiled `.filter` output:
 
-- **Build profile** — socket colors and armour bases used to pick "good" links, preferred weapons, and shield progression.
-- **Early** — early-campaign weapon highlights and area-level cutoffs for sockets and boots.
+- **Build profile** — socket colors, armour bases used to pick "good" links, and shield progression.
+- **Weapon progression** — ordered, non-overlapping area-level phases selecting any mix of weapon classes and individual bases. Per-base drop-level cutoff defaults to drop level + 5; a phase's end is optional unless another phase follows. Older `earlyWeapons` configs are interpreted as a bounded phase on load; their files are not rewritten until saved.
+- **Early** — area-level cutoffs for sockets and boots.
 - **Links** — which linked-socket items are shown and when they play a sound.
 - **Equipment** — rarity thresholds (max area level, with separate cutoffs for small ≤2×2 and big >2×2 magic items), jewellery and tinctures.
 - **Highlights** — extra build-specific item highlights.
@@ -70,7 +71,7 @@ Every highlight shares the same editor:
 - **Settings** — PoE Filter Path and Sounds Folder Name. The **Sounds** subsection holds the TTS **Locale** and **Speed**, plus:
   - **Generate sounds** — regenerate every TTS sound using the current settings and sync to your PoE folder (shows live progress).
   - **Sync sounds** — clean stale files and copy the existing pack to your PoE folder.
-- **Defaults** — shared default values used when a filter leaves a field unset.
+- **Defaults** — shared default values used when a filter leaves a field unset; filter-specific highlights and gem callouts are edited on each filter instead.
 - **Styles** — colors, sizes and opacity for the built-in style names, with copy/paste and saved styles.
 
 ## Editing filters in TypeScript (alternative)

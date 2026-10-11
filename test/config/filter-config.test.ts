@@ -36,6 +36,25 @@ describe("tts serialization", () => {
 })
 
 describe("filter config serialization", () => {
+  it("round-trips staged weapon targets, area caps and per-rarity manifest sounds", () => {
+    const config = {
+      buildProfile: {
+        weaponPhases: [
+          {
+            itemClasses: ["One Hand Axes"] as const,
+            baseTypes: ["Rusted Hatchet"] as const,
+            untilAreaLevel: 28,
+            rare: { tts: MANIFEST_BY_ID.regal_orb },
+          },
+          { itemClasses: ["Claws"] as const },
+        ],
+      },
+      buildSpecificOptions: {},
+    }
+    const serialized = serializeFilterConfig(config)
+    expect(serialized.buildProfile.weaponPhases?.[0].rare?.tts).toBe("regal_orb")
+    expect(deserializeFilterConfig(serialized)).toEqual(config)
+  })
   it("snapshots manifest entries to id strings", () => {
     const serialized = serializeFilterConfig({
       buildProfile: {},
@@ -77,6 +96,21 @@ describe("filter config serialization", () => {
 })
 
 describe("filter config persistence", () => {
+  it("maps a stored early weapon highlight to a bounded phase without rewriting the file", () => {
+    const legacy = {
+      buildProfile: { earlyWeapons: { itemClasses: ["One Hand Axes"] as const, maxAreaLevel: 30, rare: { tts: "regal_orb" } } },
+      buildSpecificOptions: { early: { earlyMaxAreaLevel: 28 } },
+    }
+    writeFilterConfig(filterDir, legacy)
+    const loaded = loadFilterConfig(filterDir)
+    expect(loaded.buildProfile.weaponPhases).toEqual([
+      { itemClasses: ["One Hand Axes"], untilAreaLevel: 30, rare: { tts: MANIFEST_BY_ID.regal_orb } },
+    ])
+    expect(readFilterConfig(filterDir).buildProfile).toEqual({
+      weaponPhases: [{ itemClasses: ["One Hand Axes"], untilAreaLevel: 30, rare: { tts: "regal_orb" } }],
+    })
+    expect(JSON.parse(fs.readFileSync(path.join(filterDir, "config.json"), "utf8"))).toEqual(legacy)
+  })
   it("serializes preferredWeapons tts to a manifest id", () => {
     const serialized = serializeFilterConfig({
       buildProfile: { preferredWeapons: { itemClasses: ["Wands"], rare: { tts: MANIFEST_BY_ID.regal_orb } } },

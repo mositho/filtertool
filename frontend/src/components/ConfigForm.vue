@@ -13,6 +13,7 @@ import { getPath, setPath, deletePath } from "../path"
 import FieldInput from "./FieldInput.vue"
 import HighlightEditor from "./HighlightEditor.vue"
 import HighlightCard from "./HighlightCard.vue"
+import WeaponProgression from "./WeaponProgression.vue"
 
 const props = defineProps<{ modelValue: FilterConfig; reference: ReferenceData; defaults?: Record<string, unknown> }>()
 const emit = defineEmits<{ "update:modelValue": [value: FilterConfig]; "previewSection": [section: string] }>()
@@ -24,18 +25,12 @@ function emitChange() {
 const buildProfile = computed(() => props.modelValue.buildProfile)
 const buildSpecific = computed(() => props.modelValue.buildSpecificOptions)
 
-const weaponBaseTypes = computed(() => props.reference.weaponClasses.flatMap((c) => props.reference.baseTypesByClass[c] ?? []))
-
 function optionsFor(field: SchemaField): string[] {
   if (field.control !== "select" && field.control !== "multiselect") return []
   if (field.options && field.options.length > 0) return field.options
   switch (field.path) {
     case "preferredArmour":
       return props.reference.armourTypes
-    case "earlyWeapons.itemClasses":
-      return props.reference.weaponClasses
-    case "earlyWeapons.baseTypes":
-      return weaponBaseTypes.value
     case "jewellery.amulets":
       return props.reference.amulets
     case "tinctures.baseTypes":
@@ -112,6 +107,14 @@ const highlights = computed(() => {
   return Array.isArray(raw) ? (raw as Record<string, unknown>[]) : []
 })
 
+const weaponPhases = computed(() => (Array.isArray(buildProfile.value.weaponPhases) ? buildProfile.value.weaponPhases : []))
+
+function setWeaponPhases(value: Record<string, unknown>[]) {
+  if (value.length === 0) deletePath(buildProfile.value, "weaponPhases")
+  else setPath(buildProfile.value, "weaponPhases", value)
+  emitChange()
+}
+
 function setHighlights(value: Record<string, unknown>[]) {
   setPath(buildSpecific.value, highlightPath, value)
   emitChange()
@@ -137,7 +140,6 @@ function useHighlight(path: string) {
 
 const highlightBindings: Record<string, ReturnType<typeof useHighlight>> = {
   preferredWeapons: useHighlight("preferredWeapons"),
-  earlyWeapons: useHighlight("earlyWeapons"),
 }
 
 function isWide(field: SchemaField): boolean {
@@ -181,6 +183,7 @@ function subsectionEntries(group: FieldGroup, groupRoot: Record<string, unknown>
   const entries: SubsectionEntry[] = []
   const walk = (subsections: FieldSubsection[], parentRoot: Record<string, unknown>, depth: number) => {
     subsections.forEach((subsection, index) => {
+      if (group.key === "buildProfile" && subsection.key === "preferredWeapons") return
       const root = subsectionRoot(parentRoot, subsection)
       entries.push({ key: `${depth}-${subsection.key}`, subsection, group, root, depth, hasSiblingAbove: index > 0 })
       walk(subsection.subsections ?? [], root, depth + 1)
@@ -202,7 +205,7 @@ const buildSpecificGroups = computed(() => BUILD_SPECIFIC_SCHEMA.map((group) => 
 
 const allGroups = computed(() => [...buildProfileGroups.value, ...buildSpecificGroups.value])
 
-const collapsed = ref<Record<string, boolean>>({})
+const collapsed = ref<Record<string, boolean>>({ early: true, gems: true, highlightedEquipment: true })
 
 function isCollapsed(key: string): boolean {
   return !!collapsed.value[key]
@@ -263,6 +266,27 @@ function expandAll() {
             @change="emitChange"
             @update:highlights="setHighlights"
           />
+
+          <template v-else-if="entry.group.key === 'weaponProgression'">
+            <WeaponProgression :phases="weaponPhases" :reference="reference" @update:phases="setWeaponPhases" @change="emitChange" />
+            <details v-if="buildProfile.preferredWeapons" class="mt-4 border-t border-neutral-800 pt-3">
+              <summary class="cursor-pointer text-xs text-neutral-400">
+                Existing weapon highlights (used only before weapon phases are added)
+              </summary>
+              <p v-if="buildProfile.weaponPhases !== undefined" class="mt-2 text-xs text-amber-400">
+                These legacy highlights are inactive while weapon phases exist. Remove phases to use the existing settings again.
+              </p>
+              <div v-if="buildProfile.preferredWeapons" class="mt-3">
+                <h3 class="mb-2 text-sm text-neutral-300">Preferred weapons</h3>
+                <HighlightCard
+                  :highlight="highlightBindings.preferredWeapons.highlight.value"
+                  :reference="reference"
+                  weapons-only
+                  @change="highlightBindings.preferredWeapons.onChange"
+                />
+              </div>
+            </details>
+          </template>
 
           <template v-else>
             <div v-if="entry.group.fields.length > 0" class="grid grid-cols-1 gap-3 sm:grid-cols-2">
