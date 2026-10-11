@@ -87,14 +87,22 @@ function onKeydown(event: KeyboardEvent) {
 
 <template>
   <div ref="root" class="relative">
-    <div class="flex min-h-9 w-full flex-wrap items-center gap-1 rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-sm">
+    <div
+      class="flex min-h-9 w-full cursor-pointer flex-wrap items-center gap-1 rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-sm focus-within:border-blue-500"
+      role="group"
+      aria-label="Edit selected options"
+      tabindex="0"
+      @click="toggleOpen"
+      @keydown.enter.self.prevent="toggleOpen"
+      @keydown.space.self.prevent="toggleOpen"
+    >
       <button
         v-for="value in selected"
         :key="value"
         type="button"
         class="rounded bg-neutral-800 px-1.5 py-0.5 text-xs text-neutral-200 hover:bg-neutral-700"
         :aria-label="`Remove ${value}`"
-        @click="toggle(value)"
+        @click.stop="toggle(value)"
       >
         {{ value }} <span aria-hidden="true">×</span>
       </button>
@@ -103,7 +111,7 @@ function onKeydown(event: KeyboardEvent) {
         type="button"
         class="ml-auto shrink-0 rounded bg-blue-700 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-white hover:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
         :aria-expanded="open"
-        @click="toggleOpen"
+        @click.stop="toggleOpen"
       >
         Edit
       </button>
