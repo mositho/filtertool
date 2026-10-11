@@ -21,10 +21,13 @@ export const earlySockets = ({
   threeSocketMaxAreaLevel = filterDefaults.early.threeSocketMaxAreaLevel,
 }: Partial<BuildProfile> & EarlyConfig = {}) => {
   const resolvedEarlyWeapons = resolveSharedWeaponQuery({ earlyWeapons, preferredWeapons })
-  const resolvedWeaponBaseTypes = resolveWeaponBaseTypes({
-    itemClasses: resolvedEarlyWeapons.itemClasses,
-    baseTypes: resolvedEarlyWeapons.baseTypes,
-  })
+  const hasWeaponTargets = resolvedEarlyWeapons.itemClasses.length > 0 || resolvedEarlyWeapons.baseTypes.length > 0
+  const resolvedWeaponBaseTypes = hasWeaponTargets
+    ? resolveWeaponBaseTypes({
+        itemClasses: resolvedEarlyWeapons.itemClasses,
+        baseTypes: resolvedEarlyWeapons.baseTypes,
+      })
+    : []
   const itemClasses = [...ARMOUR_CLASSES, ...resolvedEarlyWeapons.itemClasses]
 
   return withHeading(

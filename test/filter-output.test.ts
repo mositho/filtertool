@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest"
 import { buildProfile as emptyProfile, buildSpecificOptions as emptyOptions } from "./fixtures/empty-config"
 import {
   early,
+  earlySockets,
   filterDefaults,
   gems,
   highlightedEquipment,
@@ -495,6 +496,11 @@ describe("shield progression", () => {
 })
 
 describe("weapon queries", () => {
+  test("does not treat an empty preferred-weapon selection as all weapons for early sockets", () => {
+    const output = earlySockets({ preferredWeapons: { weaponCutoffOverlap: 5 } })
+    expect(output).not.toContain("BaseType")
+  })
+
   test("preserves explicit bases and separates non-weapon classes", () => {
     expect(resolveWeaponBaseTypes({ baseTypes: ["Rusted Hatchet"] })).toContain("Rusted Hatchet")
     const query = resolveMixedItemClassWeaponQuery({ itemClasses: ["Rings", "One Hand Axes"], minAps: 1 })
