@@ -6,7 +6,7 @@ import { WEAPON_CLASSES, type WeaponItemClass } from "./item-classes"
 export type WeaponBaseType = GeneratedWeaponBaseType
 export type WeaponBaseQuery = { itemClasses?: readonly WeaponItemClass[]; minAps?: number; maxDropLevel?: number }
 export const isWeaponItemClass = (itemClass: ItemClass): itemClass is WeaponItemClass =>
-  WEAPON_CLASSES.includes(itemClass as WeaponItemClass)
+  WEAPON_CLASSES.includes(itemClass as (typeof WEAPON_CLASSES)[number]) || itemClass === "Shields"
 export const isWeaponBaseType = (baseType: BaseType): baseType is WeaponBaseType =>
   WEAPON_BASE_DATA.some((weapon) => weapon.baseType === baseType)
 export const findWeaponBaseTypes = ({ itemClasses, minAps, maxDropLevel }: WeaponBaseQuery): WeaponBaseType[] =>

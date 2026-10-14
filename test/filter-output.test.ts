@@ -67,7 +67,10 @@ describe("weapon progression shields", () => {
   test("allows shields as phase item classes", () => {
     const output = weaponPhases([{ itemClasses: ["Shields"], maxAreaLevel: 28 }])
 
-    expect(output).toContain('Class "Shields"')
+    expect(output).toContain('BaseType "Splintered Tower Shield"')
+    expect(output).toContain('BaseType "Twig Spirit Shield"')
+    expect(output).not.toContain('BaseType "Rusted Hatchet"')
+    expect(output).toMatch(/BaseType "[^"]+ Shield" "[^"]+ Shield"/)
     expect(output).toContain("AreaLevel <= 28")
   })
 })
@@ -99,7 +102,7 @@ describe("highlighted equipment", () => {
     })
     const blocks = output.split(/\nShow\n/).filter((block) => block.includes("Rarity == Normal"))
     expect(blocks).toHaveLength(2)
-    expect(blocks.some((block) => block.includes('Class "Rings"') && !block.includes("BaseType"))).toBe(true)
+    expect(blocks.some((block) => block.includes('Class == "Rings"') && !block.includes("BaseType"))).toBe(true)
     expect(blocks.some((block) => block.includes('BaseType "Rusted Hatchet"') && !block.includes("Class"))).toBe(true)
   })
 
@@ -112,6 +115,15 @@ describe("highlighted equipment", () => {
     expect(output).toMatch(/Rarity == Normal/)
     expect(output).not.toMatch(/Rarity == Rare/)
     expect(output).not.toMatch(/Rarity == Magic/)
+  })
+
+  test("matches selected item classes exactly", () => {
+    const output = highlightedEquipment({
+      highlights: [{ itemClasses: ["Shields"], rarities: ["Normal"] }],
+    })
+
+    expect(output).toContain('Class == "Shields"')
+    expect(output).not.toContain('Class "Shields"')
   })
 
   test("applies per-rarity icons", () => {

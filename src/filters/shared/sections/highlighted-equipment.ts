@@ -26,7 +26,7 @@ export const applyHighlightTargets = (
   { baseTypes, itemClasses }: { baseTypes?: readonly BaseType[]; itemClasses?: readonly ItemClass[] },
 ) => {
   if (baseTypes?.length) target.baseType(...baseTypes)
-  if (itemClasses?.length) target.itemClass(...itemClasses)
+  if (itemClasses?.length) target.itemClassExact(...itemClasses)
   return target
 }
 
@@ -194,15 +194,16 @@ export const buildHighlightedBaseTypeRules = ({
     baseTypes: baseTypes?.filter(isWeaponBaseType) ?? [],
     minAps,
   })
-  const weapons = weaponBaseTypes.flatMap((baseType) => {
+  const weaponsByMaximum = new Map<number | undefined, BaseType[]>()
+  for (const baseType of weaponBaseTypes) {
     const automatic = cutoff(baseType, weaponCutoffOverlap)
-    if (automatic !== undefined && minAreaLevel !== undefined && automatic < minAreaLevel) return []
-    return makeRules(
-      [baseType],
-      undefined,
-      maxAreaLevel !== undefined && automatic !== undefined ? Math.min(maxAreaLevel, automatic) : (maxAreaLevel ?? automatic),
-    )
-  })
+    if (automatic !== undefined && minAreaLevel !== undefined && automatic < minAreaLevel) continue
+    const maximum = maxAreaLevel !== undefined && automatic !== undefined ? Math.min(maxAreaLevel, automatic) : (maxAreaLevel ?? automatic)
+    const groupedBaseTypes = weaponsByMaximum.get(maximum) ?? []
+    groupedBaseTypes.push(baseType)
+    weaponsByMaximum.set(maximum, groupedBaseTypes)
+  }
+  const weapons = [...weaponsByMaximum].flatMap(([maximum, groupedBaseTypes]) => makeRules(groupedBaseTypes, undefined, maximum))
   const nonWeaponBases = baseTypes?.filter((baseType) => !isWeaponBaseType(baseType)) ?? []
   return [...weapons, ...makeTargetRules(nonWeaponBases, nonWeaponClasses)]
 }
