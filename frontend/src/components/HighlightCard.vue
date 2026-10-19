@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch, onMounted, onBeforeUnmount } from "vue"
-import { HIGHLIGHT_FIELDS, HIGHLIGHT_RARITIES, RARITY_HIGHLIGHT_KEYS, SIZE_OPERATORS, SOUND_FIELD_PATHS } from "@schema/form-schema"
+import { HIGHLIGHT_FIELDS, HIGHLIGHT_RARITIES, SIZE_OPERATORS, SOUND_FIELD_PATHS } from "@schema/form-schema"
 import type { ReferenceData } from "../api"
 import { getPath, setPath, deletePath } from "../path"
 import FieldLabel from "./FieldLabel.vue"
@@ -171,11 +171,6 @@ function setRarities(value: string[]) {
 }
 
 function setPerRarity(value: boolean) {
-  if (value) {
-    for (const path of ["iconColor", "iconShape", "iconSize", "tts", "soundFileName", "soundId"]) deletePath(props.highlight, path)
-  } else {
-    for (const key of RARITY_HIGHLIGHT_KEYS) deletePath(props.highlight, key)
-  }
   setField("perRarityCustomization", value || undefined)
   active.value = computeActive()
   persistModules()
