@@ -12,6 +12,7 @@ import {
   deserializeTts,
   serializeTts,
 } from "../../src/filters/shared/config-loader"
+import { TEST_BASE_TYPE } from "../fixtures/base-types"
 
 let filterDir: string
 
@@ -41,9 +42,9 @@ describe("filter config serialization", () => {
       buildProfile: {
         weaponPhases: [
           {
-            name: "Early axes",
+            name: "Selected weapons",
             itemClasses: ["One Hand Axes"] as const,
-            baseTypes: ["Rusted Hatchet"] as const,
+            baseTypes: [TEST_BASE_TYPE] as const,
             maxAreaLevel: 28,
             rare: { tts: MANIFEST_BY_ID.regal_orb },
           },
@@ -53,7 +54,7 @@ describe("filter config serialization", () => {
       buildSpecificOptions: {},
     }
     const serialized = serializeFilterConfig(config)
-    expect(serialized.buildProfile.weaponPhases?.[0].name).toBe("Early axes")
+    expect(serialized.buildProfile.weaponPhases?.[0].name).toBe("Selected weapons")
     expect(serialized.buildProfile.weaponPhases?.[0].rare?.tts).toBe("regal_orb")
     expect(deserializeFilterConfig(serialized)).toEqual(config)
   })
@@ -61,7 +62,7 @@ describe("filter config serialization", () => {
     const serialized = serializeFilterConfig({
       buildProfile: {},
       buildSpecificOptions: {
-        highlightedEquipment: { highlights: [{ baseTypes: ["Rusted Hatchet"], rare: { tts: MANIFEST_BY_ID.regal_orb } }] },
+        highlightedEquipment: { highlights: [{ baseTypes: [TEST_BASE_TYPE], rare: { tts: MANIFEST_BY_ID.regal_orb } }] },
       },
     })
     expect(serialized.buildSpecificOptions.highlightedEquipment?.highlights?.[0].rare?.tts).toBe("regal_orb")
@@ -87,7 +88,7 @@ describe("filter config serialization", () => {
     const config = {
       buildProfile: { preferredColors: ["R", "G"] as const },
       buildSpecificOptions: {
-        highlightedEquipment: { highlights: [{ baseTypes: ["Rusted Hatchet"], rare: { tts: MANIFEST_BY_ID.regal_orb } }] },
+        highlightedEquipment: { highlights: [{ baseTypes: [TEST_BASE_TYPE], rare: { tts: MANIFEST_BY_ID.regal_orb } }] },
         links: { genericThreeLinksEnabled: false },
       },
     }

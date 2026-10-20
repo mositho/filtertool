@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from "vitest"
 import { createApp, defineComponent, h, nextTick, reactive, type App } from "vue"
 import HighlightCard from "../../frontend/src/components/HighlightCard.vue"
 import type { ReferenceData } from "../../frontend/src/api"
+import { TEST_BASE_TYPE } from "../fixtures/base-types"
 
 let app: App | undefined
 let container: HTMLDivElement | undefined
@@ -17,7 +18,7 @@ describe("highlight level inputs", () => {
     const highlight = reactive<Record<string, unknown>>({})
     const reference = {
       itemClasses: ["Rings", "One Hand Axes"],
-      baseTypesByClass: { "Rings": ["Gold Ring"], "One Hand Axes": ["Rusted Hatchet"] },
+      baseTypesByClass: { "Rings": [TEST_BASE_TYPE], "One Hand Axes": [TEST_BASE_TYPE] },
       weaponClasses: ["One Hand Axes"],
       sounds: [],
     } as unknown as ReferenceData
@@ -45,17 +46,17 @@ describe("highlight level inputs", () => {
     classFilter.dispatchEvent(new Event("change", { bubbles: true }))
     await nextTick()
     const baseLabel = Array.from(container.querySelectorAll<HTMLLabelElement>("label")).find(
-      (label) => label.textContent?.trim() === "Rusted Hatchet",
+      (label) => label.textContent?.trim() === TEST_BASE_TYPE,
     )!
     baseLabel.querySelector<HTMLInputElement>("input")!.click()
     await nextTick()
-    expect(highlight.baseTypes).toEqual(["Rusted Hatchet"])
+    expect(highlight.baseTypes).toEqual([TEST_BASE_TYPE])
     expect(highlight.itemClasses).toEqual(["Rings"])
   })
 
   it("shows feedback when Min Area Level is above Max Area Level", async () => {
     const highlight = reactive<Record<string, unknown>>({
-      baseTypes: ["Rusted Hatchet"],
+      baseTypes: [TEST_BASE_TYPE],
       minAreaLevel: 30,
       maxAreaLevel: 28,
       modules: ["areaLevel"],
@@ -89,7 +90,7 @@ describe("highlight level inputs", () => {
 
   it("shows feedback when Min Item Level is above Max Item Level", async () => {
     const highlight = reactive<Record<string, unknown>>({
-      baseTypes: ["Rusted Hatchet"],
+      baseTypes: [TEST_BASE_TYPE],
       minItemLevel: 50,
       maxItemLevel: 40,
       modules: ["itemLevel"],

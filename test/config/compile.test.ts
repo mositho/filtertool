@@ -4,6 +4,7 @@ import os from "os"
 import path from "path"
 import { compileFilter } from "../../src/filters/shared/compile"
 import { loadFilterConfig, writeFilterConfig } from "../../src/filters/shared/config-loader"
+import { TEST_BASE_TYPE } from "../fixtures/base-types"
 
 let filterDir: string
 
@@ -25,9 +26,9 @@ describe("compileFilter", () => {
   it("reflects build-specific options", () => {
     const withHighlight = compileFilter({
       buildProfile: {},
-      buildSpecificOptions: { highlightedEquipment: { highlights: [{ baseTypes: ["Rusted Hatchet"], rarities: ["Rare"] }] } },
+      buildSpecificOptions: { highlightedEquipment: { highlights: [{ baseTypes: [TEST_BASE_TYPE], rarities: ["Rare"] }] } },
     })
-    expect(withHighlight).toMatch(/BaseType "Rusted Hatchet"/)
+    expect(withHighlight).toContain(`BaseType "${TEST_BASE_TYPE}"`)
     expect(withHighlight).toMatch(/Rarity == Rare/)
   })
 
@@ -35,13 +36,13 @@ describe("compileFilter", () => {
     writeFilterConfig(filterDir, {
       buildProfile: {},
       buildSpecificOptions: {
-        highlightedEquipment: { highlights: [{ baseTypes: ["Rusted Hatchet"], rarities: ["Rare"] }] },
+        highlightedEquipment: { highlights: [{ baseTypes: [TEST_BASE_TYPE], rarities: ["Rare"] }] },
       },
     })
     const loaded = loadFilterConfig(filterDir)
     expect(loaded.buildSpecificOptions.highlightedEquipment?.highlights).toHaveLength(1)
     const output = compileFilter(loaded)
-    expect(output).toMatch(/BaseType "Rusted Hatchet"/)
+    expect(output).toContain(`BaseType "${TEST_BASE_TYPE}"`)
     expect(output).toMatch(/Rarity == Rare/)
   })
 })

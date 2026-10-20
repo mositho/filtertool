@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest"
 import type { BuildProfile, BuildSpecificOptions, HighlightedBaseTypeConfig } from "../../src/filters/shared/sections/options"
 import { BUILD_SPECIFIC_SCHEMA, DEFAULTS_SCHEMA, schemaLeafPaths } from "../../src/config/form-schema"
+import { TEST_BASE_TYPE } from "../fixtures/base-types"
 
 type Complete<T> = T extends readonly (infer U)[]
   ? readonly Complete<U>[]
@@ -12,7 +13,7 @@ type Complete<T> = T extends readonly (infer U)[]
 
 const fullHighlight: Complete<HighlightedBaseTypeConfig> = {
   name: "My Highlight",
-  baseTypes: ["Rusted Hatchet"],
+  baseTypes: [TEST_BASE_TYPE],
   itemClasses: ["One Hand Axes"],
   minAps: 1.3,
   linkedSockets: 0,

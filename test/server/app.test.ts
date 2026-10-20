@@ -5,6 +5,7 @@ import os from "os"
 import path from "path"
 import request from "supertest"
 import { createApp } from "../../src/server/app"
+import { TEST_BASE_TYPE } from "../fixtures/base-types"
 
 let settingsRoot: string
 let filtersRoot: string
@@ -78,11 +79,11 @@ describe("filters API", () => {
       .send({
         config: {
           buildProfile: {},
-          buildSpecificOptions: { highlightedEquipment: { highlights: [{ baseTypes: ["Rusted Hatchet"], rarities: ["Rare"] }] } },
+          buildSpecificOptions: { highlightedEquipment: { highlights: [{ baseTypes: [TEST_BASE_TYPE], rarities: ["Rare"] }] } },
         },
       })
       .expect(200)
-    expect(res.body.output).toMatch(/BaseType "Rusted Hatchet"/)
+    expect(res.body.output).toContain(`BaseType "${TEST_BASE_TYPE}"`)
     expect(res.body.output).toMatch(/Rarity == Rare/)
   })
 

@@ -19,9 +19,16 @@ import { weaponPhases } from "../src/filters/shared/sections/equipment"
 import { joinSections } from "../src/filters/shared/sections/composition"
 import { compileFilter } from "../src/filters/shared/compile"
 import { resolveShieldProgressionMode } from "../src/filters/shared/sections/options"
-import { resolveMixedItemClassWeaponQuery, resolveWeaponBaseTypes } from "../src/filters/shared/sections/weapon-queries"
+import { WEAPON_BASE_DATA } from "../src/types/weapon-base-data"
+import {
+  findWeaponBaseTypes,
+  resolveMixedItemClassWeaponQuery,
+  resolveWeaponBaseTypes,
+} from "../src/filters/shared/sections/weapon-queries"
 import { orderedWeaponPhases } from "../src/filters/shared/sections/weapon-phases"
 import rule from "../src/rule"
+import type { BaseType } from "../src/types"
+import { TEST_BASE_TYPE, TEST_BASE_TYPE_TWO } from "./fixtures/base-types"
 
 describe("empty filter configuration", () => {
   test("exposes every configurable section", () => {
@@ -98,20 +105,20 @@ describe("jewellery", () => {
 describe("highlighted equipment", () => {
   test("matches classes and individual bases as alternatives", () => {
     const output = highlightedEquipment({
-      highlights: [{ itemClasses: ["Rings"], baseTypes: ["Rusted Hatchet"], rarities: ["Normal"] }],
+      highlights: [{ itemClasses: ["Rings"], baseTypes: [TEST_BASE_TYPE], rarities: ["Normal"] }],
     })
     const blocks = output.split(/\nShow\n/).filter((block) => block.includes("Rarity == Normal"))
     expect(blocks).toHaveLength(2)
     expect(blocks.some((block) => block.includes('Class == "Rings"') && !block.includes("BaseType"))).toBe(true)
-    expect(blocks.some((block) => block.includes('BaseType "Rusted Hatchet"') && !block.includes("Class"))).toBe(true)
+    expect(blocks.some((block) => block.includes(`BaseType "${TEST_BASE_TYPE}"`) && !block.includes("Class"))).toBe(true)
   })
 
   test("applies only the requested rarity", () => {
     const output = highlightedEquipment({
-      highlights: [{ baseTypes: ["Rusted Hatchet"], rarities: ["Normal"] }],
+      highlights: [{ baseTypes: [TEST_BASE_TYPE], rarities: ["Normal"] }],
     })
 
-    expect(output).toMatch(/BaseType "Rusted Hatchet"/)
+    expect(output).toContain(`BaseType "${TEST_BASE_TYPE}"`)
     expect(output).toMatch(/Rarity == Normal/)
     expect(output).not.toMatch(/Rarity == Rare/)
     expect(output).not.toMatch(/Rarity == Magic/)
@@ -130,7 +137,7 @@ describe("highlighted equipment", () => {
     const output = highlightedEquipment({
       highlights: [
         {
-          baseTypes: ["Rusted Hatchet"],
+          baseTypes: [TEST_BASE_TYPE],
           rarities: ["Normal", "Rare"],
           perRarityCustomization: true,
           normal: { iconColor: "Cyan", iconShape: "UpsideDownHouse" },
@@ -145,7 +152,7 @@ describe("highlighted equipment", () => {
 
   test("omits the minimap icon when no per-rarity icon is configured", () => {
     const output = highlightedEquipment({
-      highlights: [{ baseTypes: ["Rusted Hatchet"], rarities: ["Normal"] }],
+      highlights: [{ baseTypes: [TEST_BASE_TYPE], rarities: ["Normal"] }],
     })
 
     expect(output).not.toMatch(/MinimapIcon/)
@@ -155,7 +162,7 @@ describe("highlighted equipment", () => {
     const output = highlightedEquipment({
       highlights: [
         {
-          baseTypes: ["Rusted Hatchet"],
+          baseTypes: [TEST_BASE_TYPE],
           rarities: ["Normal"],
           perRarityCustomization: true,
           normal: { iconColor: "Red", iconShape: "Star" },
@@ -168,7 +175,7 @@ describe("highlighted equipment", () => {
 
   test("applies a whole-highlight icon to every rarity", () => {
     const output = highlightedEquipment({
-      highlights: [{ baseTypes: ["Rusted Hatchet"], rarities: ["Normal", "Rare"], iconColor: "Red", iconShape: "Star" }],
+      highlights: [{ baseTypes: [TEST_BASE_TYPE], rarities: ["Normal", "Rare"], iconColor: "Red", iconShape: "Star" }],
     })
 
     expect(output.match(/MinimapIcon 2 Red Star/g)).toHaveLength(2)
@@ -176,7 +183,7 @@ describe("highlighted equipment", () => {
 
   test("applies a whole-highlight sound to every rarity", () => {
     const output = highlightedEquipment({
-      highlights: [{ baseTypes: ["Rusted Hatchet"], rarities: ["Normal", "Rare"], soundId: 5 }],
+      highlights: [{ baseTypes: [TEST_BASE_TYPE], rarities: ["Normal", "Rare"], soundId: 5 }],
     })
 
     expect(output.match(/PlayAlertSound 5/g)).toHaveLength(2)
@@ -184,7 +191,7 @@ describe("highlighted equipment", () => {
 
   test("applies a whole-highlight icon size", () => {
     const output = highlightedEquipment({
-      highlights: [{ baseTypes: ["Rusted Hatchet"], rarities: ["Normal"], iconColor: "Red", iconShape: "Star", iconSize: 0 }],
+      highlights: [{ baseTypes: [TEST_BASE_TYPE], rarities: ["Normal"], iconColor: "Red", iconShape: "Star", iconSize: 0 }],
     })
 
     expect(output).toMatch(/MinimapIcon 0 Red Star/)
@@ -194,7 +201,7 @@ describe("highlighted equipment", () => {
     const output = highlightedEquipment({
       highlights: [
         {
-          baseTypes: ["Rusted Hatchet"],
+          baseTypes: [TEST_BASE_TYPE],
           rarities: ["Normal"],
           perRarityCustomization: true,
           normal: { iconColor: "Red", iconShape: "Star", iconSize: 1 },
@@ -207,24 +214,43 @@ describe("highlighted equipment", () => {
 
   test("requires a minimum number of sockets", () => {
     const output = highlightedEquipment({
-      highlights: [{ baseTypes: ["Rusted Hatchet"], rarities: ["Normal"], minSockets: 4 }],
+      highlights: [{ baseTypes: [TEST_BASE_TYPE], rarities: ["Normal"], minSockets: 4 }],
     })
 
     expect(output).toMatch(/Sockets >= 4/)
   })
 
+  test("requires a minimum number of linked sockets", () => {
+    const output = highlightedEquipment({
+      highlights: [{ baseTypes: [TEST_BASE_TYPE], rarities: ["Normal"], linkedSockets: 4 }],
+    })
+
+    expect(output).toMatch(/LinkedSockets >= 4/)
+  })
+
   test("applies minimum and maximum item level", () => {
     const output = highlightedEquipment({
-      highlights: [{ baseTypes: ["Rusted Hatchet"], rarities: ["Normal"], minItemLevel: 44, maxItemLevel: 70 }],
+      highlights: [{ baseTypes: [TEST_BASE_TYPE], rarities: ["Normal"], minItemLevel: 44, maxItemLevel: 70 }],
     })
 
     expect(output).toMatch(/ItemLevel >= 44/)
     expect(output).toMatch(/ItemLevel <= 70/)
   })
 
+  test("applies a minimum attack speed to weapon highlights", () => {
+    const selectedBases = findWeaponBaseTypes({ itemClasses: ["One Hand Axes"], minAps: 1.3 })
+    const output = highlightedEquipment({
+      highlights: [{ itemClasses: ["One Hand Axes"], rarities: ["Normal"], minAps: 1.3 }],
+    })
+
+    expect(selectedBases.length).toBeGreaterThan(0)
+    expect(output).toContain(`BaseType ${selectedBases.map((baseType) => `"${baseType}"`).join(" ")}`)
+    expect(output).not.toMatch(/Class/)
+  })
+
   test("applies minimum and maximum area level as a range", () => {
     const output = highlightedEquipment({
-      highlights: [{ baseTypes: ["Rusted Hatchet"], rarities: ["Normal"], minAreaLevel: 10, maxAreaLevel: 40 }],
+      highlights: [{ baseTypes: [TEST_BASE_TYPE], rarities: ["Normal"], minAreaLevel: 10, maxAreaLevel: 40 }],
     })
 
     expect(output).toMatch(/AreaLevel >= 10/)
@@ -235,7 +261,7 @@ describe("highlighted equipment", () => {
     const output = highlightedEquipment({
       highlights: [
         {
-          baseTypes: ["Rusted Hatchet"],
+          baseTypes: [TEST_BASE_TYPE],
           rarities: ["Normal"],
           width: { operator: "==", value: 2 },
           height: { operator: ">=", value: 3 },
@@ -251,7 +277,7 @@ describe("highlighted equipment", () => {
     const output = highlightedEquipment({
       highlights: [
         {
-          baseTypes: ["Rusted Hatchet"],
+          baseTypes: [TEST_BASE_TYPE],
           rarities: ["Normal", "Rare"],
           perRarityCustomization: true,
           iconColor: "Red",
@@ -271,7 +297,7 @@ describe("highlighted equipment", () => {
 
   test("applies a named style to every rarity", () => {
     const output = highlightedEquipment({
-      highlights: [{ baseTypes: ["Rusted Hatchet"], rarities: ["Normal", "Rare"], style: { preset: "currencyA" } }],
+      highlights: [{ baseTypes: [TEST_BASE_TYPE], rarities: ["Normal", "Rare"], style: { preset: "currencyA" } }],
     })
 
     expect(output.match(/SetTextColor 0 168 255/g)).toHaveLength(2)
@@ -279,7 +305,7 @@ describe("highlighted equipment", () => {
 
   test("overrides a preset style with inline colors", () => {
     const output = highlightedEquipment({
-      highlights: [{ baseTypes: ["Rusted Hatchet"], rarities: ["Normal"], style: { preset: "currencyA", border: "#FF0000" } }],
+      highlights: [{ baseTypes: [TEST_BASE_TYPE], rarities: ["Normal"], style: { preset: "currencyA", border: "#FF0000" } }],
     })
 
     expect(output).toMatch(/SetTextColor 0 168 255/)
@@ -288,7 +314,7 @@ describe("highlighted equipment", () => {
 
   test("applies a fully custom style", () => {
     const output = highlightedEquipment({
-      highlights: [{ baseTypes: ["Rusted Hatchet"], rarities: ["Normal"], style: { text: "#FFFFFF", background: "#000000" } }],
+      highlights: [{ baseTypes: [TEST_BASE_TYPE], rarities: ["Normal"], style: { text: "#FFFFFF", background: "#000000" } }],
     })
 
     expect(output).toMatch(/SetTextColor 255 255 255/)
@@ -297,7 +323,7 @@ describe("highlighted equipment", () => {
 
   test("falls back to the per-rarity style when no style is set", () => {
     const output = highlightedEquipment({
-      highlights: [{ baseTypes: ["Rusted Hatchet"], rarities: ["Normal"] }],
+      highlights: [{ baseTypes: [TEST_BASE_TYPE], rarities: ["Normal"] }],
     })
 
     expect(output).toMatch(/SetTextColor 217 255 255/)
@@ -589,6 +615,13 @@ describe("weapon queries", () => {
     expect(rustedRules.every((block) => !block.includes("AreaLevel >= 29"))).toBe(true)
   })
 
+  test("uses a configured weapon cutoff overlap", () => {
+    const weapon = WEAPON_BASE_DATA.find(({ itemClass }) => itemClass === "One Hand Axes")!
+    const output = weaponPhases([{ baseTypes: [weapon.baseType], weaponCutoffOverlap: 2 }])
+
+    expect(output).toContain(`AreaLevel <= ${weapon.dropLevel + 2}`)
+  })
+
   test("phase-specific socket highlights stop at the phase's Max Area Level", () => {
     const output = compileFilter({
       buildProfile: {
@@ -608,12 +641,12 @@ describe("weapon queries", () => {
 
   test("multiple phases can have no Max Area Level", () => {
     const output = compileFilter({
-      buildProfile: { weaponPhases: [{ baseTypes: ["Rusted Hatchet"] }, { baseTypes: ["Driftwood Club"] }] },
+      buildProfile: { weaponPhases: [{ baseTypes: [TEST_BASE_TYPE] }, { baseTypes: [TEST_BASE_TYPE_TWO] }] },
       buildSpecificOptions: {},
     })
     const section = output.split("### Weapon Progression")[1].split("### Six Sockets")[0]
-    expect(section).toContain('BaseType "Rusted Hatchet"')
-    expect(section).toContain('BaseType "Driftwood Club"')
+    expect(section).toContain(`BaseType "${TEST_BASE_TYPE}"`)
+    expect(section).toContain(`BaseType "${TEST_BASE_TYPE_TWO}"`)
     expect(section).not.toContain("AreaLevel >=")
   })
 
@@ -629,9 +662,9 @@ describe("weapon queries", () => {
   })
 
   test("puts a contained area-level range ahead of both its enclosing range and an all-run phase", () => {
-    const allRun = { baseTypes: ["Gilded Axe"] as const }
-    const broad = { baseTypes: ["Gilded Axe"] as const, maxAreaLevel: 28 }
-    const narrow = { baseTypes: ["Gilded Axe"] as const, minAreaLevel: 20, maxAreaLevel: 25 }
+    const allRun = { baseTypes: [TEST_BASE_TYPE] as const }
+    const broad = { baseTypes: [TEST_BASE_TYPE] as const, maxAreaLevel: 28 }
+    const narrow = { baseTypes: [TEST_BASE_TYPE] as const, minAreaLevel: 20, maxAreaLevel: 25 }
     expect(orderedWeaponPhases([allRun, broad, narrow])).toEqual([narrow, broad, allRun])
   })
 
@@ -650,22 +683,21 @@ describe("weapon queries", () => {
   })
 
   test("preserves explicit bases and separates non-weapon classes", () => {
-    expect(resolveWeaponBaseTypes({ baseTypes: ["Rusted Hatchet"] })).toContain("Rusted Hatchet")
-    expect(resolveWeaponBaseTypes({ baseTypes: ["Rusted Hatchet"] })).toEqual(["Rusted Hatchet"])
+    expect(resolveWeaponBaseTypes({ baseTypes: [TEST_BASE_TYPE] })).toContain(TEST_BASE_TYPE)
+    expect(resolveWeaponBaseTypes({ baseTypes: [TEST_BASE_TYPE] })).toEqual([TEST_BASE_TYPE])
     const query = resolveMixedItemClassWeaponQuery({ itemClasses: ["Rings", "One Hand Axes"], minAps: 1 })
     expect(query.itemClasses).toEqual(["Rings"])
     expect(query.baseTypes.length).toBeGreaterThan(0)
   })
 
   test("weapon phases with individually selected bases do not add every weapon", () => {
+    const selectedBases: BaseType[] = [TEST_BASE_TYPE, TEST_BASE_TYPE_TWO]
     const output = compileFilter({
-      buildProfile: { weaponPhases: [{ baseTypes: ["Boarding Axe", "Rusted Hatchet"], tts: "Leap Axe" }] },
+      buildProfile: { weaponPhases: [{ baseTypes: selectedBases }] },
       buildSpecificOptions: {},
     })
     const section = output.split("### Weapon Progression")[1].split("### Six Sockets")[0]
-    expect(section).toContain('BaseType "Boarding Axe"')
-    expect(section).toContain('BaseType "Rusted Hatchet"')
+    expect(section).toContain(`BaseType ${selectedBases.map((baseType) => `"${baseType}"`).join(" ")}`)
     expect(section).not.toContain('BaseType "Long Bow"')
-    expect(section).not.toContain('BaseType "Fleshripper"')
   })
 })
