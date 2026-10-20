@@ -25,7 +25,12 @@ export const resolveWeaponBaseTypes = ({
   baseTypes?: readonly WeaponBaseType[]
   minAps?: number
 }): WeaponBaseType[] => [
-  ...new Set([...baseTypes, ...findWeaponBaseTypes({ itemClasses: itemClasses.length ? itemClasses : undefined, minAps })]),
+  ...new Set([
+    ...baseTypes,
+    ...(itemClasses.length || minAps !== undefined
+      ? findWeaponBaseTypes({ itemClasses: itemClasses.length ? itemClasses : undefined, minAps })
+      : []),
+  ]),
 ]
 export const resolveMixedItemClassWeaponQuery = ({
   itemClasses,

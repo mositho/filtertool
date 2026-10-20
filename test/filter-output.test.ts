@@ -651,8 +651,21 @@ describe("weapon queries", () => {
 
   test("preserves explicit bases and separates non-weapon classes", () => {
     expect(resolveWeaponBaseTypes({ baseTypes: ["Rusted Hatchet"] })).toContain("Rusted Hatchet")
+    expect(resolveWeaponBaseTypes({ baseTypes: ["Rusted Hatchet"] })).toEqual(["Rusted Hatchet"])
     const query = resolveMixedItemClassWeaponQuery({ itemClasses: ["Rings", "One Hand Axes"], minAps: 1 })
     expect(query.itemClasses).toEqual(["Rings"])
     expect(query.baseTypes.length).toBeGreaterThan(0)
+  })
+
+  test("weapon phases with individually selected bases do not add every weapon", () => {
+    const output = compileFilter({
+      buildProfile: { weaponPhases: [{ baseTypes: ["Boarding Axe", "Rusted Hatchet"], tts: "Leap Axe" }] },
+      buildSpecificOptions: {},
+    })
+    const section = output.split("### Weapon Progression")[1].split("### Six Sockets")[0]
+    expect(section).toContain('BaseType "Boarding Axe"')
+    expect(section).toContain('BaseType "Rusted Hatchet"')
+    expect(section).not.toContain('BaseType "Long Bow"')
+    expect(section).not.toContain('BaseType "Fleshripper"')
   })
 })
