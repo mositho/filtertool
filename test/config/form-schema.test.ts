@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest"
-import type { BuildProfile, BuildSpecificOptions, HighlightedBaseTypeConfig } from "../../src/filters/shared/sections/options"
+import type {
+  BuildProfile,
+  BuildSpecificOptions,
+  EquipmentRuleConfig,
+  HighlightedBaseTypeConfig,
+} from "../../src/filters/shared/sections/options"
 import { BUILD_SPECIFIC_SCHEMA, DEFAULTS_SCHEMA, schemaLeafPaths } from "../../src/config/form-schema"
 import { TEST_BASE_TYPE } from "../fixtures/base-types"
 
@@ -18,7 +23,7 @@ const fullHighlight: Complete<HighlightedBaseTypeConfig> = {
   minAps: 1.3,
   linkedSockets: 0,
   minSockets: 0,
-  weaponCutoffOverlap: 5,
+  weaponCutoffOverlap: 10,
   rarities: ["Normal"],
   minAreaLevel: 1,
   maxAreaLevel: 20,
@@ -50,6 +55,8 @@ const canonicalConfig: Complete<BuildProfile> & Complete<BuildSpecificOptions> =
   weaponPhases: [{ ...fullHighlight, maxAreaLevel: 28 }],
   shieldProgression: "early",
   links: {
+    genericThreeLinkMaxAreaLevel: 12,
+    rules: {},
     twoLinkMaxAreaLevel: 9,
     threeLinkMaxAreaLevel: 33,
     fourLinkMaxAreaLevel: 61,
@@ -66,9 +73,9 @@ const canonicalConfig: Complete<BuildProfile> & Complete<BuildSpecificOptions> =
     beltMaxAreaLevel: 24,
   },
   flasks: { utilityFlasks: ["Jade"] },
-  rareItems: { maxAreaLevel: 45 },
-  magicItems: { bigMaxAreaLevel: 9, smallMaxAreaLevel: 24 },
-  normalItems: { maxAreaLevel: 4 },
+  rareItems: { maxAreaLevel: 45, rules: {} },
+  magicItems: { bigMaxAreaLevel: 9, smallMaxAreaLevel: 24, rules: {} },
+  normalItems: { maxAreaLevel: 4, rules: {} },
   tinctures: { baseTypes: ["Prismatic Tincture"] },
   highlightedEquipment: {
     highlights: [fullHighlight],
@@ -79,6 +86,8 @@ const canonicalConfig: Complete<BuildProfile> & Complete<BuildSpecificOptions> =
   },
   misc: { whetstoneRecipe: true, showRusticSash: true },
   early: {
+    shieldMaxAreaLevel: 12,
+    rules: {},
     earlyMaxAreaLevel: 12,
     twoSocketMaxAreaLevel: 7,
     threeSocketMaxAreaLevel: 16,
@@ -90,6 +99,10 @@ function collectLeafPaths(obj: unknown, prefix: string, out: string[]): string[]
   if (!obj || typeof obj !== "object") return out
   for (const [key, value] of Object.entries(obj)) {
     const path = prefix ? `${prefix}.${key}` : key
+    if (key === "rules") {
+      out.push(path)
+      continue
+    }
     if (Array.isArray(value)) {
       if (value.length > 0 && typeof value[0] === "object" && value[0] !== null) {
         collectLeafPaths(value[0], path, out)
@@ -106,6 +119,40 @@ function collectLeafPaths(obj: unknown, prefix: string, out: string[]): string[]
 }
 
 describe("form schema drift", () => {
+  it("covers every built-in rule setting, including structured presentation controls", () => {
+    const completeRule: Complete<EquipmentRuleConfig> = {
+      enabled: true,
+      maxAreaLevel: 30,
+      soundCutoffLevel: 20,
+      style: fullHighlight.style,
+      icon: { enabled: true, iconColor: "Red", iconShape: "Star", iconSize: 1 },
+      sound: { enabled: true, tts: "three_link", soundId: 3, soundFileName: "custom.mp3" },
+    }
+    const represented = new Set<string>()
+    const walk = (section: {
+      fields: { path: string; control: string }[]
+      subsections?: (typeof BUILD_SPECIFIC_SCHEMA)[number]["subsections"]
+    }) => {
+      for (const field of section.fields) {
+        const suffix = /\.rules\.[^.]+\.(.+)$/.exec(field.path)?.[1]
+        if (!suffix) continue
+        const children =
+          field.control === "style"
+            ? ["preset", "text", "background", "backgroundOpacity", "border", "size"]
+            : field.control === "icon"
+              ? ["enabled", "iconColor", "iconShape", "iconSize"]
+              : field.control === "rule-sound"
+                ? ["enabled", "tts", "soundId", "soundFileName"]
+                : undefined
+        if (children) for (const child of children) represented.add(`${suffix}.${child}`)
+        else represented.add(suffix)
+      }
+      section.subsections?.forEach(walk)
+    }
+    BUILD_SPECIFIC_SCHEMA.forEach(walk)
+    expect([...represented].sort()).toEqual(collectLeafPaths(completeRule, "", []).sort())
+  })
+
   it("stays in sync with the TypeScript config types", () => {
     const schemaPaths = schemaLeafPaths()
     const configPaths = collectLeafPaths(canonicalConfig, "", []).sort()
@@ -157,7 +204,7 @@ describe("form schema drift", () => {
     expect(paths).not.toContain("gemCallouts.gems")
     expect(paths).not.toContain("flasks.lifeMaxAreaLevel")
     expect(paths).not.toContain("flasks.manaMaxAreaLevel")
-    expect(paths).toContain("rareItems.partOneMaxAreaLevel")
+    expect(paths).not.toContain("rareItems.partOneMaxAreaLevel")
   })
 
   it("keeps the Rustic Sash toggle in Early while editing the build profile", () => {

@@ -4,10 +4,11 @@ import { ref, watch } from "vue"
 const props = defineProps<{
   modelValue: Record<string, unknown>
   sounds: { id: string; name: string; hasFile?: boolean }[]
+  defaultLabel?: string
 }>()
 const emit = defineEmits<{ "update:modelValue": [value: Record<string, unknown>] }>()
 
-type SoundType = "none" | "preset" | "tts" | "alert" | "file"
+type SoundType = "default" | "none" | "preset" | "tts" | "alert" | "file"
 
 function detectType(h: Record<string, unknown>): SoundType {
   if (typeof h.tts === "string" && h.tts) {
@@ -15,6 +16,7 @@ function detectType(h: Record<string, unknown>): SoundType {
   }
   if (typeof h.soundFileName === "string" && h.soundFileName) return "file"
   if (typeof h.soundId === "number") return "alert"
+  if (props.defaultLabel && h.enabled === true) return "default"
   return "none"
 }
 
@@ -33,6 +35,7 @@ function commit() {
   delete h.tts
   delete h.soundFileName
   delete h.soundId
+  if (props.defaultLabel) h.enabled = type.value === "default"
   if (type.value === "preset" && preset.value) h.tts = preset.value
   if (type.value === "tts" && ttsText.value) h.tts = ttsText.value
   if (type.value === "alert") h.soundId = alert.value
@@ -95,6 +98,7 @@ function onAlertChange(event: Event) {
 <template>
   <div class="space-y-2">
     <select v-model="type" class="w-full rounded border border-neutral-700 bg-neutral-900 px-2 py-1.5 text-sm">
+      <option v-if="defaultLabel" value="default">{{ defaultLabel }}</option>
       <option value="none">None</option>
       <option value="preset">TTS Template</option>
       <option value="tts">TTS Custom</option>

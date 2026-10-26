@@ -1,14 +1,28 @@
 import type { BuildProfile, BuildSpecificOptions, HighlightedBaseTypeConfig } from "../filters/shared/sections/options"
+import { EQUIPMENT_FOOTPRINTS, EQUIPMENT_RARITY_TEXT } from "../filters/shared/equipment-rules"
 
-export type SchemaControl = "number" | "boolean" | "select" | "multiselect" | "link-colors" | "highlight-list" | "weapon-phases" | "sound"
+export type SchemaControl =
+  | "number"
+  | "boolean"
+  | "select"
+  | "multiselect"
+  | "link-colors"
+  | "highlight-list"
+  | "weapon-phases"
+  | "sound"
+  | "rule-sound"
+  | "style"
+  | "icon"
 
 export type SchemaField = {
+  fullWidth?: boolean
   path: string
   label: string
   control: SchemaControl
   tooltip?: string
   /** Value shown when the config has nothing set; keeps the form prefilled with the effective default. */
   defaultValue?: unknown
+  defaultFrom?: { path: string; label: string; value?: unknown }
   options?: string[]
   min?: number
   max?: number
@@ -29,6 +43,11 @@ export type SchemaField = {
 }
 
 export type FieldSubsection = {
+  /** Primary cutoff and size controls share a row on wider screens. */
+  layout?: "cutoff-size"
+  /** Presentation card inside the shared Advanced disclosure. */
+  module?: boolean
+  collapsed?: boolean
   key: string
   title: string
   description?: string
@@ -144,7 +163,7 @@ export const HIGHLIGHT_FIELDS: SchemaField[] = [
     control: "number",
     min: 0,
     integer: true,
-    defaultValue: 5,
+    defaultValue: 10,
     tooltip: "A weapon base stays highlighted for this many area levels after it starts dropping (cutoff = drop level + overlap).",
   },
 ]
@@ -239,7 +258,7 @@ const buildEarlyGeneric: SchemaField[] = [
     min: 0,
     integer: true,
     defaultValue: 12,
-    tooltip: "Area level cutoff for early shield highlighting, early rare-item sizing and generic three-links.",
+    tooltip: "Shared default cutoff for early shields, three-socket items and generic three-links. Each can be overridden separately.",
   },
   {
     path: "early.twoSocketMaxAreaLevel",
@@ -256,8 +275,9 @@ const buildEarlyGeneric: SchemaField[] = [
     control: "number",
     min: 0,
     integer: true,
-    defaultValue: 16,
-    tooltip: "Area level up to which three-socket items are highlighted.",
+    defaultFrom: { path: "early.earlyMaxAreaLevel", label: "Early Max Area Level", value: 12 },
+    previewSection: "Early Sockets",
+    tooltip: "Max Area Level for three-socket items, linked or unlinked. Follows Early Max Area Level unless overridden.",
   },
   {
     path: "early.earlyBootsMaxAreaLevel",
@@ -267,6 +287,16 @@ const buildEarlyGeneric: SchemaField[] = [
     integer: true,
     defaultValue: 24,
     tooltip: "Area level up to which rare boots are highlighted during the early campaign.",
+  },
+  {
+    path: "early.shieldMaxAreaLevel",
+    label: "Early Shields · Max Area Level",
+    control: "number",
+    min: 0,
+    integer: true,
+    defaultFrom: { path: "early.earlyMaxAreaLevel", label: "Early Max Area Level", value: 12 },
+    tooltip:
+      "Ends early shield highlighting and starts preferred rare shields in Full progression mode. Follows Early Max Area Level unless overridden.",
   },
 ]
 
@@ -331,7 +361,7 @@ const linksSoundCutoffs: SchemaField[] = [
     integer: true,
     defaultValue: 23,
     tooltip:
-      "Up to this area level, three-links play a sound; beyond it they're silent. Generic three-links sound only up to the early max area level unless extended.",
+      "Up to this Area Level, three-links play a sound; beyond it they're silent. Sound never extends visibility. Generic three-links stop at their early cutoff unless extended.",
   },
   {
     path: "links.fourLinkTtsCutoffLevel",
@@ -346,11 +376,22 @@ const linksSoundCutoffs: SchemaField[] = [
 
 const linksGeneric: SchemaField[] = [
   {
+    path: "links.genericThreeLinkMaxAreaLevel",
+    fullWidth: true,
+    label: "Early Generic Three Links · Max Area Level",
+    control: "number",
+    min: 0,
+    integer: true,
+    defaultFrom: { path: "early.earlyMaxAreaLevel", label: "Early Max Area Level", value: 12 },
+    tooltip:
+      "Show generic three-links through this Area Level even when the extension toggle is off. Follows Early Max Area Level unless overridden; the three-link maximum still applies.",
+  },
+  {
     path: "links.genericThreeLinksEnabled",
     label: "Three Links",
     control: "boolean",
     defaultValue: false,
-    tooltip: "Also show three-linked items past the early max area level, even when they don't match your socket colors or armour.",
+    tooltip: "Also show three-linked items past their early cutoff, even when they don't match your socket colors or armour.",
   },
   {
     path: "links.genericFourLinksEnabled",
@@ -497,6 +538,173 @@ const equipmentFlasks: SchemaField[] = [
   },
 ]
 
+function ruleSection(
+  path: string,
+  title: string,
+  style: Record<string, unknown>,
+  maximum?: SchemaField["defaultFrom"],
+  soundCutoff?: SchemaField["defaultFrom"],
+  inlineSize = false,
+): FieldSubsection {
+  const styleField: SchemaField = { path: `${path}.style`, label: "Style", control: "style", defaultValue: style }
+  return {
+    key: path,
+    title,
+    collapsed: true,
+    ...(inlineSize ? { layout: "cutoff-size" as const } : {}),
+    fields: [
+      { path: `${path}.enabled`, label: "Rule enabled", control: "boolean", defaultValue: true },
+      ...(maximum
+        ? [
+            {
+              path: `${path}.maxAreaLevel`,
+              label: "Max Area Level",
+              control: "number" as const,
+              fullWidth: !inlineSize,
+              min: 0,
+              integer: true,
+              defaultFrom: maximum,
+              ...(maximum.value === undefined ? { placeholder: "uncapped" } : {}),
+            },
+          ]
+        : []),
+      ...(inlineSize
+        ? [
+            {
+              path: `${path}.style.size`,
+              label: "Size",
+              control: "number" as const,
+              min: 20,
+              max: 45,
+              integer: true,
+              defaultValue: style.size ?? 45,
+            },
+          ]
+        : []),
+    ],
+    subsections: [
+      { key: `${path}.style`, title: "Style", module: true, fields: [styleField] },
+      {
+        key: `${path}.icon`,
+        title: "Icon",
+        module: true,
+        fields: [{ path: `${path}.icon`, label: "Minimap icon", control: "icon", defaultValue: { enabled: false } }],
+      },
+      {
+        key: `${path}.sound`,
+        title: "Sound",
+        module: true,
+        fields: [
+          ...(soundCutoff
+            ? [
+                {
+                  path: `${path}.soundCutoffLevel`,
+                  label: "Sound · Max Area Level",
+                  control: "number" as const,
+                  min: 0,
+                  integer: true,
+                  defaultFrom: soundCutoff,
+                },
+              ]
+            : []),
+          {
+            path: `${path}.sound`,
+            label: "Sound",
+            control: "rule-sound",
+            defaultValue: { enabled: !!soundCutoff },
+            tooltip: soundCutoff
+              ? "Uses the existing per-slot callout by default. Custom sounds stop at the sound cutoff too."
+              : "Silent by default.",
+          },
+        ],
+      },
+    ],
+  }
+}
+
+const socketRules = [2, 3].map((count) =>
+  ruleSection(
+    `early.rules.armour${count}`,
+    `${count} Sockets · Armour`,
+    { size: count === 2 ? 40 : 45 },
+    {
+      path: `early.${count === 2 ? "two" : "three"}SocketMaxAreaLevel`,
+      label: `${count === 2 ? "Two" : "Three"} Sockets`,
+      value: count === 2 ? 7 : undefined,
+    },
+    undefined,
+    true,
+  ),
+)
+
+const linkRules = [2, 3, 4].flatMap((count) =>
+  ["selected", "good", "generic"].map((tier) => {
+    const word = count === 2 ? "two" : count === 3 ? "three" : "four"
+    const preset = `${tier === "generic" ? "" : tier}${tier === "generic" ? word : word[0].toUpperCase() + word.slice(1)}Link`
+    return ruleSection(
+      `links.rules.${count}${tier}`,
+      `${count} Links · ${tier === "selected" ? "Colours + Armour" : tier === "good" ? "Colours or Armour" : "Generic"}`,
+      { preset },
+      { path: `links.${word}LinkMaxAreaLevel`, label: `${count} Links`, value: count === 2 ? 9 : count === 3 ? 33 : 61 },
+      count === 2
+        ? undefined
+        : { path: `links.${word}LinkTtsCutoffLevel`, label: `${count} Links sound cutoff`, value: count === 3 ? 23 : 50 },
+      true,
+    )
+  }),
+)
+
+const genericEquipment: FieldSubsection[] = [
+  {
+    key: "normalRules",
+    title: "Normal",
+    collapsed: true,
+    previewSection: "Normal Items",
+    fields: [],
+    subsections: [
+      ruleSection(
+        "normalItems.rules.equipment",
+        "Socketable Equipment",
+        { size: 40 },
+        { path: "normalItems.maxAreaLevel", label: "Normal Items", value: 4 },
+      ),
+      ruleSection(
+        "normalItems.rules.belts",
+        "Belts",
+        { preset: "jewellery" },
+        { path: "normalItems.maxAreaLevel", label: "Normal Items", value: 4 },
+      ),
+    ],
+  },
+  ...(["magic", "rare"] as const).map(
+    (rarity): FieldSubsection => ({
+      key: `${rarity}Rules`,
+      title: rarity === "magic" ? "Magic" : "Rare",
+      collapsed: true,
+      previewSection: rarity === "magic" ? "Magic Items" : "Rare Items",
+      fields: [],
+      subsections: [
+        ...EQUIPMENT_FOOTPRINTS.map(({ key, width, height, size }) =>
+          ruleSection(
+            `${rarity}Items.rules.${key}`,
+            `${width}×${height} · ${width * height} inventory ${width * height === 1 ? "slot" : "slots"}`,
+            { size, text: EQUIPMENT_RARITY_TEXT[rarity] },
+            rarity === "rare"
+              ? { path: "rareItems.maxAreaLevel", label: "Rare Items" }
+              : {
+                  path: `magicItems.${height <= 2 ? "small" : "big"}MaxAreaLevel`,
+                  label: `${height <= 2 ? "Small" : "Big"} Magic Items`,
+                  value: height <= 2 ? 24 : 9,
+                },
+            undefined,
+            true,
+          ),
+        ),
+      ],
+    }),
+  ),
+]
+
 export const BUILD_SPECIFIC_SCHEMA: FieldGroup[] = [
   {
     key: "early",
@@ -507,12 +715,20 @@ export const BUILD_SPECIFIC_SCHEMA: FieldGroup[] = [
     subsections: [
       { key: "generic", title: "Area level cutoffs", previewSection: "Early", fields: buildEarlyGeneric },
       { key: "rusticSash", title: "Rustic Sash", root: "buildProfile", previewSection: "Early", fields: earlyRusticSash },
+      {
+        key: "socketRules",
+        title: "Socket Rules",
+        collapsed: true,
+        previewSection: "Early Sockets",
+        fields: [],
+        subsections: socketRules,
+      },
     ],
   },
   {
     key: "links",
     title: "Links",
-    description: "Which linked-socket items are shown and when they play a sound.",
+    description: "Armour only; first matching link tier wins.",
     previewSection: "Links",
     fields: [],
     subsections: [
@@ -521,9 +737,10 @@ export const BUILD_SPECIFIC_SCHEMA: FieldGroup[] = [
       {
         key: "generic",
         title: "Generic links",
-        description: "Generic three-links are always shown up to the early max area level; enable them to show them beyond it.",
+        description: "Extend generic links beyond their early cutoff.",
         fields: linksGeneric,
       },
+      { key: "linkRules", title: "Link Rules", collapsed: true, fields: [], subsections: linkRules },
     ],
   },
   {
@@ -544,6 +761,7 @@ export const BUILD_SPECIFIC_SCHEMA: FieldGroup[] = [
       { key: "tinctures", title: "Tinctures", previewSection: "Tinctures", fields: equipmentTinctures },
       { key: "flasks", title: "Flasks", previewSection: "Flasks", fields: equipmentFlasks },
       { key: "rarityItems", title: "Max Area Level", fields: equipmentRarityItems },
+      { key: "genericEquipment", title: "Equipment Rules", collapsed: true, fields: [], subsections: genericEquipment },
     ],
   },
   {
@@ -605,7 +823,9 @@ export function schemaLeafPaths(): string[] {
   for (const group of [...BUILD_PROFILE_SCHEMA, ...BUILD_SPECIFIC_SCHEMA]) {
     const fields = [...group.fields, ...(group.subsections ?? []).flatMap(collectFields)]
     for (const field of fields) {
-      if (field.control === "highlight-list" || field.control === "weapon-phases") {
+      if (field.path.includes(".rules.")) {
+        paths.push(field.path.split(".rules.")[0] + ".rules")
+      } else if (field.control === "highlight-list" || field.control === "weapon-phases") {
         for (const highlightField of HIGHLIGHT_FIELDS) {
           paths.push(`${field.path}.${highlightField.path}`)
         }
@@ -628,7 +848,7 @@ export function schemaLeafPaths(): string[] {
       }
     }
   }
-  return paths.sort()
+  return [...new Set(paths)].sort()
 }
 
 /** A fresh highlight used as the seed for a newly added highlight row. */
@@ -644,7 +864,7 @@ export function emptyHighlight(): HighlightedBaseTypeConfig {
 export function emptyWeaponHighlight(): HighlightedBaseTypeConfig {
   return {
     perRarityCustomization: true,
-    weaponCutoffOverlap: 5,
+    weaponCutoffOverlap: 10,
     normal: { iconColor: "Cyan", iconShape: "UpsideDownHouse" },
     magic: { iconColor: "Blue", iconShape: "UpsideDownHouse" },
     rare: { iconColor: "Yellow", iconShape: "UpsideDownHouse", soundId: 3 },
@@ -695,28 +915,4 @@ function stripHighlights(groups: FieldGroup[]): FieldGroup[] {
  * fields, minus highlights); values come from `baseFilterDefaults` (served as
  * `baseDefaults`).
  */
-export const DEFAULTS_SCHEMA: FieldGroup[] = stripHighlights([...BUILD_PROFILE_SCHEMA, ...BUILD_SPECIFIC_SCHEMA]).map((group) =>
-  group.key === "equipment"
-    ? {
-        ...group,
-        subsections: group.subsections?.map((section) =>
-          section.key === "rarityItems"
-            ? {
-                ...section,
-                fields: [
-                  ...section.fields,
-                  {
-                    path: "rareItems.partOneMaxAreaLevel",
-                    label: "Early rare-item cutoff",
-                    control: "number" as const,
-                    min: 0,
-                    integer: true,
-                    tooltip: "Area level separating early rare-equipment rules from later ones; shared across filters.",
-                  },
-                ],
-              }
-            : section,
-        ),
-      }
-    : group,
-)
+export const DEFAULTS_SCHEMA: FieldGroup[] = stripHighlights([...BUILD_PROFILE_SCHEMA, ...BUILD_SPECIFIC_SCHEMA])

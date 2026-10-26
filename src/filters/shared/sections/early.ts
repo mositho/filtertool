@@ -7,68 +7,41 @@ import { compileRules, withHeading } from "./composition"
 import { ARMOUR_CLASSES, defenceMixinMap } from "./item-classes"
 import type { BuildProfile, EarlyConfig } from "./options"
 import { resolveShieldProgressionMode } from "./options"
-import { isWeaponBaseType, isWeaponItemClass, resolveWeaponBaseTypes } from "./weapon-queries"
-import { WEAPON_BASE_DATA } from "../../../types/weapon-base-data"
-import { orderedWeaponPhases } from "./weapon-phases"
+import { equipmentRule, presentEquipmentRule } from "./equipment-rule-config"
 
 const RUSTIC_SASH_MAX_AREA_LEVEL = 12
 
 export const twilightStrand = () => withHeading("Twilight Strand", compileRules(rule().rarity("==", "Normal").areaLevel("==", 1).size(45)))
 
 export const earlySockets = ({
-  weaponPhases = [],
+  earlyMaxAreaLevel = filterDefaults.early.earlyMaxAreaLevel,
   twoSocketMaxAreaLevel = filterDefaults.early.twoSocketMaxAreaLevel,
-  threeSocketMaxAreaLevel = filterDefaults.early.threeSocketMaxAreaLevel,
-}: Partial<BuildProfile> & EarlyConfig = {}) => {
-  const dropLevels = new Map<string, number>(WEAPON_BASE_DATA.map((weapon) => [weapon.baseType, weapon.dropLevel]))
-  const weaponRules = orderedWeaponPhases(weaponPhases).flatMap((phase) => {
-    const itemClasses = phase.itemClasses?.filter(isWeaponItemClass) ?? []
-    const baseTypes = phase.baseTypes?.filter(isWeaponBaseType) ?? []
-    const hasTargets = itemClasses.length > 0 || baseTypes.length > 0
-    const bases = hasTargets ? resolveWeaponBaseTypes({ itemClasses, baseTypes, minAps: phase.minAps }) : []
+  threeSocketMaxAreaLevel = filterDefaults.early.threeSocketMaxAreaLevel ?? earlyMaxAreaLevel,
+  rules,
+}: EarlyConfig = {}) => {
+  const armourRule = (count: number, cutoff: number, size: number) => {
+    const config = equipmentRule(filterDefaults.early.rules, rules, `armour${count}`)
     return (
-      [
-        { count: 2, cutoff: twoSocketMaxAreaLevel, size: 40 },
-        { count: 3, cutoff: threeSocketMaxAreaLevel, size: 45 },
-      ] as const
-    ).flatMap(({ count, cutoff, size }) => {
-      return bases.flatMap((baseType) => {
-        const dropLevel = dropLevels.get(baseType)
-        const maximum = Math.min(
-          cutoff,
-          phase.maxAreaLevel ?? cutoff,
-          dropLevel === undefined ? cutoff : dropLevel + (phase.weaponCutoffOverlap ?? 5),
-        )
-        if (phase.minAreaLevel !== undefined && phase.minAreaLevel > maximum) return []
-        const socketRule = rule().sockets("==", count).baseType(baseType).areaLevel("<=", maximum).size(size)
-        if (phase.minAreaLevel !== undefined) socketRule.areaLevel(">=", phase.minAreaLevel)
-        return [socketRule]
-      })
-    })
-  })
+      config.enabled !== false &&
+      presentEquipmentRule(
+        rule()
+          .sockets("==", count)
+          .itemClass(...ARMOUR_CLASSES)
+          .areaLevel("<=", config.maxAreaLevel ?? cutoff),
+        config,
+        { size },
+      )
+    )
+  }
 
-  return withHeading(
-    "Early Sockets",
-    compileRules(
-      rule()
-        .sockets("==", 2)
-        .itemClass(...ARMOUR_CLASSES)
-        .areaLevel("<=", twoSocketMaxAreaLevel)
-        .size(40),
-      rule()
-        .sockets("==", 3)
-        .itemClass(...ARMOUR_CLASSES)
-        .areaLevel("<=", threeSocketMaxAreaLevel)
-        .size(45),
-      ...weaponRules,
-    ),
-  )
+  return withHeading("Early Sockets", compileRules(armourRule(2, twoSocketMaxAreaLevel, 40), armourRule(3, threeSocketMaxAreaLevel, 45)))
 }
 
 export const early = ({
   shieldProgression,
   preferredArmour = filterDefaults.preferredArmour,
   earlyMaxAreaLevel = filterDefaults.early.earlyMaxAreaLevel,
+  shieldMaxAreaLevel = filterDefaults.early.shieldMaxAreaLevel ?? earlyMaxAreaLevel,
   earlyBootsMaxAreaLevel = filterDefaults.early.earlyBootsMaxAreaLevel,
   misc,
 }: Partial<BuildProfile> & EarlyConfig) => {
@@ -84,12 +57,12 @@ export const early = ({
         .mixin(styleMixin(filterStyles.rareArmour))
         .tts(manifestSoundFile(MANIFEST_BY_ID.rare_boots)),
       shieldMode !== "none" &&
-        rule().itemClass("Shields").areaLevel("<=", earlyMaxAreaLevel).mixin(styleMixin(filterStyles.earlyShieldBase)),
+        rule().itemClass("Shields").areaLevel("<=", shieldMaxAreaLevel).mixin(styleMixin(filterStyles.earlyShieldBase)),
       ...(shieldMode === "full"
         ? preferredArmour.map((defenceType) =>
             rule()
               .itemClass("Shields")
-              .areaLevel(">", earlyMaxAreaLevel)
+              .areaLevel(">", shieldMaxAreaLevel)
               .rarity("==", "Rare")
               .mixin(styleMixin(filterStyles.rareArmour))
               .mixin(defenceMixinMap[defenceType]),

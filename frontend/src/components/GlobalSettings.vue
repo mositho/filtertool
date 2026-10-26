@@ -5,6 +5,10 @@ import { DEFAULTS_SCHEMA, type FieldGroup, type FieldSubsection, type SchemaFiel
 import { getPath, setPath, deletePath, pruneEmpty, stableStringify } from "../path"
 import FieldInput from "./FieldInput.vue"
 import NumberField from "./NumberField.vue"
+import RuleAdvanced from "./RuleAdvanced.vue"
+import { fieldDefault, defaultSource, ruleEnabledField, setStyleSize } from "../fieldDefaults"
+import RuleHeader from "./RuleHeader.vue"
+import { DEFAULT_STYLE_SETTINGS, MIN_STYLE_SIZE } from "../../../src/style-defaults"
 
 const settings = ref<AppSettings>({ filterPath: "", soundsFolder: "", tts: { locale: "en-US", speed: 1.6 } })
 const saving = ref(false)
@@ -20,10 +24,17 @@ const reference = ref<ReferenceData | null>(null)
 
 const baseStyles = ref<Record<string, unknown>>({})
 const userStyles = ref<Record<string, Record<string, unknown>>>({})
+const defaultsReference = computed(() =>
+  reference.value
+    ? {
+        ...reference.value,
+        styles: Object.fromEntries(Object.keys(baseStyles.value).map((key) => [key, effectiveStyle(key)])),
+      }
+    : undefined,
+)
 
-const DEFAULT_SIZE = 45
-const MIN_STYLE_SIZE = 20
-const DEFAULT_OPACITY = 245 / 255
+const DEFAULT_SIZE = DEFAULT_STYLE_SETTINGS.size
+const DEFAULT_OPACITY = DEFAULT_STYLE_SETTINGS.backgroundOpacity
 
 async function load() {
   const [s, d, st, refData] = await Promise.all([api.getSettings(), api.getDefaults(), api.getStyles(), api.reference()])
@@ -205,14 +216,23 @@ defineExpose({
 
 function defaultsValue(field: SchemaField): unknown {
   const value = getPath(userDefaults.value, field.path)
-  return value === undefined ? getPath(baseDefaults.value, field.path) : value
+  return value === undefined ? fieldDefault(field, userDefaults.value, baseDefaults.value, defaultsReference.value?.styles) : value
 }
 
 function setDefaultsValue(field: SchemaField, value: unknown) {
+  if (field.path.endsWith(".style.size")) {
+    setStyleSize(userDefaults.value, field.path, value, baseDefaults.value)
+    return
+  }
   const base = getPath(baseDefaults.value, field.path)
-  const isBase = value === undefined || (base !== undefined && stableStringify(value) === stableStringify(base))
+  const isBase = value === undefined || (!field.defaultFrom && base !== undefined && stableStringify(value) === stableStringify(base))
   if (isBase) deletePath(userDefaults.value, field.path)
   else setPath(userDefaults.value, field.path, value)
+}
+
+function setRuleEnabled(field: SchemaField, value: boolean) {
+  const inherited = fieldDefault(field, userDefaults.value, baseDefaults.value)
+  setDefaultsValue(field, value === inherited ? undefined : value)
 }
 
 function defaultsOptions(field: SchemaField): string[] {
@@ -248,18 +268,39 @@ function visibleDefaultsFields(fields: SchemaField[]): SchemaField[] {
   return fields.filter(isDefaultsVisible)
 }
 
-type DefaultsSubsectionEntry = { key: string; subsection: FieldSubsection; depth: number; hasSiblingAbove: boolean }
+type DefaultsSubsectionEntry = {
+  key: string
+  subsection: FieldSubsection
+  enabledField?: SchemaField
+  depth: number
+  hasSiblingAbove: boolean
+}
 
 function defaultsSubsectionEntries(group: FieldGroup): DefaultsSubsectionEntry[] {
   const entries: DefaultsSubsectionEntry[] = []
   const walk = (subsections: FieldSubsection[], depth: number) => {
     subsections.forEach((subsection, index) => {
-      entries.push({ key: `${depth}-${subsection.key}`, subsection, depth, hasSiblingAbove: index > 0 })
-      walk(subsection.subsections ?? [], depth + 1)
+      if (subsection.module) return
+      entries.push({
+        key: `${depth}-${subsection.key}`,
+        subsection,
+        enabledField: subsection.collapsed ? ruleEnabledField(subsection) : undefined,
+        depth,
+        hasSiblingAbove: index > 0,
+      })
+      if (!defaultSubsectionCollapsed(group.key, subsection)) walk(subsection.subsections ?? [], depth + 1)
     })
   }
   walk(group.subsections ?? [], 0)
   return entries
+}
+
+const defaultSections = ref<Record<string, boolean>>({})
+function defaultSubsectionCollapsed(group: string, section: FieldSubsection): boolean {
+  return defaultSections.value[`${group}:${section.key}`] ?? section.collapsed ?? false
+}
+function toggleDefaultSubsection(group: string, section: FieldSubsection) {
+  defaultSections.value[`${group}:${section.key}`] = !defaultSubsectionCollapsed(group, section)
 }
 
 function effectiveStyle(key: string): Record<string, unknown> {
@@ -268,7 +309,7 @@ function effectiveStyle(key: string): Record<string, unknown> {
 
 function styleColor(style: Record<string, unknown>, prop: string): string {
   const value = style[prop]
-  return typeof value === "string" ? value : "#000000"
+  return typeof value === "string" ? value : (DEFAULT_STYLE_SETTINGS[prop as "text" | "background" | "border"] ?? "#000000")
 }
 
 function setStyleProp(key: string, prop: string, value: unknown) {
@@ -294,13 +335,12 @@ function swatchFrom(style: Record<string, unknown>): Record<string, string> {
   const rawSize = typeof style.size === "number" ? style.size : DEFAULT_SIZE
   const size = Math.max(MIN_STYLE_SIZE, rawSize)
   const opacity = typeof style.backgroundOpacity === "number" ? style.backgroundOpacity : DEFAULT_OPACITY
-  const background = typeof style.background === "string" ? style.background : null
-  const rgb = background ? hexToRgb(background) : null
+  const rgb = hexToRgb(styleColor(style, "background"))
   const fontSize = Math.round(size * 0.42)
   return {
-    color: typeof style.text === "string" ? style.text : "#000000",
+    color: styleColor(style, "text"),
     backgroundColor: rgb ? `rgba(${rgb.r},${rgb.g},${rgb.b},${opacity})` : "transparent",
-    borderColor: typeof style.border === "string" ? style.border : "transparent",
+    borderColor: styleColor(style, "border"),
     fontSize: `${fontSize}px`,
     height: `${Math.max(28, fontSize + 18)}px`,
   }
@@ -373,6 +413,13 @@ function collapseAllDefaults() {
 
 function expandAllDefaults() {
   defaultsCollapsed.value = {}
+  const expand = (group: string, sections: FieldSubsection[]) => {
+    for (const section of sections) {
+      defaultSections.value[`${group}:${section.key}`] = false
+      expand(group, section.subsections ?? [])
+    }
+  }
+  for (const group of DEFAULTS_SCHEMA) expand(group.key, group.subsections ?? [])
 }
 
 const settingsCollapsed = ref(false)
@@ -453,6 +500,7 @@ function removeSaved(name: string) {
       <button
         type="button"
         @click="toggleSettings"
+        :aria-expanded="!settingsCollapsed"
         class="flex w-full items-center justify-between gap-2 px-4 py-3 text-left hover:bg-neutral-900/40"
       >
         <span class="text-lg font-semibold uppercase tracking-wide text-neutral-200">Settings</span>
@@ -567,7 +615,8 @@ function removeSaved(name: string) {
             <button
               type="button"
               @click="toggleDefaultsGroup(group.key)"
-              class="mb-1 flex w-full items-center justify-between gap-2 text-left hover:bg-neutral-900/40"
+              :aria-expanded="!isDefaultsCollapsed(group.key)"
+              class="mb-1 flex w-full items-center justify-between gap-2 rounded px-4 py-3 text-left hover:bg-neutral-900/40"
             >
               <span class="text-sm font-semibold uppercase tracking-wide text-neutral-400">{{ group.title }}</span>
               <span class="text-sm text-neutral-500">{{ isDefaultsCollapsed(group.key) ? "▸" : "▾" }}</span>
@@ -577,6 +626,11 @@ function removeSaved(name: string) {
                 <div v-for="field in visibleDefaultsFields(group.fields)" :key="field.path">
                   <FieldInput
                     :field="field"
+                    :reference="defaultsReference"
+                    :default-source="defaultSource(field, baseDefaults)"
+                    :defaulted="getPath(userDefaults, field.path) === undefined"
+                    :can-reset="getPath(userDefaults, field.path) !== undefined"
+                    @reset="setDefaultsValue(field, undefined)"
                     :value="defaultsValue(field)"
                     :options="defaultsOptions(field)"
                     @update:value="setDefaultsValue(field, $event)"
@@ -586,19 +640,75 @@ function removeSaved(name: string) {
               <div
                 v-for="sub in defaultsSubsectionEntries(group)"
                 :key="sub.key"
-                :class="sub.hasSiblingAbove ? 'mt-4 border-t border-neutral-800/60 pt-3' : 'mt-3'"
+                :class="sub.depth > 0 ? 'mt-2' : sub.hasSiblingAbove ? 'mt-4 border-t border-neutral-800/60 pt-3' : 'mt-3'"
+                :style="{ marginLeft: `${sub.depth}rem` }"
               >
-                <h5 class="mb-1 text-xs font-semibold uppercase tracking-wide text-neutral-500">{{ sub.subsection.title }}</h5>
-                <div class="grid grid-cols-1 gap-3">
-                  <div v-for="field in visibleDefaultsFields(sub.subsection.fields)" :key="field.path">
+                <RuleHeader
+                  v-if="sub.subsection.collapsed"
+                  :title="sub.subsection.title"
+                  :heading="sub.depth === 0"
+                  :expanded="!defaultSubsectionCollapsed(group.key, sub.subsection)"
+                  :field="sub.enabledField"
+                  :enabled="sub.enabledField && defaultsValue(sub.enabledField)"
+                  :defaulted="!sub.enabledField || getPath(userDefaults, sub.enabledField.path) === undefined"
+                  @toggle="toggleDefaultSubsection(group.key, sub.subsection)"
+                  @change="sub.enabledField && setRuleEnabled(sub.enabledField, $event)"
+                  @reset="sub.enabledField && setDefaultsValue(sub.enabledField, undefined)"
+                />
+                <h5
+                  v-else
+                  class="mb-1 font-semibold uppercase tracking-wide"
+                  :class="sub.depth > 0 ? 'text-xs text-neutral-500' : 'text-sm text-neutral-400'"
+                >
+                  {{ sub.subsection.title }}
+                </h5>
+                <p
+                  v-if="sub.subsection.description && !defaultSubsectionCollapsed(group.key, sub.subsection)"
+                  class="mb-2 text-xs text-neutral-500"
+                >
+                  {{ sub.subsection.description }}
+                </p>
+                <div
+                  v-show="!defaultSubsectionCollapsed(group.key, sub.subsection)"
+                  class="grid grid-cols-1 gap-3"
+                  :class="sub.subsection.layout === 'cutoff-size' ? 'items-end sm:grid-cols-2' : ''"
+                >
+                  <div
+                    v-for="field in visibleDefaultsFields(sub.subsection.fields).filter((field) => field !== sub.enabledField)"
+                    :key="field.path"
+                    class="min-w-0"
+                  >
                     <FieldInput
                       :field="field"
+                      :reference="defaultsReference"
+                      :default-source="defaultSource(field, baseDefaults)"
+                      :defaulted="getPath(userDefaults, field.path) === undefined"
+                      :can-reset="getPath(userDefaults, field.path) !== undefined"
+                      @reset="setDefaultsValue(field, undefined)"
                       :value="defaultsValue(field)"
                       :options="defaultsOptions(field)"
                       @update:value="setDefaultsValue(field, $event)"
                     />
                   </div>
                 </div>
+                <RuleAdvanced
+                  v-if="!defaultSubsectionCollapsed(group.key, sub.subsection)"
+                  :modules="(sub.subsection.subsections ?? []).filter((child) => child.module)"
+                >
+                  <template #default="{ field }">
+                    <FieldInput
+                      :field="field"
+                      :reference="defaultsReference"
+                      :default-source="defaultSource(field, baseDefaults)"
+                      :defaulted="getPath(userDefaults, field.path) === undefined"
+                      :can-reset="getPath(userDefaults, field.path) !== undefined"
+                      @reset="setDefaultsValue(field, undefined)"
+                      :value="defaultsValue(field)"
+                      :options="defaultsOptions(field)"
+                      @update:value="setDefaultsValue(field, $event)"
+                    />
+                  </template>
+                </RuleAdvanced>
               </div>
             </div>
           </div>
@@ -632,6 +742,7 @@ function removeSaved(name: string) {
             <button
               type="button"
               @click="toggleSection(section.title)"
+              :aria-expanded="!collapsed[section.title]"
               class="flex w-full items-center justify-between px-3 py-2 text-left text-sm font-semibold uppercase tracking-wide text-neutral-400 hover:bg-neutral-900/40"
             >
               <span>{{ section.title }}</span>

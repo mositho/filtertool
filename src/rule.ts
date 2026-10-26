@@ -164,17 +164,17 @@ const rule = (...rules: Rule[]): Rule => {
     },
 
     text(r, g, b, a) {
-      this.content.set("SetTextColor", `${r} ${g} ${b} ${a !== undefined ? a : ""}`)
+      this.content.set("SetTextColor", `${r} ${g} ${b}${a !== undefined ? ` ${a}` : ""}`)
       return this
     },
 
     border(r, g, b, a) {
-      this.content.set("SetBorderColor", `${r} ${g} ${b} ${a !== undefined ? a : ""}`)
+      this.content.set("SetBorderColor", `${r} ${g} ${b}${a !== undefined ? ` ${a}` : ""}`)
       return this
     },
 
     background(r, g, b, a) {
-      this.content.set("SetBackgroundColor", `${r} ${g} ${b} ${a !== undefined ? a : ""}`)
+      this.content.set("SetBackgroundColor", `${r} ${g} ${b}${a !== undefined ? ` ${a}` : ""}`)
       return this
     },
 
@@ -186,8 +186,8 @@ const rule = (...rules: Rule[]): Rule => {
       }
       if (styleData.background !== null) {
         const [r, g, b] = hexToRgb(styleData.background ?? DEFAULT_STYLE_SETTINGS.background)
-        const opacity = styleData.backgroundOpacity ?? DEFAULT_STYLE_SETTINGS.backgroundOpacity
-        this.background(r, g, b, Math.round(opacity * 255))
+        const opacity = styleData.backgroundOpacity
+        this.background(r, g, b, opacity === undefined ? undefined : Math.round(opacity * 255))
       }
       if (styleData.border !== null) {
         const [r, g, b] = hexToRgb(styleData.border ?? DEFAULT_STYLE_SETTINGS.border)

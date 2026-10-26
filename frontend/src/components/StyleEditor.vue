@@ -2,22 +2,23 @@
 import { computed } from "vue"
 import NumberField from "./NumberField.vue"
 import { styleClipboard } from "../styleClipboard"
+import { DEFAULT_STYLE_SETTINGS, MIN_STYLE_SIZE } from "../../../src/style-defaults"
 
 const props = defineProps<{
   modelValue: Record<string, unknown>
   styleNames: string[]
   styles: Record<string, Record<string, unknown>>
+  defaultStyle?: Record<string, unknown>
 }>()
 
 const emit = defineEmits<{ "update:modelValue": [value: Record<string, unknown> | undefined] }>()
 
-const DEFAULT_SIZE = 45
-const MIN_STYLE_SIZE = 20
-const DEFAULT_OPACITY = 245 / 255
+const DEFAULT_SIZE = DEFAULT_STYLE_SETTINGS.size
+const DEFAULT_OPACITY = DEFAULT_STYLE_SETTINGS.backgroundOpacity
 
-const DEFAULT_TEXT = "#FFFFFF"
-const DEFAULT_BACKGROUND = "#000000"
-const DEFAULT_BORDER = "#FFFFFF"
+const DEFAULT_TEXT = DEFAULT_STYLE_SETTINGS.text
+const DEFAULT_BACKGROUND = DEFAULT_STYLE_SETTINGS.background
+const DEFAULT_BORDER = DEFAULT_STYLE_SETTINGS.border
 
 const COLOR_DEFAULTS: Record<string, string> = {
   text: DEFAULT_TEXT,
@@ -40,7 +41,7 @@ const preset = computed(() => (typeof props.modelValue.preset === "string" ? pro
 
 function effectiveStyle(): Record<string, unknown> {
   const base = preset.value ? (props.styles[preset.value] ?? {}) : {}
-  const merged: Record<string, unknown> = { ...base }
+  const merged: Record<string, unknown> = { ...props.defaultStyle, ...base }
   for (const key of OVERRIDE_KEYS) {
     if (props.modelValue[key] !== undefined) merged[key] = props.modelValue[key]
   }
@@ -102,13 +103,16 @@ function pasteStyle() {
 </script>
 
 <template>
-  <div class="space-y-2">
-    <div class="hidden items-center gap-3 text-[10px] uppercase text-neutral-600 md:grid" :style="{ gridTemplateColumns: GRID_TEMPLATE }">
+  <div class="@container min-w-0 space-y-2">
+    <div
+      class="hidden items-center gap-3 text-[10px] uppercase text-neutral-600 @min-[44rem]:grid"
+      :style="{ gridTemplateColumns: GRID_TEMPLATE }"
+    >
       <span>Preset</span><span>Text</span><span>Bg</span><span>Border</span><span title="20–45">Size</span
       ><span title="1 = fully opaque, 0 = transparent">Opacity</span><span></span><span class="text-right">Preview</span>
     </div>
 
-    <div class="hidden items-center gap-3 md:grid" :style="{ gridTemplateColumns: GRID_TEMPLATE }">
+    <div class="hidden items-center gap-3 @min-[44rem]:grid" :style="{ gridTemplateColumns: GRID_TEMPLATE }">
       <select
         :value="preset"
         @change="setPreset(($event.target as HTMLSelectElement).value)"
@@ -219,7 +223,7 @@ function pasteStyle() {
       </div>
     </div>
 
-    <div class="rounded border border-neutral-800 p-2 md:hidden">
+    <div class="rounded border border-neutral-800 p-2 @min-[44rem]:hidden">
       <div class="mb-2 flex items-center justify-between gap-2">
         <select
           :value="preset"

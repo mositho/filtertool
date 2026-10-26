@@ -318,7 +318,7 @@ describe("highlighted equipment", () => {
     })
 
     expect(output).toMatch(/SetTextColor 255 255 255/)
-    expect(output).toMatch(/SetBackgroundColor 0 0 0 245/)
+    expect(output).toMatch(/^SetBackgroundColor 0 0 0$/m)
   })
 
   test("falls back to the per-rarity style when no style is set", () => {
@@ -390,9 +390,9 @@ describe("magic items", () => {
   test("shows small magic items for longer than big ones", () => {
     const output = magicItems({ bigMaxAreaLevel: 9, smallMaxAreaLevel: 24 })
 
-    expect(output).toMatch(/Height <= 2/)
+    expect(output).toMatch(/Height == 2/)
     expect(output).toMatch(/AreaLevel <= 24/)
-    expect(output).toMatch(/Height >= 3/)
+    expect(output).toMatch(/Height == 3/)
     expect(output).toMatch(/AreaLevel <= 9/)
   })
 })
@@ -587,7 +587,7 @@ describe("weapon queries", () => {
     })
     const weaponSection = output.split("### Weapon Progression")[1].split("### Six Sockets")[0]
     expect(weaponSection).toContain('BaseType "Rusted Hatchet"')
-    expect(weaponSection).toContain("AreaLevel <= 7")
+    expect(weaponSection).toContain("AreaLevel <= 12")
     expect(weaponSection).not.toContain("AreaLevel >= 29")
   })
 
@@ -605,7 +605,7 @@ describe("weapon queries", () => {
     expect(section).toContain("AreaLevel <= 28")
     expect(section).toContain("AreaLevel >= 29")
     expect(section).toContain('BaseType "Gilded Axe"')
-    expect(section).toContain("AreaLevel <= 7")
+    expect(section).toContain("AreaLevel <= 12")
     const gildedRules = section.split(/\nShow\n/).filter((block) => block.includes('BaseType "Gilded Axe"'))
     expect(gildedRules.length).toBeGreaterThan(0)
     expect(gildedRules.filter((block) => block.includes("AreaLevel >= 0")).every((block) => block.includes("AreaLevel <= 28"))).toBe(true)
@@ -622,7 +622,13 @@ describe("weapon queries", () => {
     expect(output).toContain(`AreaLevel <= ${weapon.dropLevel + 2}`)
   })
 
-  test("phase-specific socket highlights stop at the phase's Max Area Level", () => {
+  test("defaults weapon progression overlap to ten area levels", () => {
+    const weapon = WEAPON_BASE_DATA.find(({ itemClass }) => itemClass === "One Hand Axes")!
+    const phase = { baseTypes: [weapon.baseType] }
+    expect(weaponPhases([phase])).toContain(`AreaLevel <= ${weapon.dropLevel + 10}`)
+  })
+
+  test("weapon phases do not generate early weapon socket rules", () => {
     const output = compileFilter({
       buildProfile: {
         weaponPhases: [
@@ -633,10 +639,10 @@ describe("weapon queries", () => {
       buildSpecificOptions: {},
     })
     const socketSection = output.split("### Early Sockets")[1].split("### Flasks")[0]
-    const oldWeaponRules = socketSection.split(/\nShow\n/).filter((block) => block.includes('BaseType "Rusted Hatchet"'))
-    expect(oldWeaponRules.length).toBeGreaterThan(0)
-    expect(oldWeaponRules.every((block) => block.includes("AreaLevel <= 5"))).toBe(true)
-    expect(socketSection).toContain("AreaLevel >= 6")
+    expect(socketSection).not.toContain("BaseType")
+    expect(socketSection).not.toContain("AreaLevel >= 6")
+    expect(socketSection.match(/Sockets == [23]/g)).toHaveLength(2)
+    expect(output.split("### Weapon Progression")[1].split("### Six Sockets")[0]).toContain('BaseType "Rusted Hatchet"')
   })
 
   test("multiple phases can have no Max Area Level", () => {
@@ -658,7 +664,7 @@ describe("weapon queries", () => {
       buildSpecificOptions: {},
     })
     const section = output.split("### Weapon Progression")[1].split("### Six Sockets")[0]
-    expect(section.indexOf("AreaLevel <= 28")).toBeLessThan(section.indexOf("AreaLevel <= 33"))
+    expect(section.indexOf("AreaLevel <= 28")).toBeLessThan(section.indexOf("AreaLevel <= 38"))
   })
 
   test("puts a contained area-level range ahead of both its enclosing range and an all-run phase", () => {
@@ -677,9 +683,12 @@ describe("weapon queries", () => {
     ).toThrow(/Min Area Level must not exceed Max Area Level/)
   })
 
-  test("does not treat an empty weapon phase as all weapons for early sockets", () => {
-    const output = earlySockets({ weaponPhases: [{ weaponCutoffOverlap: 5 }] })
+  test("ignores saved weapon socket overrides and only emits armour socket rules", () => {
+    const output = earlySockets({ rules: { weapon2: { style: { text: "#123456" } }, weapon3: { maxAreaLevel: 99 } } })
     expect(output).not.toContain("BaseType")
+    expect(output).not.toContain("SetTextColor 18 52 86")
+    expect(output).not.toContain("AreaLevel <= 99")
+    expect(output.match(/Class "Body Armours"/g)).toHaveLength(2)
   })
 
   test("preserves explicit bases and separates non-weapon classes", () => {

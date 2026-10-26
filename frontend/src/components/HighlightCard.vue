@@ -11,6 +11,7 @@ import SoundSelector from "./SoundSelector.vue"
 import IconPicker from "./IconPicker.vue"
 import StyleEditor from "./StyleEditor.vue"
 import ItemTargetPicker from "./ItemTargetPicker.vue"
+import AdvancedOptions from "./AdvancedOptions.vue"
 import { areaLevelRangeError, itemLevelRangeError } from "@schema/range-validation"
 
 const props = defineProps<{
@@ -178,7 +179,7 @@ function setPerRarity(value: boolean) {
 
 function addModule(id: ModuleId) {
   active.value = new Set([...active.value, id])
-  if (id === "weaponCutoff") setField("weaponCutoffOverlap", 5)
+  if (id === "weaponCutoff") setField("weaponCutoffOverlap", 10)
   persistModules()
 }
 
@@ -342,8 +343,7 @@ function applyRaritySound(rarity: string, next: Record<string, unknown>) {
     <p v-if="!phaseMode && itemLevelError && !active.has('itemLevel')" role="alert" class="text-xs text-red-400">
       {{ itemLevelError }}
     </p>
-    <details class="space-y-2">
-      <summary class="cursor-pointer text-sm text-neutral-400">Advanced</summary>
+    <AdvancedOptions>
       <div class="space-y-1">
         <FieldLabel label="Rarities" :tooltip="FIELD_BY_PATH.rarities?.tooltip" />
         <MultiSelect :model-value="rarityValue" :options="HIGHLIGHT_RARITIES" @update:model-value="setRarities($event)" />
@@ -524,6 +524,7 @@ function applyRaritySound(rarity: string, next: Record<string, unknown>) {
           <button
             type="button"
             @click="modulesOpen = !modulesOpen"
+            :aria-expanded="modulesOpen"
             class="rounded bg-blue-700 px-3 py-1.5 text-sm text-white hover:bg-blue-600"
           >
             + Add module
@@ -544,6 +545,6 @@ function applyRaritySound(rarity: string, next: Record<string, unknown>) {
           </div>
         </div>
       </div>
-    </details>
+    </AdvancedOptions>
   </div>
 </template>

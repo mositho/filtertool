@@ -1,13 +1,14 @@
 import { loadJsonOverride, loadOptionalOverride, mergeDeep } from "./user-overrides"
 
 const GLOBAL_EARLY_MAX_AREA_LEVEL = 12
-const GLOBAL_PART_ONE_MAX_AREA_LEVEL = 45
 
 export const baseFilterDefaults = {
   shieldProgression: "early",
   preferredColors: ["R", "G", "B"],
   preferredArmour: [],
   links: {
+    genericThreeLinkMaxAreaLevel: undefined as number | undefined,
+    rules: {} as Record<string, import("./sections/options").EquipmentRuleConfig>,
     twoLinkMaxAreaLevel: 9,
     threeLinkTtsCutoffLevel: 23,
     threeLinkMaxAreaLevel: 33,
@@ -25,21 +26,25 @@ export const baseFilterDefaults = {
     amulets: ["Amber", "Jade", "Lapis", "Turquoise", "Citrine", "Agate", "Onyx"],
   },
   early: {
+    shieldMaxAreaLevel: undefined as number | undefined,
+    rules: {} as Record<string, import("./sections/options").EquipmentRuleConfig>,
     earlyMaxAreaLevel: GLOBAL_EARLY_MAX_AREA_LEVEL,
     twoSocketMaxAreaLevel: 7,
-    threeSocketMaxAreaLevel: 16,
+    threeSocketMaxAreaLevel: undefined as number | undefined,
     earlyBootsMaxAreaLevel: 24,
   },
   rareItems: {
-    partOneMaxAreaLevel: GLOBAL_PART_ONE_MAX_AREA_LEVEL,
+    rules: {} as Record<string, import("./sections/options").EquipmentRuleConfig>,
     // Rare items are uncapped by default; set this to a level to hide them past it.
     maxAreaLevel: undefined as number | undefined,
   },
   magicItems: {
+    rules: {} as Record<string, import("./sections/options").EquipmentRuleConfig>,
     bigMaxAreaLevel: 9,
     smallMaxAreaLevel: 24,
   },
   normalItems: {
+    rules: {} as Record<string, import("./sections/options").EquipmentRuleConfig>,
     maxAreaLevel: 4,
   },
   tinctures: {

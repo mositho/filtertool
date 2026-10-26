@@ -2,15 +2,7 @@ import type { Color, Mixin, Shape, StyleData } from "../../types"
 import { loadJsonOverride, loadOptionalOverride, mergeDeep } from "./user-overrides"
 export { getSoundPackFolder, soundFile } from "../../sounds"
 
-export const DEFAULT_STYLE_SETTINGS = {
-  size: 45,
-  backgroundOpacity: 245 / 255,
-  text: "#FFFFFF",
-  background: "#000000",
-  border: "#FFFFFF",
-} as const
-
-export const MIN_STYLE_SIZE = 20
+export { DEFAULT_STYLE_SETTINGS, MIN_STYLE_SIZE } from "../../style-defaults"
 
 const BACKGROUND_OPACITY = {
   low: 100 / 255,
