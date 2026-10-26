@@ -110,7 +110,7 @@ function pastePhase() {
       </button>
     </div>
     <div v-for="(phase, index) in phases" :key="index" class="rounded border border-neutral-800 bg-neutral-950/60 p-3">
-      <div class="flex items-center gap-2">
+      <div class="disclosure-header -m-3 flex items-center gap-2 rounded p-3" @click.self="openPhase = openPhase === index ? null : index">
         <button
           type="button"
           class="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-neutral-800 text-sm text-neutral-300 hover:bg-red-700 hover:text-white"
@@ -132,7 +132,7 @@ function pastePhase() {
         <button
           v-else
           type="button"
-          class="min-w-0 flex-1 text-left text-sm text-neutral-200 hover:text-white"
+          class="min-w-0 flex-1 rounded px-2 py-1 text-left text-sm text-neutral-200 hover:text-white"
           :aria-expanded="openPhase === index"
           @click="openPhase = openPhase === index ? null : index"
         >

@@ -1,5 +1,35 @@
 @import "tailwindcss";
 
+@layer components {
+  :where([aria-expanded], summary, .disclosure-header) {
+    cursor: pointer;
+    border-radius: 0.25rem;
+    transition:
+      background-color 150ms,
+      color 150ms;
+  }
+
+  :where([aria-expanded], summary, .disclosure-header):hover {
+    background-color: rgb(64 64 64 / 35%);
+    color: #ffffff;
+  }
+
+  :where([aria-expanded], summary):focus-visible {
+    outline: 2px solid #737373;
+    outline-offset: 2px;
+  }
+
+  summary {
+    display: list-item;
+    width: 100%;
+    list-style-position: inside;
+  }
+
+  .disclosure-header > [aria-expanded]:hover {
+    background-color: transparent;
+  }
+}
+
 html,
 body,
 #app {

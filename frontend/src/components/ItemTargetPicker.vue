@@ -58,9 +58,9 @@ function toggleBase(base: string) {
         {{ base }} ×
       </button>
     </div>
-    <details class="rounded border border-neutral-700 p-2">
-      <summary class="cursor-pointer text-xs text-neutral-300">Choose {{ weaponOnly ? "weapon" : "item" }} classes</summary>
-      <div class="mt-2 space-y-2">
+    <details class="rounded border border-neutral-700">
+      <summary class="rounded px-3 py-2 text-xs text-neutral-300">Choose {{ weaponOnly ? "weapon" : "item" }} classes</summary>
+      <div class="space-y-2 px-2 pb-2">
         <input
           v-model="classSearch"
           type="search"
@@ -77,9 +77,9 @@ function toggleBase(base: string) {
         </div>
       </div>
     </details>
-    <details class="rounded border border-neutral-700 p-2">
-      <summary class="cursor-pointer text-xs text-neutral-300">Choose individual bases</summary>
-      <div class="mt-2 space-y-2">
+    <details class="rounded border border-neutral-700">
+      <summary class="rounded px-3 py-2 text-xs text-neutral-300">Choose individual bases</summary>
+      <div class="space-y-2 px-2 pb-2">
         <div class="flex flex-col gap-2 sm:flex-row">
           <select
             v-model="selectedClass"

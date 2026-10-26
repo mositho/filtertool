@@ -5,6 +5,7 @@ import type { ReferenceData } from "../../frontend/src/api"
 import ConfigForm from "../../frontend/src/components/ConfigForm.vue"
 import HighlightEditor from "../../frontend/src/components/HighlightEditor.vue"
 import ItemTargetPicker from "../../frontend/src/components/ItemTargetPicker.vue"
+import WeaponProgression from "../../frontend/src/components/WeaponProgression.vue"
 
 vi.mock("../../frontend/src/components/HighlightCard.vue", () => ({ default: { template: "<div>Highlight options</div>" } }))
 
@@ -49,6 +50,23 @@ const reference = {
 } satisfies ReferenceData
 
 describe("editor view controls", () => {
+  it.each([
+    { name: "highlight", component: HighlightEditor, entries: { highlights: [{}] } },
+    { name: "weapon phase", component: WeaponProgression, entries: { phases: [{}] } },
+  ])("expands a $name when clicking the full header padding", async ({ component, entries }) => {
+    const root = mount(component, { ...entries, reference })
+    const header = root.querySelector<HTMLButtonElement>("button[aria-expanded]")!
+    const strip = header.closest<HTMLElement>(".disclosure-header")!
+    expect(strip.classList.contains("-m-3")).toBe(true)
+    expect(header.getAttribute("aria-expanded")).toBe("false")
+    strip.click()
+    await nextTick()
+    expect(header.getAttribute("aria-expanded")).toBe("true")
+    strip.click()
+    await nextTick()
+    expect(header.getAttribute("aria-expanded")).toBe("false")
+  })
+
   it("defaults only Build Profile to collapsed and remembers each filter's view", async () => {
     const props = {
       modelValue: { buildProfile: {}, buildSpecificOptions: {} },

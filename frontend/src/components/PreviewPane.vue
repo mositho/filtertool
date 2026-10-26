@@ -40,6 +40,7 @@ watch(
     <button
       type="button"
       @click="emit('update:open', true)"
+      :aria-expanded="false"
       class="flex h-7 w-7 items-center justify-center rounded border border-neutral-700 text-neutral-400 hover:bg-neutral-800 hover:text-white"
       title="Extend output preview"
     >
@@ -52,6 +53,7 @@ watch(
       <button
         type="button"
         @click="emit('update:open', false)"
+        :aria-expanded="true"
         class="text-sm text-neutral-400 hover:text-white"
         title="Collapse output preview"
       >

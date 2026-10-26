@@ -93,7 +93,10 @@ function confirmRename(index: number) {
       </button>
     </div>
     <div v-for="(highlight, index) in highlights" :key="index" class="rounded border border-neutral-800 bg-neutral-900/40 p-3">
-      <div class="flex items-center gap-2">
+      <div
+        class="disclosure-header -m-3 flex items-center gap-2 rounded p-3"
+        @click.self="openHighlight = openHighlight === index ? null : index"
+      >
         <button
           type="button"
           @click="remove(index)"
@@ -114,7 +117,7 @@ function confirmRename(index: number) {
         <button
           v-else
           type="button"
-          class="min-w-0 flex-1 text-left text-sm text-neutral-200 hover:text-white"
+          class="min-w-0 flex-1 rounded px-2 py-1 text-left text-sm text-neutral-200 hover:text-white"
           :aria-expanded="openHighlight === index"
           @click="openHighlight = openHighlight === index ? null : index"
         >
