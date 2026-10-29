@@ -1,4 +1,4 @@
-import * as csv from "fast-csv"
+import * as csv from "@fast-csv/parse"
 import { createReadStream, existsSync, mkdirSync, readdirSync, unlinkSync, writeFileSync } from "fs"
 import { join } from "path"
 import { format, resolveConfig } from "prettier"

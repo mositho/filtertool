@@ -30,6 +30,26 @@ import rule from "../src/rule"
 import type { BaseType } from "../src/types"
 import { TEST_BASE_TYPE, TEST_BASE_TYPE_TWO } from "./fixtures/base-types"
 
+describe("sound volume defaults", () => {
+  test("reduces built-in alert sounds without changing custom sound volume", () => {
+    expect(rule().sound(3).compile()).toContain("PlayAlertSound 3 240")
+    expect(rule().sound(3, undefined, true).compile()).toContain("PlayAlertSoundPositional 3 240")
+    expect(rule().tts("wand.mp3", undefined, false).compile()).toContain('CustomAlertSound "poeft-sounds-v2/wand.mp3" 300')
+    expect(rule().customSound("custom.mp3").compile()).toContain('CustomAlertSound "custom.mp3" 300')
+  })
+
+  test("preserves explicit volume overrides, including silence", () => {
+    expect(rule().sound(3, 300).compile()).toContain("PlayAlertSound 3 300")
+    expect(rule().sound(3, 0).compile()).toContain("PlayAlertSound 3 0")
+  })
+
+  test("uses the quieter default in compiled standard filters", () => {
+    const output = compileFilter({ buildProfile: emptyProfile, buildSpecificOptions: emptyOptions })
+    expect(output).toContain("PlayAlertSound 3 240")
+    expect(output).not.toMatch(/PlayAlertSound(?:Positional)? \d+ 300/)
+  })
+})
+
 describe("empty filter configuration", () => {
   test("exposes every configurable section", () => {
     expect(emptyProfile).toEqual({})
