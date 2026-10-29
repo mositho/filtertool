@@ -5,7 +5,7 @@ import readline from "readline"
 import { globSync } from "glob"
 import { SOUND_MANIFEST } from "../sounds/manifest"
 import { generateTtsFile, readTtsSettings, writeTtsSettings } from "../sounds/tts"
-import { writeGenerationState, type GenerationState } from "../sounds/generation-state"
+import { writeGenerationState, TTS_PROCESSING_VERSION, type GenerationState } from "../sounds/generation-state"
 import { generatedSoundTextToFileName, getSoundPackTargetDir, SOUND_PACK_SOURCE_DIR } from "../sounds/paths"
 import { findTtsConfigLiterals } from "../sounds/discover-tts"
 import { syncSoundPack } from "./sync-sounds"
@@ -190,7 +190,12 @@ export async function generateSounds(options: GenerateSoundsOptions = {}): Promi
 
     const state: GenerationState = {}
     for (const entry of entries) {
-      state[entry.filename] = { text: entry.text, locale: settings.locale, speed: settings.speed }
+      state[entry.filename] = {
+        text: entry.text,
+        locale: settings.locale,
+        speed: settings.speed,
+        processingVersion: TTS_PROCESSING_VERSION,
+      }
     }
     writeGenerationState(state)
 

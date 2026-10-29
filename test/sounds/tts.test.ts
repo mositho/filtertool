@@ -3,7 +3,7 @@ import fs from "fs"
 import os from "os"
 import path from "path"
 import { readTtsSettings, writeTtsSettings, DEFAULT_TTS_SETTINGS, ttsTextForFile, staleManifestSoundIds } from "../../src/sounds/tts"
-import { readGenerationState, writeGenerationState } from "../../src/sounds/generation-state"
+import { readGenerationState, writeGenerationState, TTS_PROCESSING_VERSION } from "../../src/sounds/generation-state"
 import { MANIFEST_BY_ID } from "../../src/sounds/manifest"
 import { settingsPath } from "../../src/config/settings"
 
@@ -71,19 +71,34 @@ describe("staleManifestSoundIds", () => {
   })
 
   it("flags a sound whose text changed", () => {
-    const state = { "amethyst_ring.mp3": { text: "Amethyst Ring", locale: "en-US", speed: 1.6 } }
+    const state = {
+      "amethyst_ring.mp3": { text: "Amethyst Ring", locale: "en-US", speed: 1.6, processingVersion: TTS_PROCESSING_VERSION },
+    }
     expect(staleManifestSoundIds(state, { locale: "en-US", speed: 1.6 })).toContain("amethyst_ring")
   })
 
   it("flags a sound when the locale changed", () => {
     const entry = MANIFEST_BY_ID.amethyst_ring
-    const state = { "amethyst_ring.mp3": { text: entry.text, locale: "en-US", speed: 1.6 } }
+    const state = {
+      "amethyst_ring.mp3": { text: entry.text, locale: "en-US", speed: 1.6, processingVersion: TTS_PROCESSING_VERSION },
+    }
     expect(staleManifestSoundIds(state, { locale: "de-DE", speed: 1.6 })).toContain("amethyst_ring")
   })
 
   it("does not flag up-to-date sounds", () => {
     const entry = MANIFEST_BY_ID.amethyst_ring
-    const state = { "amethyst_ring.mp3": { text: entry.text, locale: "en-US", speed: 1.6 } }
+    const state = {
+      "amethyst_ring.mp3": { text: entry.text, locale: "en-US", speed: 1.6, processingVersion: TTS_PROCESSING_VERSION },
+    }
     expect(staleManifestSoundIds(state, { locale: "en-US", speed: 1.6 })).not.toContain("amethyst_ring")
+  })
+
+  it("flags old audio even when text, locale and speed are unchanged", () => {
+    const entry = MANIFEST_BY_ID.amethyst_ring
+    const signature = { text: entry.text, locale: "en-US", speed: 1.6 }
+    for (const processingVersion of [undefined, TTS_PROCESSING_VERSION - 1]) {
+      const state = { "amethyst_ring.mp3": { ...signature, processingVersion } }
+      expect(staleManifestSoundIds(state, { locale: "en-US", speed: 1.6 })).toContain("amethyst_ring")
+    }
   })
 })

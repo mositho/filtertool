@@ -4,6 +4,7 @@ import os from "os"
 import path from "path"
 import {
   DEFAULT_TTS_SETTINGS,
+  DEFAULT_WIN_FILTER_PATH,
   defaultSettings,
   ensureSettings,
   loadSettings,
@@ -38,7 +39,11 @@ describe("migrateFromLegacy", () => {
   })
 
   it("returns defaults when no legacy files exist", () => {
-    expect(migrateFromLegacy(rootDir)).toEqual({ filterPath: undefined, soundsFolder: undefined, tts: DEFAULT_TTS_SETTINGS })
+    expect(migrateFromLegacy(rootDir)).toEqual({
+      filterPath: process.platform === "win32" ? DEFAULT_WIN_FILTER_PATH : undefined,
+      soundsFolder: undefined,
+      tts: DEFAULT_TTS_SETTINGS,
+    })
   })
 })
 

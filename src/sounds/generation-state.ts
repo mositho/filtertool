@@ -2,11 +2,16 @@ import fs from "fs"
 import path from "path"
 import { repoRoot } from "../config/settings"
 
+/** Increment when audio processing changes so cached sounds are regenerated. */
+export const TTS_PROCESSING_VERSION = 1
+
 export type GenerationSignature = {
   /** The spoken text used to generate the sound. */
   text: string
   locale: string
   speed: number
+  /** Absent in sound packs generated before loudness normalization. */
+  processingVersion?: number
 }
 
 /** Maps a sound filename (e.g. `amethyst_ring.mp3`) to the signature it was generated with. */
