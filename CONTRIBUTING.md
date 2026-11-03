@@ -15,7 +15,7 @@ npm audit --audit-level=high
 
 ## Dependencies
 
-Dependabot opens weekly update PRs. When upgrading `ffmpeg-static`, review its install script and update the pinned `allowScripts` approval in `package.json`.
+This project is deprecated and dependencies are no longer updated automatically. If you make a maintenance update, review `ffmpeg-static`'s install script and update the pinned `allowScripts` approval in `package.json` as needed.
 
 ## Releases
 

@@ -6,6 +6,9 @@
 
 </div>
 
+> [!IMPORTANT]
+> **This project is deprecated and is no longer actively maintained.** Its successor is [Filtertool Desktop](https://github.com/mositho/filtertool-desktop). Please use the desktop project for ongoing development and support.
+
 ## Get started
 
 Install [Node.js 24 LTS](https://nodejs.org/). Download and extract the source code from a [published release](https://github.com/mositho/filtertool/releases), or clone the repository for development. From that folder, run:
